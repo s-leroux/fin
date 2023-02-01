@@ -30,6 +30,17 @@ class Model:
                     self._params
             )
 
+    def adjust(self, x, conditions):
+        """
+        Recalculate the "x" parameter under the given conditions.
+        Return a new instance of the receiver's class.
+        """
+        new_params = self._params.copy()
+        new_params.update(conditions)
+        new_params.pop(x, None)
+
+        return type(self)(new_params)
+
     def __getattr__(self, name):
         return self._params[name]
 
