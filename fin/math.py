@@ -1,4 +1,5 @@
 EPSILON=0.0001
+HUGE=1e10
 
 class MathError(Exception):
     pass
