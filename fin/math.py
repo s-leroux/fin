@@ -16,8 +16,8 @@ def solve(fct, x, min, max, vars={}):
         min, max = max, min
 
     da = vars.copy()
-    db = vars.copy()
-    dc = vars.copy()
+    db = da.copy()
+    dc = da.copy()
 
     da[x] = min
     db[x] = (min+max)/2
