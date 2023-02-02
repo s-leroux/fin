@@ -11,6 +11,17 @@ class Call(fin.model.Model):
         )
         super().__init__(call, pnames, params)
 
+class Put(fin.model.Model):
+    def __init__(self, params):
+        pnames = (
+            "tp",
+            "ap",
+            "ep",
+            "parity",
+            "premium",
+        )
+        super().__init__(put, pnames, params)
+
 def call(tp,ap,ep,parity,premium):
     """
     Model function for a call Turbo.
@@ -22,7 +33,7 @@ def call(tp,ap,ep,parity,premium):
     - parity:
     - premium: the issuer's fees (gap prime, precount dividends, ...)
     """
-    return (ap-ep)/parity+premium-tp
+    return (0.0 if ap <= ep else (ap-ep)/parity+premium)-tp
 
 def put(tp,ap,ep,parity,premium):
     """
@@ -35,5 +46,5 @@ def put(tp,ap,ep,parity,premium):
     - parity:
     - premium: the issuer's fees (gap prime, precount dividends, ...)
     """
-    return (ep-ap)/parity+premium-tp
+    return (0.0 if ep <= ap else (ep-ap)/parity+premium)-tp
 

@@ -25,7 +25,7 @@ class Model:
             self._params[pname] = fin.math.solve(
                     self._fct,
                     pname,
-                    fin.math.EPSILON,
+                    -fin.math.HUGE,
                     fin.math.HUGE,
                     self._params
             )
