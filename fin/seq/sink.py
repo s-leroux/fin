@@ -1,6 +1,20 @@
 """ A sink is a consumer for a sequence
 """
 
+def take(source, n):
+    """ Consume up to n rows from source and return them in a list.
+    """
+    result = []
+    while n > 0:
+        chunk, source = source(n)
+        if not chunk:
+            break
+        else:
+            result += chunk
+            n -= len(chunk)
+
+    return result
+
 def all(source):
     """ Consume a source until eof and return all data
         in one (potentially huge) list.

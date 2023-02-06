@@ -11,13 +11,16 @@ def samples(values=()):
 def chunk_generator(fct):
     """ Build a sequence chunk by chunk
     """
-    
+    chunk = None
     def _chunk_generator(count):
-        chunk = fct()
+        nonlocal chunk
+
+        if chunk is None:
+            chunk = fct()
         if not chunk:
             return nothing()(count)
         else:
-            return rawdata(chunk, _chunk_generator)(count)
+            return rawdata(chunk, chunk_generator(fct))(count)
 
     return _chunk_generator
 
@@ -60,27 +63,27 @@ def rawdata(data, cont=nothing()):
 
     return at(0)
 
-def range(from_or_to, to=None, step=1):
-    BUFFER_SIZE=500
+def range(start_or_end, end=None, step=1):
+    MAX_BUFFER_SIZE=500
 
-    from_ = 0
-    if to is None:
-        to = from_or_to
+    start = 0
+    if end is None:
+        end = start_or_end
     else:
-        from_ = from_or_to
+        start = start_or_end
 
     def fct():
-        nonlocal from_
+        nonlocal start
 
-        n = min(math.ceil((to - from_)/step), BUFFER_SIZE)
+        n = min(math.ceil((end - start)/step), MAX_BUFFER_SIZE)
         if n <= 0:
             return ()
 
         chunk = [None]*n
         for i in builtins.range(n):
-            chunk[i] = (i*step+from_,)
+            chunk[i] = (i*step+start,)
 
-        from_ += n*step
+        start += n*step
 
         return chunk
 

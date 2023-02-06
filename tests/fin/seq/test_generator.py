@@ -65,7 +65,6 @@ class TestRange(unittest.TestCase):
 
         self.assertSequenceEqual(actual, expected)
 
-
     def test_range_2(self):
         expected = self.expected(1, 100)
         g = generator.range(1, 100)
@@ -79,4 +78,14 @@ class TestRange(unittest.TestCase):
         actual = sink.all(g) 
 
         self.assertSequenceEqual(actual, expected)
+
+    def test_range_idempotence(self):
+        n = 3
+        expected = self.expected(1, n+1)
+        g = generator.range(1, 100)
+        a = sink.take(g, n)
+        b = sink.take(g, n)
+
+        self.assertSequenceEqual(a, expected)
+        self.assertSequenceEqual(a, b)
 
