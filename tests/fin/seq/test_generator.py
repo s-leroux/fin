@@ -1,6 +1,7 @@
 import unittest
 
 import fin.seq.generator as generator
+import fin.seq.sink as sink
 
 class TestUtils(unittest.TestCase):
     def test_samples(self):
@@ -40,3 +41,42 @@ class TestRawData(unittest.TestCase):
         for n in 5,6,7:
             actual, g = g(n)
             self.assertSequenceEqual(actual, ((1,2,3,),)*n)
+
+class TestRange(unittest.TestCase):
+    def expected(self, a, b=None, c=None):
+        result = []
+        r = None
+        if c is not None:
+            r = range(a, b, c)
+        elif b is not None:
+            r = range(a, b)
+        else:
+            r = range(a)
+
+        for n in r:
+            result.append((n,))
+
+        return result
+
+    def test_range_1(self):
+        expected = self.expected(1000)
+        g = generator.range(1000)
+        actual = sink.all(g) 
+
+        self.assertSequenceEqual(actual, expected)
+
+
+    def test_range_2(self):
+        expected = self.expected(1, 100)
+        g = generator.range(1, 100)
+        actual = sink.all(g) 
+
+        self.assertSequenceEqual(actual, expected)
+
+    def test_range_3(self):
+        expected = self.expected(1, 2000, 3)
+        g = generator.range(1, 2000, 3)
+        actual = sink.all(g) 
+
+        self.assertSequenceEqual(actual, expected)
+
