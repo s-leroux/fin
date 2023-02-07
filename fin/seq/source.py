@@ -8,11 +8,11 @@ def samples(values=()):
     return tuple(values)
     # return array('f', values)
 
-def chunk_generator(fct):
+def chunk_source(fct):
     """ Build a sequence chunk by chunk
     """
     chunk = None
-    def _chunk_generator(count):
+    def _chunk_source(count):
         nonlocal chunk
 
         if chunk is None:
@@ -20,15 +20,15 @@ def chunk_generator(fct):
         if not chunk:
             return nothing()(count)
         else:
-            return rawdata(chunk, chunk_generator(fct))(count)
+            return rawdata(chunk, chunk_source(fct))(count)
 
-    return _chunk_generator
+    return _chunk_source
 
 # ======================================================================
-# Core generators
+# Core sources
 # ======================================================================
 def nothing():
-    """ Empty generator. Produce an infinite stream of nothingness.
+    """ Empty source. Produce an infinite stream of nothingness.
     """
     def _nothing(count, cache=()*1000):
         return cache[:count], _nothing
@@ -36,7 +36,7 @@ def nothing():
     return _nothing
 
 def constant(*values):
-    """ Return a generator producing an infinite stream of samples
+    """ Return a source producing an infinite stream of samples
         with the same value
     """
     buffer = [(value,)*1000 for value in values]
@@ -47,7 +47,7 @@ def constant(*values):
     return read
 
 def rawdata(data, cont=nothing()):
-    """ Return a generator from rawdata.
+    """ Return a source from rawdata.
     """
     data = samples(data)
     def at(offset):
@@ -86,4 +86,4 @@ def range(start_or_end, end=None, step=1):
 
         return chunk
 
-    return chunk_generator(fct)
+    return chunk_source(fct)

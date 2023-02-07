@@ -1,6 +1,6 @@
 import unittest
 
-import fin.seq.generator as generator
+import fin.seq.source as source
 
 class Test(unittest.TestCase):
     def test_(self):
