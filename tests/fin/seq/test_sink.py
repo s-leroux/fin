@@ -3,6 +3,14 @@ import unittest
 import fin.seq.source as source
 import fin.seq.sink as sink
 
+class TestTake(unittest.TestCase):
+    def test_take(self):
+        g = source.constant(1)
+
+        for i in range(1,1000):
+            data, g = sink.take(g, i)
+            self.assertEqual(len(data[0]), i)
+
 class TestCount(unittest.TestCase):
     def test_count(self):
         n = 2048
