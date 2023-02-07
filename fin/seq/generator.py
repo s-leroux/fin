@@ -39,10 +39,10 @@ def constant(*values):
     """ Return a generator producing an infinite stream of samples
         with the same value
     """
-    buffer = ((values),)*1000
+    buffer = [(value,)*1000 for value in values]
 
     def read(n):
-        return buffer[:n], read
+        return [b[:n] for b in buffer], read
 
     return read
 
@@ -53,8 +53,9 @@ def rawdata(data, cont=nothing()):
     def at(offset):
         def read(count):
             stop = offset+count
-            result = data[offset:stop]
-            if result:
+            result = [col[offset:stop] for col in data]
+            l = min([len(col) for col in result])
+            if l>0:
                 return result, at(stop)
             else:
                 return cont(count)
@@ -79,9 +80,7 @@ def range(start_or_end, end=None, step=1):
         if n <= 0:
             return ()
 
-        chunk = [None]*n
-        for i in builtins.range(n):
-            chunk[i] = (i*step+start,)
+        chunk = (tuple(builtins.range(start, start+n*step, step)),)
 
         start += n*step
 
