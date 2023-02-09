@@ -1,6 +1,7 @@
 import unittest
 
 from fin.seq import table
+from fin.seq import algo
 
 class TestTable(unittest.TestCase):
     def test_constructor(self):
@@ -36,7 +37,7 @@ class TestTable(unittest.TestCase):
         VALUE=123
         t = table.Table(LEN)
 
-        t.add_column("X", lambda: VALUE)
+        t.add_column("X", lambda n: [VALUE]*n)
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1)
@@ -48,11 +49,31 @@ class TestTable(unittest.TestCase):
         t = table.Table(LEN)
 
         t.add_column("X", range(LEN))
-        t.add_column("Y", lambda x: x+1, "X")
+        t.add_column("Y", lambda n, xs: [x+1 for x in xs], "X")
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 2)
         self.assertEqual(t._data[1], [x+1 for x in range(LEN)])
+
+    def test_add_column_from_algo(self):
+        LEN=10
+        A=list(range(200, 200+LEN))
+        B=list(range(300, 300+LEN))
+
+        t = table.Table(LEN)
+        t.add_column("A", A)
+        t.add_column("B", B)
+        t.add_column("C", algo.by_row(lambda a, b: a+b), "A", "B")
+        self.assertEqual(t._data[2], list(range(500, 500+2*LEN, 2)))
+
+    def test_naive_window(self):
+        LEN=10
+        A=list(range(10, 10+LEN))
+
+        t = table.Table(LEN)
+        t.add_column("A", A)
+        t.add_column("B", algo.naive_window(sum, 2), "A")
+        self.assertEqual(t._data[1], [None, 21, 23, 25, 27, 29, 31, 33, 35, 37])
 
     def test_get_column(self):
         LEN=5

@@ -57,36 +57,22 @@ class Table:
         return list(it)
 
     def make_column_from_callable(self, fct, *cols):
-        cols = [self.get_column(n) for n in cols]
-        result = [None]*self._rows
-
-        i = 0
-        if len(cols):
-            for row in zip(*cols):
-                try:
-                    result[i] = fct(*row)
-                except e:
-                    pass
-
-                i += 1
-        else:
-            n = len(result)
-            while i < n:
-                result[i] = fct()
-                i += 1
-
-        return result
+        cols = [self.get_column(n)._column for n in cols]
+        return fct(self._rows, *cols)
 
     def apply(self, fct, *cols):
+        """ Call a function for each rows
+        """
         # The apply fuction is meaningless if called without any column argument
         if not len(cols):
             raise TypeError("At least one column should be specified")
 
         cols = [self.get_column(n) for n in cols]
-        for row in zip(*cols):
-            fct(*row)
+        return [fct(*row) for row in zip(*cols)]
 
     def aggregate(self, fct, *cols):
+        """ Call a function on the given columns
+        """
         # The aggregate fuction is meaningless if called without any column argument
         if not len(cols):
             raise TypeError("At least one column should be specified")
