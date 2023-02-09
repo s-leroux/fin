@@ -1,5 +1,7 @@
 """ Common algorithms usable on tables
 """
+import math
+import builtins
 
 def window(fct, n):
     def _window(rowcount, *cols):
@@ -40,3 +42,17 @@ def by_row(fct):
 def moving_average(n):
     return naive_window(lambda col:sum(col)/len(col), n)
 
+def standard_deviation(n):
+    sqrt = math.sqrt
+    sum = builtins.sum
+    a = 1.0/(n-1.0)
+    b = a/n
+
+    def s(ui):
+        ui_squared = [u*u for u in ui]
+        s1 = sum(ui_squared)
+        s2 = sum(ui)**2
+       
+        return sqrt(a*s1-b*s2)
+
+    return naive_window(s, n)
