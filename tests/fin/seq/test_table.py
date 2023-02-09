@@ -5,27 +5,92 @@ from fin.seq import column
 
 class TestTable(unittest.TestCase):
     def test_constructor(self):
-        t = table.Table()
+        t = table.Table(0)
 
         self.assertEqual(t.rows(), 0)
         self.assertEqual(t.columns(), 0)
 
-    def test_one_col(self):
-        t = table.Table()
+    def test_add_column_from_iterator(self):
+        FROM=1
+        TO=100
+        t = table.Table(TO-FROM)
 
-        t.append(column.range(1,100))
+        t.add_column("X", range(FROM, TO))
 
-        self.assertEqual(t.rows(), 99)
+        self.assertEqual(t.rows(), TO-FROM)
         self.assertEqual(t.columns(), 1)
+        self.assertSequenceEqual(t._data[0], range(FROM, TO))
+
+    def test_add_column_from_value(self):
+        LEN=99
+        VALUE=123
+        t = table.Table(LEN)
+
+        t.add_column("X", VALUE)
+
+        self.assertEqual(t.rows(), LEN)
+        self.assertEqual(t.columns(), 1)
+        self.assertEqual(t._data[0], [VALUE]*LEN)
+
+    def test_add_column_from_function_zero_param(self):
+        LEN=99
+        VALUE=123
+        t = table.Table(LEN)
+
+        t.add_column("X", lambda: VALUE)
+
+        self.assertEqual(t.rows(), LEN)
+        self.assertEqual(t.columns(), 1)
+        self.assertEqual(t._data[0], [VALUE]*LEN)
+
+    def test_add_column_from_function_one_param(self):
+        LEN=99
+        VALUE=123
+        t = table.Table(LEN)
+
+        t.add_column("X", range(LEN))
+        t.add_column("Y", lambda x: x+1, "X")
+
+        self.assertEqual(t.rows(), LEN)
+        self.assertEqual(t.columns(), 2)
+        self.assertEqual(t._data[1], [x+1 for x in range(LEN)])
+
+    def test_get_column(self):
+        LEN=5
+        A=[1]*LEN
+        B=[2]*LEN
+        C=[3]*LEN
+        t = table.Table(LEN)
+
+        t.add_column("A", A)
+        t.add_column("B", B)
+        t.add_column("C", C)
+
+        self.assertEqual(t.get_column(0)._column, A)
+        self.assertEqual(t.get_column(1)._column, B)
+        self.assertEqual(t.get_column(2)._column, C)
+
+        self.assertEqual(t.get_column("A")._column, A)
+        self.assertEqual(t.get_column("B")._column, B)
+        self.assertEqual(t.get_column("C")._column, C)
+
+    def test_bad_col_length(self):
+        t = table.Table(99)
+
+        with self.assertRaises(table.InvalidError):
+            t.add_column("X", [0.0]*100)
+
+        with self.assertRaises(table.InvalidError):
+            t.add_column("X", [0.0]*98)
 
 class TestColumnRef(unittest.TestCase):
     def test_add(self):
         FROM = 1
         TO = 101
         N = 2
-        t = table.Table()
+        t = table.Table(TO-FROM)
 
-        t.append(column.range(FROM, TO))
+        t.add_column("X", range(FROM, TO))
         col = t.get_column(0)
 
         self.assertEqual(col+N, list(range(FROM+N, TO+N)))
