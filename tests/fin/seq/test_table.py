@@ -1,7 +1,6 @@
 import unittest
 
 from fin.seq import table
-from fin.seq import column
 
 class TestTable(unittest.TestCase):
     def test_constructor(self):
