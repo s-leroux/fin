@@ -31,16 +31,7 @@ class Table:
         return len(self._data) and self._rows
 
     def add_column(self, name, init, *cols):
-        column = None
-        if callable(init):
-            column = self.make_column_from_callable(init, *cols)
-        else:
-            try:
-                it = iter(init)
-            except TypeError:
-                column = self.make_column_from_value(init, *cols)
-            else:
-                column = self.make_column_from_iterator(it, *cols)
+        column = self.eval(init, *cols)
 
         if column is None:
             raise TypeError("Can't create column from 'init': " + repr(init))
@@ -50,35 +41,26 @@ class Table:
         self._data.append(column)
         self._headers.append(name)
 
-    def make_column_from_value(self, value):
+    def eval(self, init, *cols):
+        if callable(init):
+            return self.eval_from_callable(init, *cols)
+        else:
+            try:
+                it = iter(init)
+            except TypeError:
+                return self.eval_from_value(init, *cols)
+            else:
+                return self.eval_from_iterator(it, *cols)
+
+    def eval_from_value(self, value):
         return [value]*self._rows
 
-    def make_column_from_iterator(self, it):
+    def eval_from_iterator(self, it):
         return list(it)
 
-    def make_column_from_callable(self, fct, *cols):
+    def eval_from_callable(self, fct, *cols):
         cols = [self.get_column(n)._column for n in cols]
         return fct(self._rows, *cols)
-
-    def apply(self, fct, *cols):
-        """ Call a function for each rows
-        """
-        # The apply fuction is meaningless if called without any column argument
-        if not len(cols):
-            raise TypeError("At least one column should be specified")
-
-        cols = [self.get_column(n) for n in cols]
-        return [fct(*row) for row in zip(*cols)]
-
-    def aggregate(self, fct, *cols):
-        """ Call a function on the given columns
-        """
-        # The aggregate fuction is meaningless if called without any column argument
-        if not len(cols):
-            raise TypeError("At least one column should be specified")
-
-        cols = [self.get_column(n) for n in cols]
-        return fct(*cols)
 
     def get_column(self,c):
         if type(c) is str:
