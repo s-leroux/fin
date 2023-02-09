@@ -77,6 +77,23 @@ class Table:
 
         return result
 
+    def apply(self, fct, *cols):
+        # The apply fuction is meaningless if called without any column argument
+        if not len(cols):
+            raise TypeError("At least one column should be specified")
+
+        cols = [self.get_column(n) for n in cols]
+        for row in zip(*cols):
+            fct(*row)
+
+    def aggregate(self, fct, *cols):
+        # The aggregate fuction is meaningless if called without any column argument
+        if not len(cols):
+            raise TypeError("At least one column should be specified")
+
+        cols = [self.get_column(n) for n in cols]
+        return fct(*cols)
+
     def get_column(self,c):
         if type(c) is str:
             c = self._headers.index(c)

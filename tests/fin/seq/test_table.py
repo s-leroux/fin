@@ -74,6 +74,37 @@ class TestTable(unittest.TestCase):
         self.assertEqual(t.get_column("B")._column, B)
         self.assertEqual(t.get_column("C")._column, C)
 
+    def test_apply(self):
+        LEN=99
+        VALUE=123
+
+        result  = 0
+        def count(v):
+            nonlocal result
+            result += v
+
+        t = table.Table(LEN)
+
+        t.add_column("X", VALUE)
+        t.apply(count, "X")
+
+        self.assertEqual(t.rows(), LEN)
+        self.assertEqual(t.columns(), 1)
+        self.assertEqual(result, VALUE*LEN)
+
+    def test_aggregate(self):
+        LEN=99
+        VALUE=123
+
+        t = table.Table(LEN)
+
+        t.add_column("X", VALUE)
+        result = t.aggregate(sum, "X")
+
+        self.assertEqual(t.rows(), LEN)
+        self.assertEqual(t.columns(), 1)
+        self.assertEqual(result, VALUE*LEN)
+
     def test_bad_col_length(self):
         t = table.Table(99)
 
