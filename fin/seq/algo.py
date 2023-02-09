@@ -4,7 +4,6 @@
 def window(fct, n):
     def _window(rowcount, *cols):
         i = n-1
-        rowcount = len(cols[0])
         result = [None]*rowcount
         while i < rowcount:
             result[i] = fct(i-n+1, i+1, *cols)
