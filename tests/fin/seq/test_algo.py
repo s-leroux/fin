@@ -58,3 +58,76 @@ class TestStandardDeviation(unittest.TestCase):
             36.00462933,
         ])
 
+    def test_naive_standard_deviation(self):
+        """ check if the default implementation is consistent with
+            the naive implementation
+        """
+        WINDOW_SIZE=4
+        vector = [x**2 for x in range(10, 20)]
+        s1 = eval(
+            algo.naive_standard_deviation(WINDOW_SIZE),
+            vector,
+        )
+        s2 = eval(
+            algo.standard_deviation(WINDOW_SIZE),
+            vector,
+        )
+
+        self.assertSequenceEqual(s1, s2)
+
+    def test_propagate_nones(self):
+        data = [x**2 for x in range(10, 20)]
+        data[5] = None
+        data[6] = None
+
+        actual = eval(
+            algo.standard_deviation(3),
+            data,
+        )
+
+        self.assertSequenceEqual(actual, [
+            None,
+            None,
+            22.00757445,
+            24.00694344,
+            26.00640947,
+            None,
+            None,
+            None,
+            None,
+            36.00462933,
+        ])
+
+class TestVolatility(unittest.TestCase):
+    def test_volatility(self):
+        # Data from John C. Hull "Options, Futures, and Other Devicatives, 5th ed." p240
+        INPUT=[
+            20.00,
+            20.10,
+            19.90,
+            20.00,
+            20.50,
+            20.25,
+            20.90,
+            20.90,
+            20.90,
+            20.75,
+            20.75,
+            21.00,
+            21.10,
+            20.90,
+            20.90,
+            21.25,
+            21.40,
+            21.40,
+            21.25,
+            21.75,
+            22.00,
+        ]
+        WINDOW=len(INPUT)-1
+        OUTPUT = [*[None]*WINDOW, 0.19302342]
+
+        actual = eval(algo.volatility(WINDOW), INPUT)
+
+        self.assertSequenceEqual(actual, OUTPUT)
+
