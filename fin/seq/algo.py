@@ -219,16 +219,7 @@ def volatility(n, tau=1/252):
     vol = lambda stddev : stddev*k
 
     def _volatility(rowcount, values):
-        ui = [None]*rowcount
-        prev = values[0]
-        i = 1
-        while i < rowcount:
-            x = values[i]
-            ui[i] = log(x/prev)
-            prev = x
-
-            i += 1
-
+        ui = map1(lambda curr, prev: log(curr/prev))(rowcount, values)
         result = stddev(rowcount, ui)
         return map(vol)(rowcount, result)
 
