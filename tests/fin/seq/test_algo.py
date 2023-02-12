@@ -131,3 +131,13 @@ class TestVolatility(unittest.TestCase):
 
         self.assertSequenceEqual(actual, OUTPUT)
 
+
+class TestMap1(unittest.TestCase):
+    def test_map1(self):
+        INPUT=list(range(1,10))
+        OUTPUT = [None, *range(3, 19, 2)]
+
+        actual = eval(algo.map1(lambda a,b: a+b), INPUT)
+
+        self.assertSequenceEqual(actual, OUTPUT)
+

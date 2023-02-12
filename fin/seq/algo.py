@@ -169,6 +169,8 @@ def naive_variance(n):
     return naive_window(_variance, n)
 
 def map(fct):
+    """ Map data using y_i = f(u_i)
+    """
     def _map(rowcount, values):
         result = [None]*rowcount
         i = rowcount
@@ -180,6 +182,33 @@ def map(fct):
         return result
 
     return _map
+
+def map1(fct):
+    """ Map data using y_i = f(u_i, u_i-1)
+    """
+    def _map(rowcount, values):
+        result = [None]*rowcount
+        prev = None
+        i = 0
+        while i < rowcount:
+            x = values[i]
+            if x is not None and prev is not None:
+                result[i] = fct(x, prev)
+
+            prev = x
+            i += 1
+
+        return result
+
+    return _map
+
+def difference(fct, y0):
+    """ Map data using a difference(1) function y_i = f(u_i, y_i-1)
+    """
+    def _difference(rowcount, values):
+        pass
+
+    return _difference
 
 def volatility(n, tau=1/252):
     """ The price volatility over a n-period window
