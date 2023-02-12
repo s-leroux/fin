@@ -189,14 +189,12 @@ def map1(fct):
     def _map(rowcount, values):
         result = [None]*rowcount
         prev = None
-        i = 0
-        while i < rowcount:
-            x = values[i]
+
+        for i, x in enumerate(values):
             if x is not None and prev is not None:
                 result[i] = fct(x, prev)
 
             prev = x
-            i += 1
 
         return result
 
