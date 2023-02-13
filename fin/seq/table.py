@@ -108,7 +108,7 @@ class Table:
 
         fmt = ""
         for w in width:
-            fmt += f" {{:{w}}}"
+            fmt += f" {{:>{w}}}"
         fmt += "\n"
 
         result = ""
