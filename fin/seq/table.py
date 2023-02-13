@@ -21,7 +21,7 @@ class Table:
     """
     def __init__(self, rows):
         self._rows = rows
-        self._headers = []
+        self._headings = []
         self._data = []
 
     def columns(self):
@@ -33,7 +33,7 @@ class Table:
     def names(self):
         """ Return the column names
         """
-        return list(self._headers)
+        return list(self._headings)
 
     def rename(self, name_or_index, newname):
         """ Change the name of a column.
@@ -43,7 +43,7 @@ class Table:
         """
         column = self[name_or_index]
         index = column._index
-        self._headers[index] = newname
+        self._headings[index] = newname
 
     def add_column(self, name, init, *cols):
         column = self.eval(init, *cols)
@@ -56,7 +56,7 @@ class Table:
             raise InvalidError()
 
         self._data.append(column)
-        self._headers.append(name)
+        self._headings.append(name)
 
     def add_columns(self, *col_specs):
         for col_spec in col_specs:
@@ -66,7 +66,7 @@ class Table:
         """ Remove a column from the table, given it's index or name
         """
         index = self._get_column_index(index_or_name)
-        del self._headers[index]
+        del self._headings[index]
         del self._data[index]
 
     def del_columns(self, *col_specs):
@@ -103,7 +103,7 @@ class Table:
 
     def _get_column_index(self, index_or_name):
         if type(index_or_name) is str:
-            index_or_name = self._headers.index(index_or_name)
+            index_or_name = self._headings.index(index_or_name)
 
         return int(index_or_name)
 
@@ -142,7 +142,7 @@ class Table:
 
         return result
 
-def table_from_data(data, headers):
+def table_from_data(data, headings):
     if not len(data):
         rowcount = 0
     else:
@@ -155,7 +155,7 @@ def table_from_data(data, headers):
 
     t = Table(rowcount)
     t._data = data
-    t._headers = headers
+    t._headings = headings
 
     return t
 
@@ -163,7 +163,7 @@ import csv
 def table_from_csv(iterator, format=''):
     rows = []
     reader = csv.reader(iterator)
-    header = next(reader)
+    heading = next(reader)
     rows = list(reader)
     for index, fchar in enumerate(format):
         if fchar=='n': # NUMERIC
@@ -178,7 +178,7 @@ def table_from_csv(iterator, format=''):
         else:
             n += 1
 
-    return table_from_data(cols, header)
+    return table_from_data(cols, heading)
 
 def table_from_csv_file(fname, format=''):
     with open(fname, newline='') as csvfile:
