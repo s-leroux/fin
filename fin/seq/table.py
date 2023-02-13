@@ -2,6 +2,9 @@
 class InvalidError(Exception):
     pass
 
+class DuplicateName(ValueError):
+    pass
+
 class ColumnRef:
     def __init__(self, table, index):
         self._table = table
@@ -21,8 +24,8 @@ class Table:
     """
     def __init__(self, rows):
         self._rows = rows
-        self._headings = []
-        self._data = []
+        self._headings = [ "#" ]
+        self._data = [ list(range(rows)) ]
 
     def columns(self):
         return len(self._data)
@@ -43,9 +46,15 @@ class Table:
         """
         column = self[name_or_index]
         index = column._index
+        if index == 0:
+            raise ValueError("Cannot rename column 0")
+
         self._headings[index] = newname
 
     def add_column(self, name, init, *cols):
+        if name in self._headings:
+            raise DuplicateName(name)
+
         column = self.eval(init, *cols)
         if type(column) != list: # In case the eval function returned a generator
             column = list(column)
@@ -66,6 +75,9 @@ class Table:
         """ Remove a column from the table, given it's index or name
         """
         index = self._get_column_index(index_or_name)
+        if index == 0:
+            raise ValueError("Cannot remove column 0")
+
         del self._headings[index]
         del self._data[index]
 
@@ -97,12 +109,11 @@ class Table:
         return fct(self._rows, *cols)
 
     def filter(self, fct, *cols):
-        names = [self._headings[self._get_column_index(n)] for n in cols]
         cols = [self._data[self._get_column_index(n)] for n in cols]
-        rows = [ row for row, flt in zip(zip(*self._data),zip(*cols)) if fct(*flt) ]
+        rows = [ row for row, flt in zip(zip(*self._data[1:]),zip(*cols)) if fct(*flt) ]
 
         t = Table(len(rows))
-        for name, column in zip(names, zip(*rows)):
+        for name, column in zip(self._headings[1:], zip(*rows)):
             t.add_column(name, column)
 
         return t
@@ -165,8 +176,8 @@ def table_from_data(data, headings):
                 raise InvalidError()
 
     t = Table(rowcount)
-    t._data = data
-    t._headings = headings
+    for heading, column in zip(headings, data):
+        t.add_column(heading, column)
 
     return t
 
