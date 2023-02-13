@@ -30,8 +30,25 @@ class Table:
     def rows(self):
         return len(self._data) and self._rows
 
+    def names(self):
+        """ Return the column names
+        """
+        return list(self._headers)
+
+    def rename(self, name_or_index, newname):
+        """ Change the name of a column.
+
+            The Original column may be specified using its index or name.
+            If the name is ambiguous, the behavior is unspecified.
+        """
+        column = self.get_column(name_or_index)
+        index = column._index
+        self._headers[index] = newname
+
     def add_column(self, name, init, *cols):
         column = self.eval(init, *cols)
+        if type(column) != list: # In case the eval function returned a generator
+            column = list(column)
 
         if column is None:
             raise TypeError("Can't create column from 'init': " + repr(init))
@@ -40,6 +57,10 @@ class Table:
 
         self._data.append(column)
         self._headers.append(name)
+
+    def add_columns(self, *col_specs):
+        for col_spec in col_specs:
+            self.add_column(*col_spec)
 
     def eval(self, init, *cols):
         if callable(init):
@@ -68,6 +89,41 @@ class Table:
 
         return ColumnRef(self, c)
 
+    def __str__(self):
+        def value_to_string(value):
+            if type(value) == float:
+                return f"{value:10.4f}"
+            else:
+                return str(value)
+
+        rows = [ self.names() ]
+        width = [ len(c) for c in rows[0] ]
+
+        for row in zip(*self._data):
+            row = [value_to_string(value) for value in row]
+            for i, value in enumerate(row):
+                width[i] = max(width[i], len(value))
+
+            rows.append(row)
+
+        fmt = ""
+        for w in width:
+            fmt += f" {{:{w}}}"
+        fmt += "\n"
+
+        result = ""
+        it = iter(rows)
+
+        # title row
+        result += fmt.format(*next(it))
+        result += "-"*len(result) + "\n"
+
+        # data rows
+        for row in it:
+            result += fmt.format(*row)
+
+        return result
+
 def table_from_data(data, headers):
     if not len(data):
         rowcount = 0
@@ -86,13 +142,11 @@ def table_from_data(data, headers):
     return t
 
 import csv
-def table_from_csv(fname, format=''):
+def table_from_csv(iterator, format=''):
     rows = []
-    with open(fname, newline='') as csvfile:
-        reader = csv.reader(csvfile, quoting=csv.QUOTE_NONNUMERIC)
-        header = next(reader)
-        rows = list(reader)
-
+    reader = csv.reader(iterator)
+    header = next(reader)
+    rows = list(reader)
     for index, fchar in enumerate(format):
         if fchar=='n': # NUMERIC
             for row in rows:
@@ -107,3 +161,7 @@ def table_from_csv(fname, format=''):
             n += 1
 
     return table_from_data(cols, header)
+
+def table_from_csv_file(fname, format=''):
+    with open(fname, newline='') as csvfile:
+        return table_from_csv(csvfile, format=format)

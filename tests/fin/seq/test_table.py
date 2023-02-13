@@ -116,6 +116,17 @@ class TestTable(unittest.TestCase):
         with self.assertRaises(table.InvalidError):
             t.add_column("X", [0.0]*98)
 
+    def test_rename(self):
+        t = table.Table(10)
+        t.add_columns(
+            ("A", lambda count : range(count)),
+            ("B", 2),
+            ("C", 3),
+        )
+        t.rename("A", "N")
+        self.assertSequenceEqual(t.names(), ("N", "B", "C"))
+
+
 class TestColumnRef(unittest.TestCase):
     def test_add(self):
         FROM = 1
@@ -130,7 +141,7 @@ class TestColumnRef(unittest.TestCase):
 
 class TestCSV(unittest.TestCase):
     def test_load(self):
-        t = table.table_from_csv("tests/_fixtures/bd.csv", format="dn-n")
+        t = table.table_from_csv_file("tests/_fixtures/bd.csv", format="dn-n")
 
         self.assertEqual(t.rows(), 284)
         self.assertEqual(t.columns(), 3)
