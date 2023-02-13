@@ -183,6 +183,21 @@ def map(fct):
 
     return _map
 
+def mapn(fct):
+    """ Map data using y_i = f(u_i0 .. u_in)
+    """
+    def _mapn(rowcount, *values):
+        result = [None]*rowcount
+        for i, row in enumerate(zip(*values)):
+            try:
+                result[i] = fct(*row)
+            except TypeError:
+                pass
+
+        return result
+
+    return _mapn
+
 def map1(fct):
     """ Map data using y_i = f(u_i, u_i-1)
     """

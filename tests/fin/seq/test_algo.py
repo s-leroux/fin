@@ -141,3 +141,14 @@ class TestMap1(unittest.TestCase):
 
         self.assertSequenceEqual(actual, OUTPUT)
 
+class TestMapN(unittest.TestCase):
+    def test_map_n_0(self):
+        LEN=10
+        A = list(range(0, LEN))
+        B = list(range(1, LEN+1))
+        F=lambda a,b: a+b
+        EXPECTED = list(range(1, 2*LEN+1, 2))
+        actual = eval(algo.mapn(F), A, B)
+
+        self.assertSequenceEqual(actual, EXPECTED)
+

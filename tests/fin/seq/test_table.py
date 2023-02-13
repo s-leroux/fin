@@ -126,7 +126,6 @@ class TestTable(unittest.TestCase):
         t.rename("A", "N")
         self.assertSequenceEqual(t.names(), ("N", "B", "C"))
 
-
 class TestColumnRef(unittest.TestCase):
     def test_add(self):
         FROM = 1
