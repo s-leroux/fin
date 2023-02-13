@@ -86,13 +86,13 @@ class TestTable(unittest.TestCase):
         t.add_column("B", B)
         t.add_column("C", C)
 
-        self.assertEqual(t.get_column(0)._column, A)
-        self.assertEqual(t.get_column(1)._column, B)
-        self.assertEqual(t.get_column(2)._column, C)
+        self.assertEqual(t[0]._column, A)
+        self.assertEqual(t[1]._column, B)
+        self.assertEqual(t[2]._column, C)
 
-        self.assertEqual(t.get_column("A")._column, A)
-        self.assertEqual(t.get_column("B")._column, B)
-        self.assertEqual(t.get_column("C")._column, C)
+        self.assertEqual(t["A"]._column, A)
+        self.assertEqual(t["B"]._column, B)
+        self.assertEqual(t["C"]._column, C)
 
     def test_eval(self):
         LEN=99
@@ -134,7 +134,7 @@ class TestColumnRef(unittest.TestCase):
         t = table.Table(TO-FROM)
 
         t.add_column("X", range(FROM, TO))
-        col = t.get_column(0)
+        col = t[0]
 
         self.assertEqual(col+N, list(range(FROM+N, TO+N)))
 
@@ -145,11 +145,11 @@ class TestCSV(unittest.TestCase):
         self.assertEqual(t.rows(), 284)
         self.assertEqual(t.columns(), 3)
 
-        time = t.get_column("time")
+        time = t["time"]
         self.assertEqual(time[0], "2022-01-03")
         self.assertEqual(time[-1], "2023-02-07")
 
-        quote = t.get_column("BOURSE DIRECT")
+        quote = t["BOURSE DIRECT"]
         self.assertEqual(quote[0], 2.73)
         self.assertEqual(quote[-1], 3.49)
 

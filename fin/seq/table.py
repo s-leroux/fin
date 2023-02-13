@@ -41,7 +41,7 @@ class Table:
             The Original column may be specified using its index or name.
             If the name is ambiguous, the behavior is unspecified.
         """
-        column = self.get_column(name_or_index)
+        column = self[name_or_index]
         index = column._index
         self._headers[index] = newname
 
@@ -80,10 +80,10 @@ class Table:
         return list(it)
 
     def eval_from_callable(self, fct, *cols):
-        cols = [self.get_column(n)._column for n in cols]
+        cols = [self[n]._column for n in cols]
         return fct(self._rows, *cols)
 
-    def get_column(self,c):
+    def __getitem__(self,c):
         if type(c) is str:
             c = self._headers.index(c)
 
