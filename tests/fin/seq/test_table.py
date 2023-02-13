@@ -126,6 +126,17 @@ class TestTable(unittest.TestCase):
         t.rename("A", "N")
         self.assertSequenceEqual(t.names(), ("N", "B", "C"))
 
+    def test_filter(self):
+        t = table.Table(10)
+        t.add_columns(
+            ("A", lambda count : range(count)),
+            ("B", 2),
+            ("C", 3),
+        )
+        t2 = t.filter(lambda x : 2 < x < 7, "A")
+        self.assertEqual(t2.rows(), 4)
+        self.assertSequenceEqual(list(t2["A"]), (3,4,5,6))
+
 class TestColumnRef(unittest.TestCase):
     def test_add(self):
         FROM = 1

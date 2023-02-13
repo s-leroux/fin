@@ -96,6 +96,17 @@ class Table:
         cols = [self[n]._column for n in cols]
         return fct(self._rows, *cols)
 
+    def filter(self, fct, *cols):
+        names = [self._headings[self._get_column_index(n)] for n in cols]
+        cols = [self._data[self._get_column_index(n)] for n in cols]
+        rows = [ row for row, flt in zip(zip(*self._data),zip(*cols)) if fct(*flt) ]
+
+        t = Table(len(rows))
+        for name, column in zip(names, zip(*rows)):
+            t.add_column(name, column)
+
+        return t
+
     def __getitem__(self,c):
         c = self._get_column_index(c)
 
