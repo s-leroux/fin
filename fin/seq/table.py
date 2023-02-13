@@ -62,6 +62,19 @@ class Table:
         for col_spec in col_specs:
             self.add_column(*col_spec)
 
+    def del_column(self, index_or_name):
+        """ Remove a column from the table, given it's index or name
+        """
+        index = self._get_column_index(index_or_name)
+        del self._headers[index]
+        del self._data[index]
+
+    def del_columns(self, *col_specs):
+        """ Remove columns from the table.
+        """
+        for col_spec in col_specs:
+            self.del_column(col_spec)
+
     def eval(self, init, *cols):
         if callable(init):
             return self.eval_from_callable(init, *cols)
@@ -84,10 +97,15 @@ class Table:
         return fct(self._rows, *cols)
 
     def __getitem__(self,c):
-        if type(c) is str:
-            c = self._headers.index(c)
+        c = self._get_column_index(c)
 
         return ColumnRef(self, c)
+
+    def _get_column_index(self, index_or_name):
+        if type(index_or_name) is str:
+            index_or_name = self._headers.index(index_or_name)
+
+        return int(index_or_name)
 
     def __str__(self):
         def value_to_string(value):
