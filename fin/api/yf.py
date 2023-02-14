@@ -28,7 +28,9 @@ def historical_data(ticker, duration=timedelta(days=365), end=None):
             TO=round(end.timestamp()))
 
     r = get(url)
-    if r.status_code == 200:
-        return table.table_from_csv(r.text.splitlines(), format="dnnnnnn")
+    if r.status_code != 200:
+        raise Exception("Can't retrieve data at " + url + " status=" + str(r.status_code))
 
-    raise Exception("Can't retrieve data at " + url)
+    t = table.table_from_csv(r.text.splitlines(), format="dnnnnni")
+    return t
+

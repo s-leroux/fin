@@ -24,7 +24,7 @@ class Table:
     """
     def __init__(self, rows):
         self._rows = rows
-        self._headings = [ "#" ]
+        self._meta = [ dict(name="#") ]
         self._data = [ list(range(rows)) ]
 
     def columns(self):
@@ -36,7 +36,7 @@ class Table:
     def names(self):
         """ Return the column names
         """
-        return list(self._headings)
+        return [meta['name'] for meta in self._meta]
 
     def rename(self, name_or_index, newname):
         """ Change the name of a column.
@@ -49,23 +49,23 @@ class Table:
         if index == 0:
             raise ValueError("Cannot rename column 0")
 
-        self._headings[index] = newname
+        self._meta[index]['name'] = newname
 
     def add_column(self, name, init, *cols):
-        if name in self._headings:
+        if name in self.names():
             raise DuplicateName(name)
 
         column = self.eval(init, *cols)
-        if type(column) != list: # In case the eval function returned a generator
-            column = list(column)
 
         if column is None:
             raise TypeError("Can't create column from 'init': " + repr(init))
+        if type(column) != list: # In case, for example, the function returns a generator
+            column = list(column)
         if len(column) != self._rows:
             raise InvalidError()
 
         self._data.append(column)
-        self._headings.append(name)
+        self._meta.append(dict(name=name))
 
     def add_columns(self, *col_specs):
         for col_spec in col_specs:
@@ -78,7 +78,7 @@ class Table:
         if index == 0:
             raise ValueError("Cannot remove column 0")
 
-        del self._headings[index]
+        del self._meta[index]
         del self._data[index]
 
     def del_columns(self, *col_specs):
@@ -86,6 +86,18 @@ class Table:
         """
         for col_spec in col_specs:
             self.del_column(col_spec)
+
+    def set_column_meta(self, index_or_name, name=None):
+        """ Change the metadata associated with a column.
+        """
+        index = self._get_column_index(index_or_name)
+        if index == 0:
+            raise ValueError("Cannot alter column 0")
+
+        meta = self._meta[index]
+
+        if name is not None:
+            meta['name']=name
 
     def eval(self, init, *cols):
         if callable(init):
@@ -106,15 +118,18 @@ class Table:
 
     def eval_from_callable(self, fct, *cols):
         cols = [self[n]._column for n in cols]
-        return fct(self._rows, *cols)
+        result = fct(self._rows, *cols)
+
+        return result
 
     def filter(self, fct, *cols):
         cols = [self._data[self._get_column_index(n)] for n in cols]
         rows = [ row for row, flt in zip(zip(*self._data[1:]),zip(*cols)) if fct(*flt) ]
 
         t = Table(len(rows))
-        for name, column in zip(self._headings[1:], zip(*rows)):
-            t.add_column(name, column)
+        for meta, column in zip(self._meta[1:], zip(*rows)):
+            t.add_column(meta['name'], column)
+            t.set_column_meta(meta['name'], **meta)
 
         return t
 
@@ -125,7 +140,7 @@ class Table:
 
     def _get_column_index(self, index_or_name):
         if type(index_or_name) is str:
-            index_or_name = self._headings.index(index_or_name)
+            index_or_name = self.names().index(index_or_name)
 
         return int(index_or_name)
 
@@ -191,12 +206,16 @@ def table_from_csv(iterator, format=''):
         if fchar=='n': # NUMERIC
             for row in rows:
                 row[index] = float(row[index])
+        elif fchar=='i': # INTEGER
+            for row in rows:
+                row[index] = int(row[index])
 
     cols = list(zip(*rows))
     n = 0
     for index, fchar in enumerate(format):
         if fchar=='-':
             del cols[n]
+            del heading[n]
         else:
             n += 1
 
