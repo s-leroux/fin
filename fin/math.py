@@ -1,3 +1,5 @@
+import math
+
 EPSILON=0.0001
 HUGE=1e10
 
@@ -6,6 +8,13 @@ class MathError(Exception):
 
 class DomainError(MathError):
     pass
+
+
+def cdf(x, mu=0.0, sigma=1.0, erf=math.erf, sqrt=math.sqrt):
+    """ Cumulative distribution function for x normal distributions.
+    """
+    x = (x-mu)/sigma
+    return (1.0 + erf(x / sqrt(2.0))) / 2.0
 
 def solve(fct, x, min, max, vars={}):
     """
