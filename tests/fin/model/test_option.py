@@ -23,7 +23,7 @@ class TestModelOption(unittest.TestCase):
             sigma_0=ASSET_VOLATILITY,
             r_0=RISK_FREE_RATE,
         ))
-        self.assertAlmostEqual(model.c_0, 254.13, places=2)
+        self.assertAlmostEqual(model['c_0'], 254.13, places=2)
 
     def test_option_put_pricing(self):
         """ Test put option pricing using the Black-Scholes model
@@ -44,7 +44,7 @@ class TestModelOption(unittest.TestCase):
             sigma_0=ASSET_VOLATILITY,
             r_0=RISK_FREE_RATE,
         ))
-        self.assertAlmostEqual(model.p_0, 16.96, places=2)
+        self.assertAlmostEqual(model['p_0'], 16.96, places=2)
 
     def test_option_implied_volatility_from_call(self):
         """ Test implied volatility's derifation from Black-Scholes and a call option
@@ -65,6 +65,6 @@ class TestModelOption(unittest.TestCase):
             s_0=ASSET_PRICE,
             r_0=RISK_FREE_RATE,
         ))
-        self.assertAlmostEqual(model.sigma_0, 0.235, places=3)
+        self.assertAlmostEqual(model['sigma_0'], 0.235, places=3)
 
 

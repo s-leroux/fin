@@ -41,7 +41,7 @@ class Model:
 
         return type(self)(new_params)
 
-    def __getattr__(self, name):
+    def __getitem__(self, name):
         return self._params[name]
 
     def __repr__(self):
