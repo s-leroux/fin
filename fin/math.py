@@ -36,7 +36,7 @@ def solve(fct, x, min, max, vars={}):
     a = fct(**da)
     c = fct(**dc)
     if a*c > 0:
-        raise DomainError()
+        raise DomainError("No root in range {} {}".format(da,dc))
 
     while not -EPSILON < min-max < EPSILON:
         db[x] = (min+max)/2

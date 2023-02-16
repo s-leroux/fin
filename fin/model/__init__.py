@@ -9,6 +9,9 @@ class Underdefined(Exception):
 
 class Model:
     def __init__(self, fct, pnames, params):
+        a = -fin.math.HUGE
+        b = fin.math.HUGE
+
         self._fct = fct
         self._params = {}
         missing = []
@@ -16,6 +19,12 @@ class Model:
             pvalue = self._params[pname] = params.get(pname)
             if pvalue is None:
                 missing.append(pname)
+            else:
+                try:
+                    a, b = pvalue
+                    missing.append(pname)
+                except:
+                    pass
 
         if len(missing) > 1:
             raise Underdefined(missing)
@@ -25,8 +34,8 @@ class Model:
             self._params[pname] = fin.math.solve(
                     self._fct,
                     pname,
-                    -fin.math.HUGE,
-                    fin.math.HUGE,
+                    a,
+                    b,
                     self._params
             )
 
