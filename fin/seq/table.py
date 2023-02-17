@@ -197,15 +197,18 @@ def table_from_data(data, headings):
     return t
 
 import csv
-def table_from_csv(iterator, format=''):
+def table_from_csv(iterator, format='', delimiter=','):
     rows = []
-    reader = csv.reader(iterator)
+    reader = csv.reader(iterator, delimiter=delimiter)
     heading = next(reader)
     rows = list(reader)
     for index, fchar in enumerate(format):
         if fchar=='n': # NUMERIC
             for row in rows:
-                row[index] = float(row[index])
+                try:
+                    row[index] = float(row[index])
+                except:
+                    row[index] = None
         elif fchar=='i': # INTEGER
             for row in rows:
                 row[index] = int(row[index])
@@ -221,6 +224,6 @@ def table_from_csv(iterator, format=''):
 
     return table_from_data(cols, heading)
 
-def table_from_csv_file(fname, format=''):
+def table_from_csv_file(fname, format='', delimiter=','):
     with open(fname, newline='') as csvfile:
-        return table_from_csv(csvfile, format=format)
+        return table_from_csv(csvfile, format=format, delimiter=delimiter)
