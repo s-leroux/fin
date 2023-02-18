@@ -3,19 +3,50 @@ import math
 EPSILON=0.0001
 HUGE=1e10
 
+# ======================================================================
+# Errors
+# ======================================================================
 class MathError(Exception):
     pass
 
 class DomainError(MathError):
     pass
 
+# ======================================================================
+# Interest rates
+# ======================================================================
+def continuous_compounding(rm, m=1, log1p=math.log1p):
+    """
+    Convert from discrete compounding rates to continuous compounding
+    interest rates.
+    
+    ``rm`` is the per annum compounding rate. ``m`` is the compounding
+    frequency expressed as 1/year.
+    """
+    return m*log1p(rm/m)
 
+def discrete_compounding(rc, m=1, exp=math.exp):
+    """
+    Convert from continuous compounding rates to discrete compounding
+    interest rates.
+    
+    ``rc`` is the continuous compounding rate. ``m`` is the compounding
+    frequency expressed as 1/year.
+    """
+    return m*(exp(rc/m)-1)
+
+# ======================================================================
+# Statistical functions
+# ======================================================================
 def cdf(x, mu=0.0, sigma=1.0, erf=math.erf, sqrt=math.sqrt):
     """ Cumulative distribution function for x normal distributions.
     """
     x = (x-mu)/sigma
     return (1.0 + erf(x / sqrt(2.0))) / 2.0
 
+# ======================================================================
+# Solver
+# ======================================================================
 def solve(fct, x, min, max, vars={}):
     """
     Find a root for a (supposedly) continuous and monotonic function in the

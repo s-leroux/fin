@@ -3,11 +3,51 @@ import unittest
 import fin.math
 import builtins
 
+# ======================================================================
+# Constants
+# ======================================================================
 class TestMathConstants(unittest.TestCase):
     def test_epsilon_defined(self):
         self.assertEqual(fin.math.EPSILON, 0.0001)
 
-class TestMathNorm(unittest.TestCase):
+# ======================================================================
+# Interest rates
+# ======================================================================
+class TestMathInterestRates(unittest.TestCase):
+    def test_continuous_compounding(self):
+        """
+        It should convert from discrete compound interest rates to
+        continuous compound interest rates.
+
+        Example from John C. Hull
+        "Options, Futures and Other Derivatives, 5th ed", p44
+        """
+        YEARLY_RATE=0.10 # 10% par annum interest rates
+        FREQUENCY=2      # Semiannual compounding
+        CONTINUOUS_RATE=0.09758
+
+        actual = fin.math.continuous_compounding(YEARLY_RATE, FREQUENCY)
+        self.assertAlmostEqual(actual, CONTINUOUS_RATE, places=4)
+
+    def test_discrete_compounding(self):
+        """
+        It should convert from continuous compound interest rates to
+        discrete compound interest rates.
+
+        Example from John C. Hull
+        "Options, Futures and Other Derivatives, 5th ed", p44
+        """
+        YEARLY_RATE=0.0808 # 10% par annum interest rates
+        FREQUENCY=4      # Semiannual compounding
+        CONTINUOUS_RATE=0.08
+
+        actual = fin.math.discrete_compounding(CONTINUOUS_RATE, FREQUENCY)
+        self.assertAlmostEqual(actual, YEARLY_RATE, places=4)
+
+# ======================================================================
+# Statistical functions
+# ======================================================================
+class TestMathStatisticalFunctions(unittest.TestCase):
     def round(self, x):
         return builtins.round(x, 3)
 
