@@ -23,7 +23,7 @@ class TestModel(unittest.TestCase):
         values = { "a": 1 }
 
         with self.assertRaises(fin.model.Underdefined):
-            m = model.Model(eq, params, values)
+            m = model.Model(eq, params)(values)
 
     def test_generic_solver(self):
         """
@@ -33,7 +33,7 @@ class TestModel(unittest.TestCase):
         params = { 'c': lambda a, b : a + b }
         values = { "a": 1, "c": 3 }
 
-        m = model.Model(eq, params, values)
+        m = model.Model(eq, params)(values)
 
         self.assertEqual(m["a"], values["a"])
         self.assertEqual(m["c"], values["c"])
@@ -55,7 +55,7 @@ class TestModel(unittest.TestCase):
         params["b"] = solve_for_b
         values = { "a": 1, "c": 3 }
 
-        m = model.Model(eq, params, values)
+        m = model.Model(eq, params)(values)
 
         self.assertEqual(m["a"], values["a"])
         self.assertEqual(m["c"], values["c"])

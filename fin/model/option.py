@@ -3,13 +3,6 @@ import fin.model
 import math
 import fin.math
 
-class Call(fin.model.Model):
-    def __init__(self, values):
-        super().__init__(call, (), values)
-
-class Put(fin.model.Model):
-    def __init__(self, values):
-        super().__init__(put, (), values)
 
 def call(k, t, s_0, sigma_0, r_0, c_0, *, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
     """
@@ -54,3 +47,6 @@ def put(k, t, s_0, sigma_0, r_0, p_0, *, sqrt=math.sqrt, log=math.log, exp=math.
     d2 = d1 - v
 
     return p_0+(s_0*cdf(-d1)-k*exp(-r_0*t)*cdf(-d2))
+
+Call = fin.model.Model(call, ())
+Put = fin.model.Model(put, ())

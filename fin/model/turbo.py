@@ -1,13 +1,5 @@
 import fin.model
 
-class Call(fin.model.Model):
-    def __init__(self, params):
-        super().__init__(call, (), params)
-
-class Put(fin.model.Model):
-    def __init__(self, params):
-        super().__init__(put, (), params)
-
 def call(tp,ap,ep,parity,premium):
     """
     Model function for a call Turbo.
@@ -34,3 +26,5 @@ def put(tp,ap,ep,parity,premium):
     """
     return (0.0 if ep <= ap else (ep-ap)/parity+premium)-tp
 
+Call = fin.model.Model(call)
+Put = fin.model.Model(put)
