@@ -4,28 +4,12 @@ import math
 import fin.math
 
 class Call(fin.model.Model):
-    def __init__(self, params):
-        pnames = (
-            "k",
-            "t",
-            "s_0",
-            "sigma_0",
-            "r_0",
-            "c_0",
-        )
-        super().__init__(call, pnames, params)
+    def __init__(self, values):
+        super().__init__(call, (), values)
 
 class Put(fin.model.Model):
-    def __init__(self, params):
-        pnames = (
-            "k",
-            "t",
-            "s_0",
-            "sigma_0",
-            "r_0",
-            "p_0",
-        )
-        super().__init__(put, pnames, params)
+    def __init__(self, values):
+        super().__init__(put, (), values)
 
 def call(k, t, s_0, sigma_0, r_0, c_0, *, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
     """

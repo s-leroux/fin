@@ -2,25 +2,11 @@ import fin.model
 
 class Call(fin.model.Model):
     def __init__(self, params):
-        pnames = (
-            "tp",
-            "ap",
-            "ep",
-            "parity",
-            "premium",
-        )
-        super().__init__(call, pnames, params)
+        super().__init__(call, (), params)
 
 class Put(fin.model.Model):
     def __init__(self, params):
-        pnames = (
-            "tp",
-            "ap",
-            "ep",
-            "parity",
-            "premium",
-        )
-        super().__init__(put, pnames, params)
+        super().__init__(put, (), params)
 
 def call(tp,ap,ep,parity,premium):
     """

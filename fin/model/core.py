@@ -29,11 +29,6 @@ def MSFees(amount):
 class Breakeven(fin.model.Model):
     def __init__(self, fees_fct, params):
         self._fees_fct = fees_fct
-        pnames = (
-            "qty",
-            "s0",
-            "s1",
-        )
 
         def breakeven_model(qty, s0, s1):
             """
@@ -51,7 +46,7 @@ class Breakeven(fin.model.Model):
 
             return credit-debit
 
-        super().__init__(breakeven_model, pnames, params)
+        super().__init__(breakeven_model, (), params)
 
     def clone(self, new_params):
         return type(self)(self._fees_fct, new_params)
@@ -59,12 +54,6 @@ class Breakeven(fin.model.Model):
 class ProfitLoss(fin.model.Model):
     def __init__(self, fees_fct, params):
         self._fees_fct = fees_fct
-        pnames = (
-            "qty",
-            "s0",
-            "s1",
-            "pl",
-        )
 
         def profit_loss_model(qty, s0, s1, pl):
             """
@@ -83,7 +72,7 @@ class ProfitLoss(fin.model.Model):
 
             return credit-debit-pl
 
-        super().__init__(profit_loss_model, pnames, params)
+        super().__init__(profit_loss_model, (), params)
 
     def clone(self, new_params):
         return type(self)(self._fees_fct, new_params)
