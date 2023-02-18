@@ -13,29 +13,6 @@ class DomainError(MathError):
     pass
 
 # ======================================================================
-# Interest rates
-# ======================================================================
-def continuous_compounding(rm, m=1, log1p=math.log1p):
-    """
-    Convert from discrete compounding rates to continuous compounding
-    interest rates.
-    
-    ``rm`` is the per annum compounding rate. ``m`` is the compounding
-    frequency expressed as 1/year.
-    """
-    return m*log1p(rm/m)
-
-def discrete_compounding(rc, m=1, exp=math.exp):
-    """
-    Convert from continuous compounding rates to discrete compounding
-    interest rates.
-    
-    ``rc`` is the continuous compounding rate. ``m`` is the compounding
-    frequency expressed as 1/year.
-    """
-    return m*(exp(rc/m)-1)
-
-# ======================================================================
 # Statistical functions
 # ======================================================================
 def cdf(x, mu=0.0, sigma=1.0, erf=math.erf, sqrt=math.sqrt):

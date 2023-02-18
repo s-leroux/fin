@@ -1,5 +1,6 @@
 import unittest
 
+import math
 import fin.math
 import fin.model as model
 
@@ -61,4 +62,18 @@ class TestModel(unittest.TestCase):
         self.assertEqual(m["c"], values["c"])
         self.assertAlmostEqual(m["b"], -4.00, delta=fin.math.EPSILON)
         self.assertTrue(called)
+
+    def test_solve_in_range(self):
+        """
+        We may specify a search interval for the solver
+        """
+        eq = lambda x, y: (math.fabs(x)-3) - y
+        for interval, expected in ((0,100), 7.00),((0, -100), -7):
+            params = { 'x': interval }
+            values = { "y": 4 }
+
+            m = model.Model(eq, params)(values)
+
+            self.assertEqual(m["y"], values["y"])
+            self.assertAlmostEqual(m["x"], expected, delta=fin.math.EPSILON)
 

@@ -72,13 +72,13 @@ def Model(eq, params={}):
     # ------------------------------------------------------------------
     # Default solver
     # ------------------------------------------------------------------
-    def solver(pname):
+    def solver(pname, start=-fin.math.HUGE, end=fin.math.HUGE):
         def _solver(**params):
             # Default resolution forwarded to the generic solver
             return fin.math.solve(eq,
                         pname,
-                        -fin.math.HUGE,
-                        fin.math.HUGE,
+                        start,
+                        end,
                         params
                    )
         return _solver
@@ -91,7 +91,16 @@ def Model(eq, params={}):
         params = {k: None for k in params}
 
     pnames = [ k for k, v in signature(eq).parameters.items() if v.kind == Parameter.POSITIONAL_OR_KEYWORD ]
-    model = { k: params.get(k) or solver(k) for k in pnames }
+    model = {}
+    for k in pnames:
+        param = params.get(k)
+        # it is either a callable, None or a 2uple
+        if param is None:
+            param = solver(k)
+        elif type(param) == tuple:
+            param = solver(k, *param)
+
+        model[k] = param
 
     return _Model
 

@@ -1,0 +1,39 @@
+import fin.model
+
+import math
+import fin.math
+
+# ======================================================================
+# Interest rates
+# ======================================================================
+def continuous_compounding(rm, m=1, *, log1p=math.log1p):
+    """
+    Convert from discrete compounding rates to continuous compounding
+    interest rates.
+    
+    ``rm`` is the per annum compounding rate. ``m`` is the compounding
+    frequency expressed as 1/year.
+    """
+    try:
+        return m*log1p(rm/m)
+    except ZeroDivisionError:
+        return 0.00
+
+def discrete_compounding(rc, m=1, exp=math.exp, *, infinity=float("inf")):
+    """
+    Convert from continuous compounding rates to discrete compounding
+    interest rates.
+    
+    ``rc`` is the continuous compounding rate. ``m`` is the compounding
+    frequency expressed as 1/year.
+    """
+    try:
+        return m*(exp(rc/m)-1)
+    except (ZeroDivisionError, OverflowError):
+        return infinity
+
+Rates = fin.model.Model(lambda rc, rm, m : continuous_compounding(rm, m) - rc, dict(
+        rc=continuous_compounding,
+        rm=discrete_compounding,
+        m=(.001, 1000),
+    ))
