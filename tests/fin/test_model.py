@@ -19,7 +19,7 @@ class TestModelExceptions(unittest.TestCase):
 class TestModel(unittest.TestCase):
     def test_raises_undefined(self):
         eq = lambda a, b, c: a + b + c
-        params = { k: None for k in eq.__code__.co_varnames}
+        params = { 'c': lambda a, b : a + b }
         values = { "a": 1 }
 
         with self.assertRaises(fin.model.Underdefined):
@@ -30,7 +30,7 @@ class TestModel(unittest.TestCase):
         The generic solver should try to infer missing values
         """
         eq = lambda a, b, c: a + b + c
-        params = { k: None for k in eq.__code__.co_varnames}
+        params = { 'c': lambda a, b : a + b }
         values = { "a": 1, "c": 3 }
 
         m = model.Model(eq, params, values)
@@ -51,7 +51,7 @@ class TestModel(unittest.TestCase):
             return -a-c
 
         eq = lambda a, b, c: a + b + c
-        params = { k: None for k in eq.__code__.co_varnames}
+        params = { 'c': lambda a, b : a + b }
         params["b"] = solve_for_b
         values = { "a": 1, "c": 3 }
 

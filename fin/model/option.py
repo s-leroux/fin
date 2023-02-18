@@ -27,9 +27,9 @@ class Put(fin.model.Model):
         )
         super().__init__(put, pnames, params)
 
-def call(k, t, s_0, sigma_0, r_0, c_0, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
+def call(k, t, s_0, sigma_0, r_0, c_0, *, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
     """
-    Model function using the Black-Scholes formula to price call options
+    Model function using the Black-Scholes formula to price call options.
 
     This function evaluates to 0 if the model is at equilibrium given:
     - k: Strike price
@@ -49,9 +49,9 @@ def call(k, t, s_0, sigma_0, r_0, c_0, sqrt=math.sqrt, log=math.log, exp=math.ex
 
     return c_0-(s_0*cdf(d1)-k*exp(-r_0*t)*cdf(d2))
 
-def put(k, t, s_0, sigma_0, r_0, p_0, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
+def put(k, t, s_0, sigma_0, r_0, p_0, *, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
     """
-    Model function using the Black-Scholes formula to price put options
+    Model function using the Black-Scholes formula to price put options.
 
     This function evaluates to 0 if the model is at equilibrium given:
     - k: Strike price
