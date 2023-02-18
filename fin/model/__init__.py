@@ -48,6 +48,9 @@ class Model:
         new_params.update(conditions)
         new_params.pop(x, None)
 
+        return self.clone(new_params)
+
+    def clone(self, new_params):
         return type(self)(new_params)
 
     def __getitem__(self, name):
