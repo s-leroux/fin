@@ -182,7 +182,21 @@ class TestTable(unittest.TestCase):
         t2 = t.filter(lambda x : 2 < x < 7, "A")
         self.assertEqual(t2.rows(), 4)
         self.assertSequenceEqual(list(t2["A"]), (3,4,5,6))
-        print(t2)
+
+# ======================================================================
+# Column refs
+# ======================================================================
+class TestColumnRef(unittest.TestCase):
+    def test_add(self):
+        FROM = 1
+        TO = 101
+        N = 2
+        t = table.Table(TO-FROM)
+
+        t.add_column("X", range(FROM, TO))
+        col = t["X"]
+
+        self.assertEqual(col+N, list(range(FROM+N, TO+N)))
 
 # ======================================================================
 # Row iterator
@@ -225,22 +239,54 @@ class TestTableRowIterator(unittest.TestCase):
         expected = list(zip(C, C, A))
         self.assertSequenceEqual(actual, expected)
 
-
-
 # ======================================================================
-# Column refs
+# Table join
 # ======================================================================
-class TestColumnRef(unittest.TestCase):
-    def test_add(self):
-        FROM = 1
-        TO = 101
-        N = 2
-        t = table.Table(TO-FROM)
+class TestTableJoin(unittest.TestCase):
+    def setUp(self):
+        tableA = self._tableA = table.Table(10)
+        self._tableA.add_columns(
+            ("A", range(100, 110)),
+            ("B", range(200, 210)),
+            ("C", range(300, 310)),
+        )
+        tableB = self._tableB = table.Table(10)
+        self._tableB.add_columns(
+            ("U", range(100, 110)),
+            ("V", range(600, 610)),
+            ("W", range(700, 710)),
+        )
 
-        t.add_column("X", range(FROM, TO))
-        col = t["X"]
+        self._cols = dict(
+                [(name, tableA[name]._column) for name in tableA.names()] +
+                [(name, tableB[name]._column) for name in tableB.names()]
+                )
 
-        self.assertEqual(col+N, list(range(FROM+N, TO+N)))
+    def test_join_0(self):
+        t = table.join(self._tableA, self._tableB, "A", "U")
+        expected = list(self._cols[k] for k in "ABCUVW")
+        expected = [[*range(len(expected[0]))]] + expected
+        self.assertSequenceEqual(t._data, expected)
+
+    def test_join_1(self):
+        self._tableA["A"][2] = None
+        self._tableB["U"][5] = None
+        t = table.join(self._tableA, self._tableB, "A", "U")
+
+        idx = iter(range(999))
+        expected = list(zip(*[self._cols[k] for k in "ABCUVW"]))
+        expected = [(next(idx), *r) for r in expected if None not in r]
+        self.assertSequenceEqual(list(zip(*t._data)), expected)
+
+    def test_join_2(self):
+        self._tableA["A"][4] = None
+        self._tableB["U"][3:6] = [None]*3
+        t = table.join(self._tableA, self._tableB, "A", "U")
+
+        idx = iter(range(999))
+        expected = list(zip(*[self._cols[k] for k in "ABCUVW"]))
+        expected = [(next(idx), *r) for r in expected if None not in r]
+        self.assertSequenceEqual(list(zip(*t._data)), expected)
 
 # ======================================================================
 # CSV

@@ -23,6 +23,9 @@ class ColumnRef:
     def __getitem__(self, index):
         return self._column[index]
 
+    def __setitem__(self, index, value):
+        self._column[index] = value
+
 # ======================================================================
 # Table class
 # ======================================================================
@@ -216,6 +219,53 @@ def table_from_data(data, headings):
         t.add_column(heading, column)
 
     return t
+
+# ======================================================================
+# Create tables from CSV
+# ======================================================================
+def join(tableA, tableB, keyA, keyB=None):
+    """
+    Join tableA and tableB using their respective columns keyA and keyB.
+
+    If keyB is unspecified or None, keyB is set to keyA.
+    The key columns are assumed to be sorted in ascending order.
+    Rows contening the None value in their key column are ignored.
+    """
+    colsA = tableA.names()
+    colsA.remove("#")
+    colsB = tableB.names()
+    colsB.remove("#")
+    if keyB is not None and keyB != keyA:
+        itA = tableA.row_iterator([keyA] + colsA)
+        itB = tableB.row_iterator([keyB] + colsB)
+    else:
+        itA = tableA.row_iterator([keyA] + colsA)
+        colsB.remove(keyA)
+        itB = tableA.row_iterator([keyA] + colsB)
+
+    try:
+        kA = None
+        kB = None
+        result = []
+
+        while True:
+            while kA is None:
+                kA, *rA = next(itA)
+            while kB is None:
+                kB, *rB = next(itB)
+            if kA < kB:
+                kA, *rA = next(itA)
+            elif kB < kA:
+                kB, *rB = next(itB)
+            else:
+                #print(rA + rB)
+                result.append(rA + rB)
+                kA, *rA = next(itA)
+                kB, *rB = next(itB)
+    except StopIteration:
+        pass
+
+    return table_from_data(list(zip(*result)), colsA + colsB)
 
 # ======================================================================
 # Create tables from CSV
