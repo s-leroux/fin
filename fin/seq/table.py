@@ -29,6 +29,9 @@ class ColumnRef:
 
         return True
 
+    def __len__(self):
+        return len(self._column)
+
     def __add__(self, o):
         result = [v+o for v in self._column]
         return result
@@ -176,8 +179,22 @@ class Table:
     # Evaluation
     # ------------------------------------------------------------------
     def eval(self, init, *cols):
+        """
+        Evaluate an column expression.
+
+        A column expression can be:
+        1) A callable with the corresponding column arguments
+        2) A ColumnRef
+        3) An iterable
+        4) A constant value
+
+        When the column expression is a callable, it may return any value.
+        In all other cases, ''eval'' returns a list.
+        """
         if callable(init):
             return self.eval_from_callable(init, *cols)
+        elif type(init) == ColumnRef:
+            return self.eval_from_column_ref(init, *cols)
         else:
             try:
                 it = iter(init)
@@ -188,6 +205,9 @@ class Table:
 
     def eval_from_value(self, value):
         return [value]*self._rows
+
+    def eval_from_column_ref(self, colref):
+        return colref._column
 
     def eval_from_iterator(self, it):
         return list(it)

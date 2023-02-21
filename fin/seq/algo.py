@@ -21,7 +21,19 @@ def naive_window(fct, n):
 
     return window(_fct, n)
 
+def constantly(value):
+    """
+    Evaluates to a list made of contant values.
+    """
+    def _constantly(rowcount):
+        return [value]*rowcount
+
+    return _constantly
+
 def by_row(fct):
+    """
+    Evaluates a function row by row on a list of columns.
+    """
     def _by_row(rowcount, *cols):
         result = [None]*rowcount
         i = 0

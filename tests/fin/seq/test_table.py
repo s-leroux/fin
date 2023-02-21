@@ -106,18 +106,39 @@ class TestTable(unittest.TestCase):
         self.assertEqual(t["B"]._column, B)
         self.assertEqual(t["C"]._column, C)
 
-    def test_eval(self):
+    # ------------------------------------------------------------------
+    # Evaluation
+    # ------------------------------------------------------------------
+    def test_eval_from_callable(self):
         LEN=99
         VALUE=123
 
         t = table.Table(LEN)
-
         t.add_column("X", VALUE)
         result = t.eval(lambda n, xs:sum(xs), "X")
 
-        self.assertEqual(t.rows(), LEN)
-        self.assertEqual(t.columns(), 1+1)
         self.assertEqual(result, VALUE*LEN)
+
+    def test_eval_from_iterable(self):
+        LEN=99
+
+        r = range(LEN)
+        t = table.Table(LEN)
+        result = t.eval(r)
+
+        self.assertEqual(len(result), LEN)
+        self.assertSequenceEqual(result, list(r))
+
+    def test_eval_from_column_ref(self):
+        LEN=99
+        VALUE="123"
+
+        t = table.Table(LEN)
+        t.add_column("X", algo.constantly(VALUE))
+        result = t.eval(t["X"])
+
+        self.assertEqual(len(result), LEN)
+        self.assertSequenceEqual(result, t["X"])
 
     def test_bad_col_length(self):
         t = table.Table(99)
