@@ -2,6 +2,11 @@
 class InvalidError(Exception):
     pass
 
+class RowCountMismatch(InvalidError):
+    def __init__(self, detail, expected, actual):
+        msg = """in {detail}: {expected} rows expected, {actual} given"""
+        super().__init__(msg.format(detail=detail, expected=expected, actual=actual))
+
 class DuplicateName(ValueError):
     pass
 
@@ -18,6 +23,9 @@ class ColumnRef:
     def __getitem__(self, index):
         return self._column[index]
 
+# ======================================================================
+# Table class
+# ======================================================================
 class Table:
     """ A Table is a list of columns, all of the same length
         (i.e.: tables are rectangular)
@@ -32,6 +40,16 @@ class Table:
 
     def rows(self):
         return len(self._data) and self._rows
+
+    def row_iterator(self, columns=None):
+        """
+        Return an iterator on the table rows.
+
+        The ''column'' parameter lists the columns to select. If
+        you specify ''None'' all the columns are selected.
+        """
+        columns = [self[name_or_index] for name_or_index in columns] if columns != None else self._data
+        return zip(*columns)
 
     def names(self):
         """ Return the column names
@@ -62,7 +80,7 @@ class Table:
         if type(column) != list: # In case, for example, the function returns a generator
             column = list(column)
         if len(column) != self._rows:
-            raise InvalidError()
+            raise RowCountMismatch("column " + name, self._rows, len(column))
 
         self._data.append(column)
         self._meta.append(dict(name=name))
@@ -179,6 +197,9 @@ class Table:
 
         return result
 
+# ======================================================================
+# Create tables from existing sequences
+# ======================================================================
 def table_from_data(data, headings):
     if not len(data):
         rowcount = 0
@@ -196,6 +217,9 @@ def table_from_data(data, headings):
 
     return t
 
+# ======================================================================
+# Create tables from CSV
+# ======================================================================
 import csv
 def table_from_csv(iterator, format='', delimiter=','):
     rows = []

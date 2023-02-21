@@ -3,6 +3,9 @@ import unittest
 from fin.seq import table
 from fin.seq import algo
 
+# ======================================================================
+# Test table
+# ======================================================================
 class TestTable(unittest.TestCase):
     def test_constructor(self):
         t = table.Table(0)
@@ -181,6 +184,52 @@ class TestTable(unittest.TestCase):
         self.assertSequenceEqual(list(t2["A"]), (3,4,5,6))
         print(t2)
 
+# ======================================================================
+# Row iterator
+# ======================================================================
+class TestTableRowIterator(unittest.TestCase):
+    def setUp(self):
+        self._table = table.Table(10)
+        self._table.add_columns(
+            ("A", range(100, 110)),
+            ("B", range(200, 210)),
+            ("C", range(300, 310)),
+        )
+
+    def test_iterator_all_columns(self):
+        """
+        Without a column selector is None, it returns a row iterator over
+        the entire table.
+        """
+        actual = list(self._table.row_iterator())
+        expected = list(zip(*self._table._data))
+        self.assertSequenceEqual(actual, expected)
+
+    def test_iterator_none(self):
+        """
+        When the column selector is None, it returns a row iterator over
+        the entire table.
+        """
+        actual = list(self._table.row_iterator(None))
+        expected = list(zip(*self._table._data))
+        self.assertSequenceEqual(actual, expected)
+
+    def test_iterator_col_list(self):
+        """
+        When the column selector is None, it returns a row iterator over
+        the entire table.
+        """
+        actual = list(self._table.row_iterator(["C","C","A"]))
+        A = self._table["A"]._column
+        C = self._table["C"]._column
+        expected = list(zip(C, C, A))
+        self.assertSequenceEqual(actual, expected)
+
+
+
+# ======================================================================
+# Column refs
+# ======================================================================
 class TestColumnRef(unittest.TestCase):
     def test_add(self):
         FROM = 1
@@ -193,6 +242,9 @@ class TestColumnRef(unittest.TestCase):
 
         self.assertEqual(col+N, list(range(FROM+N, TO+N)))
 
+# ======================================================================
+# CSV
+# ======================================================================
 class TestCSV(unittest.TestCase):
     def test_load(self):
         t = table.table_from_csv_file("tests/_fixtures/bd.csv", format="dn-n")
