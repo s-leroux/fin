@@ -15,6 +15,19 @@ class ColumnRef:
         self._table = table
         self._index = index
         self._column = table._data[index]
+        self._meta = table._meta[index]
+
+    def __eq__(self, other):
+        if not isinstance(other, ColumnRef):
+            return False
+
+        if self._meta != other._meta:
+            return False
+
+        if self._column != other._column:
+            return False
+
+        return True
 
     def __add__(self, o):
         result = [v+o for v in self._column]
@@ -38,6 +51,9 @@ class Table:
         self._meta = [ dict(name="#") ]
         self._data = [ list(range(rows)) ]
 
+    # ------------------------------------------------------------------
+    # Accessors
+    # ------------------------------------------------------------------
     def columns(self):
         return len(self._data)
 
@@ -59,6 +75,42 @@ class Table:
         """
         return [meta['name'] for meta in self._meta]
 
+    # ------------------------------------------------------------------
+    # Transformations
+    # ------------------------------------------------------------------
+    def filter(self, fct, *cols):
+        """
+        Return a new table containing only rows for whom ''fct'' evaluates to
+        True.
+
+        The returned table contains all the columns of the original table,
+        not only those used for evaluation of ''fct''.
+        """
+        cols = [self._data[self._get_column_index(n)] for n in cols]
+        rows = [ row for row, flt in zip(zip(*self._data[1:]),zip(*cols)) if fct(*flt) ]
+
+        t = Table(len(rows))
+        for meta, column in zip(self._meta[1:], zip(*rows)):
+            t.add_column(meta['name'], column)
+            t.set_column_meta(meta['name'], **meta)
+
+        return t
+
+    def select(self, *cols):
+        """
+        Return a new table containing a sub-set of the reveiver's columns.
+        """
+        t = Table(self._rows)
+        indices = [self._get_column_index(col) for col in cols]
+        for index in indices:
+            t._meta.append(self._meta[index])
+            t._data.append(self._data[index])
+
+        return t
+
+    # ------------------------------------------------------------------
+    # Mutative methods
+    # ------------------------------------------------------------------
     def rename(self, name_or_index, newname):
         """ Change the name of a column.
 
@@ -120,6 +172,9 @@ class Table:
         if name is not None:
             meta['name']=name
 
+    # ------------------------------------------------------------------
+    # Evaluation
+    # ------------------------------------------------------------------
     def eval(self, init, *cols):
         if callable(init):
             return self.eval_from_callable(init, *cols)
@@ -142,17 +197,6 @@ class Table:
         result = fct(self._rows, *cols)
 
         return result
-
-    def filter(self, fct, *cols):
-        cols = [self._data[self._get_column_index(n)] for n in cols]
-        rows = [ row for row, flt in zip(zip(*self._data[1:]),zip(*cols)) if fct(*flt) ]
-
-        t = Table(len(rows))
-        for meta, column in zip(self._meta[1:], zip(*rows)):
-            t.add_column(meta['name'], column)
-            t.set_column_meta(meta['name'], **meta)
-
-        return t
 
     def __getitem__(self,c):
         c = self._get_column_index(c)

@@ -172,7 +172,13 @@ class TestTable(unittest.TestCase):
         with self.assertRaises(ValueError):
             t.del_column(0)
 
+    # ------------------------------------------------------------------
+    # Transformations
+    # ------------------------------------------------------------------
     def test_filter(self):
+        """
+        Row filtering
+        """
         t = table.Table(10)
         t.add_columns(
             ("A", lambda count : range(count)),
@@ -182,6 +188,27 @@ class TestTable(unittest.TestCase):
         t2 = t.filter(lambda x : 2 < x < 7, "A")
         self.assertEqual(t2.rows(), 4)
         self.assertSequenceEqual(list(t2["A"]), (3,4,5,6))
+
+    # ------------------------------------------------------------------
+    # Transformations
+    # ------------------------------------------------------------------
+    def test_select_by_column_name(self):
+        """
+        Column selection
+        """
+        t = table.Table(10)
+        t.add_columns(
+            ("A", 1),
+            ("B", 2),
+            ("C", 3),
+            ("D", 3),
+        )
+        t2 = t.select("C","C","A")
+        self.assertEqual(t2.rows(), t.rows())
+        self.assertEqual(t2.columns(), 1+3)
+        self.assertEqual(t2[1], t[3])
+        self.assertEqual(t2[2], t[3])
+        self.assertEqual(t2[3], t[1])
 
 # ======================================================================
 # Column refs
@@ -197,6 +224,27 @@ class TestColumnRef(unittest.TestCase):
         col = t["X"]
 
         self.assertEqual(col+N, list(range(FROM+N, TO+N)))
+
+    def test_eq(self):
+        LEN=1
+        t1 = table.Table(LEN)
+        t1.add_column("A", 1)
+        t1.add_column("B", 2)
+
+        t2 = table.Table(LEN)
+        t2.add_column("A", 1)
+        t2.add_column("B", 1)
+
+        # self equality (aka identity)
+        self.assertEqual(t1["A"], t1["A"])
+        self.assertEqual(t1["B"], t1["B"])
+        self.assertEqual(t2["A"], t2["A"])
+        self.assertEqual(t2["B"], t2["B"])
+
+        # (in)equality
+        self.assertEqual(t1["A"], t2["A"])
+        self.assertNotEqual(t1["A"], t1["B"])
+        self.assertNotEqual(t1["A"], t2["B"])
 
 # ======================================================================
 # Row iterator
