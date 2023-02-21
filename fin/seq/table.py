@@ -128,7 +128,8 @@ class Table:
         t = Table(self._rows)
         indices = [self._get_column_index(col) for col in cols]
         for index in indices:
-            t._meta.append(self._meta[index])
+            column = self._meta[index]
+            t.add_column(column.name, column.value)
 
         return t
 

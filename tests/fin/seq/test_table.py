@@ -224,11 +224,11 @@ class TestTable(unittest.TestCase):
             ("C", 3),
             ("D", 3),
         )
-        t2 = t.select("C","C","A")
+        t2 = t.select("C","D","A")
         self.assertEqual(t2.rows(), t.rows())
         self.assertEqual(t2.columns(), 1+3)
         self.assertEqual(t2[1], t[3])
-        self.assertEqual(t2[2], t[3])
+        self.assertEqual(t2[2], t[4])
         self.assertEqual(t2[3], t[1])
 
 # ======================================================================
