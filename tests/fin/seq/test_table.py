@@ -285,7 +285,7 @@ class TestTableRowIterator(unittest.TestCase):
         the entire table.
         """
         actual = list(self._table.row_iterator())
-        expected = list(zip(*self._table._data))
+        expected = list(zip(*self._table.data()))
         self.assertSequenceEqual(actual, expected)
 
     def test_iterator_none(self):
@@ -294,7 +294,7 @@ class TestTableRowIterator(unittest.TestCase):
         the entire table.
         """
         actual = list(self._table.row_iterator(None))
-        expected = list(zip(*self._table._data))
+        expected = list(zip(*self._table.data()))
         self.assertSequenceEqual(actual, expected)
 
     def test_iterator_col_list(self):
@@ -335,7 +335,7 @@ class TestTableJoin(unittest.TestCase):
         t = table.join(self._tableA, self._tableB, "A", "U")
         expected = list(self._cols[k] for k in "ABCUVW")
         expected = [[*range(len(expected[0]))]] + expected
-        self.assertSequenceEqual(t._data, expected)
+        self.assertSequenceEqual(t.data(), expected)
 
     def test_join_1(self):
         self._tableA["A"][2] = None
@@ -345,7 +345,7 @@ class TestTableJoin(unittest.TestCase):
         idx = iter(range(999))
         expected = list(zip(*[self._cols[k] for k in "ABCUVW"]))
         expected = [(next(idx), *r) for r in expected if None not in r]
-        self.assertSequenceEqual(list(zip(*t._data)), expected)
+        self.assertSequenceEqual(list(zip(*t.data())), expected)
 
     def test_join_2(self):
         self._tableA["A"][4] = None
@@ -355,7 +355,7 @@ class TestTableJoin(unittest.TestCase):
         idx = iter(range(999))
         expected = list(zip(*[self._cols[k] for k in "ABCUVW"]))
         expected = [(next(idx), *r) for r in expected if None not in r]
-        self.assertSequenceEqual(list(zip(*t._data)), expected)
+        self.assertSequenceEqual(list(zip(*t.data())), expected)
 
 # ======================================================================
 # CSV

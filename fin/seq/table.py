@@ -1,3 +1,4 @@
+from copy import copy
 
 class InvalidError(Exception):
     pass
@@ -14,17 +15,18 @@ class ColumnRef:
     def __init__(self, table, index):
         self._table = table
         self._index = index
-        self._column = table._data[index]
+        self._column = table._meta[index].value
         self._meta = table._meta[index]
 
     def __eq__(self, other):
         if not isinstance(other, ColumnRef):
             return False
 
-        if self._meta != other._meta:
+        sm = self._meta
+        om = other._meta
+        if sm.value != om.value:
             return False
-
-        if self._column != other._column:
+        if sm.name != om.name:
             return False
 
         return True
@@ -49,19 +51,38 @@ class Table:
     """ A Table is a list of columns, all of the same length
         (i.e.: tables are rectangular)
     """
+    class Column:
+        __slots__ = (
+                "value",
+                "name",
+                )
+
+        def __init__(self, name, value):
+            self.name = name
+            self.value = value
+
     def __init__(self, rows):
         self._rows = rows
-        self._meta = [ dict(name="#") ]
-        self._data = [ list(range(rows)) ]
+        col0 = Table.Column("#", list(range(rows)))
+        self._meta = [ col0 ]
 
     # ------------------------------------------------------------------
     # Accessors
     # ------------------------------------------------------------------
     def columns(self):
-        return len(self._data)
+        return len(self._meta)
 
     def rows(self):
-        return len(self._data) and self._rows
+        return self._rows
+
+    def data(self, columns=None):
+        """
+        Return the raw data for the given columns (or all if not specificed).
+        """
+        if columns != None:
+            return [self[name_or_index] for name_or_index in columns]
+        else:
+            return [ it.value for it in self._meta ]
 
     def row_iterator(self, columns=None):
         """
@@ -70,13 +91,12 @@ class Table:
         The ''column'' parameter lists the columns to select. If
         you specify ''None'' all the columns are selected.
         """
-        columns = [self[name_or_index] for name_or_index in columns] if columns != None else self._data
-        return zip(*columns)
+        return zip(*self.data(columns))
 
     def names(self):
         """ Return the column names
         """
-        return [meta['name'] for meta in self._meta]
+        return [meta.name for meta in self._meta]
 
     # ------------------------------------------------------------------
     # Transformations
@@ -89,13 +109,15 @@ class Table:
         The returned table contains all the columns of the original table,
         not only those used for evaluation of ''fct''.
         """
-        cols = [self._data[self._get_column_index(n)] for n in cols]
-        rows = [ row for row, flt in zip(zip(*self._data[1:]),zip(*cols)) if fct(*flt) ]
+        cols = self.data(cols)
+        data = self.data()[1:] # ignore the row-number column
+        rows = [ row for row, flt in zip(zip(*data),zip(*cols)) if fct(*flt) ]
 
         t = Table(len(rows))
         for meta, column in zip(self._meta[1:], zip(*rows)):
-            t.add_column(meta['name'], column)
-            t.set_column_meta(meta['name'], **meta)
+            meta = copy(meta)
+            meta.value = column
+            t._meta.append(meta)
 
         return t
 
@@ -107,7 +129,6 @@ class Table:
         indices = [self._get_column_index(col) for col in cols]
         for index in indices:
             t._meta.append(self._meta[index])
-            t._data.append(self._data[index])
 
         return t
 
@@ -125,7 +146,7 @@ class Table:
         if index == 0:
             raise ValueError("Cannot rename column 0")
 
-        self._meta[index]['name'] = newname
+        self._meta[index].name = newname
 
     def add_column(self, name, init, *cols):
         if name in self.names():
@@ -140,8 +161,8 @@ class Table:
         if len(column) != self._rows:
             raise RowCountMismatch("column " + name, self._rows, len(column))
 
-        self._data.append(column)
-        self._meta.append(dict(name=name))
+        meta = Table.Column(name, column)
+        self._meta.append(meta)
 
     def add_columns(self, *col_specs):
         for col_spec in col_specs:
@@ -155,7 +176,6 @@ class Table:
             raise ValueError("Cannot remove column 0")
 
         del self._meta[index]
-        del self._data[index]
 
     def del_columns(self, *col_specs):
         """ Remove columns from the table.
@@ -173,7 +193,7 @@ class Table:
         meta = self._meta[index]
 
         if name is not None:
-            meta['name']=name
+            meta.name=name
 
     # ------------------------------------------------------------------
     # Evaluation
@@ -193,8 +213,6 @@ class Table:
         """
         if callable(init):
             return self.eval_from_callable(init, *cols)
-        elif type(init) == ColumnRef:
-            return self.eval_from_column_ref(init, *cols)
         else:
             try:
                 it = iter(init)
@@ -239,7 +257,7 @@ class Table:
         rows = [ self.names() ]
         width = [ len(c) for c in rows[0] ]
 
-        for row in zip(*self._data):
+        for row in zip(*self.data()):
             row = [value_to_string(value) for value in row]
             for i, value in enumerate(row):
                 width[i] = max(width[i], len(value))
