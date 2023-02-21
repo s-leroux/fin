@@ -37,3 +37,11 @@ Rates = fin.model.Model(lambda rc, rm, m : continuous_compounding(rm, m) - rc, d
         rm=discrete_compounding,
         m=(.001, 1000),
     ))
+
+ExpectedReturn = fin.model.Model(
+    lambda amount, expected, rate, duration, m : (amount*(1+rate/m)**(m*duration)) - expected,
+    dict(
+        m=(.001, 1000),
+        rate=(0.00, 1000),
+    )
+)
