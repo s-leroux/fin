@@ -22,7 +22,7 @@ class TestTable(unittest.TestCase):
 
         self.assertEqual(t.rows(), TO-FROM)
         self.assertEqual(t.columns(), 1+1)
-        self.assertSequenceEqual(t["X"]._column, range(FROM, TO))
+        self.assertSequenceEqual(t["X"], range(FROM, TO))
 
     def test_add_column_from_value(self):
         LEN=99
@@ -33,7 +33,7 @@ class TestTable(unittest.TestCase):
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1+1)
-        self.assertEqual(t["X"]._column, [VALUE]*LEN)
+        self.assertSequenceEqual(t["X"], [VALUE]*LEN)
 
     def test_add_column_from_function_zero_param(self):
         LEN=99
@@ -44,7 +44,7 @@ class TestTable(unittest.TestCase):
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1+1)
-        self.assertEqual(t["X"]._column, [VALUE]*LEN)
+        self.assertSequenceEqual(t["X"], [VALUE]*LEN)
 
     def test_add_column_from_function_one_param(self):
         LEN=99
@@ -56,7 +56,7 @@ class TestTable(unittest.TestCase):
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1+2)
-        self.assertEqual(t["Y"]._column, [x+1 for x in range(LEN)])
+        self.assertSequenceEqual(t["Y"], [x+1 for x in range(LEN)])
 
     def test_add_column_from_algo(self):
         LEN=10
@@ -67,7 +67,7 @@ class TestTable(unittest.TestCase):
         t.add_column("A", A)
         t.add_column("B", B)
         t.add_column("C", algo.by_row(lambda a, b: a+b), "A", "B")
-        self.assertEqual(t["C"]._column, list(range(500, 500+2*LEN, 2)))
+        self.assertSequenceEqual(t["C"], list(range(500, 500+2*LEN, 2)))
 
     def test_add_column_reject_duplicate(self):
         """ add_column() should reject duplicate names.
@@ -84,7 +84,7 @@ class TestTable(unittest.TestCase):
         t = table.Table(LEN)
         t.add_column("A", A)
         t.add_column("B", algo.naive_window(sum, 2), "A")
-        self.assertEqual(t["B"]._column, [None, 21, 23, 25, 27, 29, 31, 33, 35, 37])
+        self.assertSequenceEqual(t["B"], [None, 21, 23, 25, 27, 29, 31, 33, 35, 37])
 
     def test_get_column(self):
         LEN=5
@@ -303,8 +303,8 @@ class TestTableRowIterator(unittest.TestCase):
         the entire table.
         """
         actual = list(self._table.row_iterator(["C","C","A"]))
-        A = self._table["A"]._column
-        C = self._table["C"]._column
+        A = self._table["A"]
+        C = self._table["C"]
         expected = list(zip(C, C, A))
         self.assertSequenceEqual(actual, expected)
 
