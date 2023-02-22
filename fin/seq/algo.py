@@ -51,6 +51,20 @@ def by_row(fct):
 
     return _by_row
 
+def shift(n):
+    """
+    Shift a column by n periods.
+
+    Sometimes called the "lag" operator.
+    """
+    def _shift(rowcount, values):
+        if n > 0:
+            return values[n:] + [None]*n
+        else:
+            return [None]*-n + values[:n]
+
+    return _shift
+
 def moving_average(n):
     return naive_window(lambda col:sum(col)/len(col), n)
 

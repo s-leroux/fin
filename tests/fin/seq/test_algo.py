@@ -152,6 +152,25 @@ class TestMapN(unittest.TestCase):
 
         self.assertSequenceEqual(actual, EXPECTED)
 
+class TestShift(unittest.TestCase):
+    def setUp(self):
+        LEN = self.LEN = 10
+        self._list = list(range(0, LEN))
+
+    def test_shift_neg(self):
+        DELTA=3
+        EXPECTED = [None]*DELTA + self._list[:-DELTA]
+        actual = eval(algo.shift(-DELTA), self._list)
+
+        self.assertSequenceEqual(actual, EXPECTED)
+
+    def test_shift_pos(self):
+        DELTA=3
+        EXPECTED = self._list[DELTA:] + [None]*DELTA
+        actual = eval(algo.shift(DELTA), self._list)
+
+        self.assertSequenceEqual(actual, EXPECTED)
+
 # ======================================================================
 # Calendar functions
 # ======================================================================
