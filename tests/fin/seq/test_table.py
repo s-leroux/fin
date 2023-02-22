@@ -18,7 +18,7 @@ class TestTable(unittest.TestCase):
         TO=100
         t = table.Table(TO-FROM)
 
-        t.add_column("X", range(FROM, TO))
+        t.add_column("X", table.column(range(FROM, TO)))
 
         self.assertEqual(t.rows(), TO-FROM)
         self.assertEqual(t.columns(), 1+1)
@@ -51,7 +51,7 @@ class TestTable(unittest.TestCase):
         VALUE=123
         t = table.Table(LEN)
 
-        t.add_column("X", range(LEN))
+        t.add_column("X", range)
         t.add_column("Y", lambda n, xs: [x+1 for x in xs], "X")
 
         self.assertEqual(t.rows(), LEN)
@@ -64,8 +64,8 @@ class TestTable(unittest.TestCase):
         B=list(range(300, 300+LEN))
 
         t = table.Table(LEN)
-        t.add_column("A", A)
-        t.add_column("B", B)
+        t.add_column("A", table.column(A))
+        t.add_column("B", table.column(B))
         t.add_column("C", algo.by_row(lambda a, b: a+b), "A", "B")
         self.assertSequenceEqual(t["C"], list(range(500, 500+2*LEN, 2)))
 
@@ -82,7 +82,7 @@ class TestTable(unittest.TestCase):
         A=list(range(10, 10+LEN))
 
         t = table.Table(LEN)
-        t.add_column("A", A)
+        t.add_column("A", table.column(A))
         t.add_column("B", algo.naive_window(sum, 2), "A")
         self.assertSequenceEqual(t["B"], [None, 21, 23, 25, 27, 29, 31, 33, 35, 37])
 
@@ -93,61 +93,30 @@ class TestTable(unittest.TestCase):
         C=[3]*LEN
         t = table.Table(LEN)
 
-        t.add_column("A", A)
-        t.add_column("B", B)
-        t.add_column("C", C)
+        t.add_column("A", table.column(A))
+        t.add_column("B", table.column(B))
+        t.add_column("C", table.column(C))
 
         # Column 0 is used for rows numbering
-        self.assertEqual(t[1]._column, A)
-        self.assertEqual(t[2]._column, B)
-        self.assertEqual(t[3]._column, C)
+        self.assertEqual(t[1].value, A)
+        self.assertEqual(t[2].value, B)
+        self.assertEqual(t[3].value, C)
+        self.assertEqual(t[1].name, "A")
+        self.assertEqual(t[2].name, "B")
+        self.assertEqual(t[3].name, "C")
 
-        self.assertEqual(t["A"]._column, A)
-        self.assertEqual(t["B"]._column, B)
-        self.assertEqual(t["C"]._column, C)
-
-    # ------------------------------------------------------------------
-    # Evaluation
-    # ------------------------------------------------------------------
-    def test_eval_from_callable(self):
-        LEN=99
-        VALUE=123
-
-        t = table.Table(LEN)
-        t.add_column("X", VALUE)
-        result = t.eval(lambda n, xs:sum(xs), "X")
-
-        self.assertEqual(result, VALUE*LEN)
-
-    def test_eval_from_iterable(self):
-        LEN=99
-
-        r = range(LEN)
-        t = table.Table(LEN)
-        result = t.eval(r)
-
-        self.assertEqual(len(result), LEN)
-        self.assertSequenceEqual(result, list(r))
-
-    def test_eval_from_column_ref(self):
-        LEN=99
-        VALUE="123"
-
-        t = table.Table(LEN)
-        t.add_column("X", algo.constantly(VALUE))
-        result = t.eval(t["X"])
-
-        self.assertEqual(len(result), LEN)
-        self.assertSequenceEqual(result, t["X"])
+        self.assertEqual(t["A"], t[1])
+        self.assertEqual(t["B"], t[2])
+        self.assertEqual(t["C"], t[3])
 
     def test_bad_col_length(self):
         t = table.Table(99)
 
         with self.assertRaises(table.InvalidError):
-            t.add_column("X", [0.0]*100)
+            t.add_column("X", table.column([0.0]*100))
 
         with self.assertRaises(table.InvalidError):
-            t.add_column("X", [0.0]*98)
+            t.add_column("X", table.column([0.0]*98))
 
     def test_rename(self):
         t = table.Table(10)
@@ -232,20 +201,86 @@ class TestTable(unittest.TestCase):
         self.assertEqual(t2[3], t[1])
 
 # ======================================================================
-# Column refs
+# Table expression evaluation
 # ======================================================================
-class TestColumnRef(unittest.TestCase):
-    def test_add(self):
-        FROM = 1
-        TO = 101
-        N = 2
-        t = table.Table(TO-FROM)
+class TestTableExpressionEvaluation(unittest.TestCase):
+    def setUp(self):
+        t = self._table = table.Table(10)
+        self._table.add_columns(
+            ("A", 1),
+            ("B", 2),
+            ("C", 3),
+            ("D", 3),
+        )
+        
+        self._A = t["A"]
+        self._B = t["B"]
+        self._C = t["C"]
+        self._D = t["D"]
 
-        t.add_column("X", range(FROM, TO))
-        col = t["X"]
+        self._f0 = lambda rowcount, col, *cols : col
+        self._f1 = lambda rowcount, x, col, *cols : col
+        self._f2 = lambda rowcount, x, y, col, *cols : col
+        self._f3 = lambda rowcount, x, y, z, col, *cols : col
 
-        self.assertEqual(col+N, list(range(FROM+N, TO+N)))
+    def test_reval_column_constant(self):
+        """
+        Constant (numeric) columns
+        """
+        # Individual column selection
+        self.assertEqual(self._table.reval(1), [ table.C([1]*self._table.rows()) ])
+        self.assertEqual(self._table.reval(2.50), [ table.C([2.50]*self._table.rows()) ])
 
+    def test_reval_column_name(self):
+        """
+        Column selection by name
+        """
+        # Individual column selection
+        self.assertEqual(self._table.reval("A"), [ self._A ])
+        self.assertEqual(self._table.reval("B"), [ self._B ])
+        self.assertEqual(self._table.reval("C"), [ self._C ])
+        self.assertEqual(self._table.reval("D"), [ self._D ])
+
+        # multi-column selection
+        self.assertEqual(self._table.reval("A", "B"), [ self._A, self._B ])
+        self.assertEqual(self._table.reval("B", "C", "D"), [ self._B, self._C, self._D ])
+
+        # group selection
+        self.assertEqual(self._table.reval(("B", "C"), "D"), [ self._B, self._C, self._D ])
+        self.assertEqual(self._table.reval("B", ("C", "D")), [ self._B, self._C, self._D ])
+
+    def test_reval_function_call(self):
+        """
+        Function calls
+        """
+        # Basic function calls
+        self.assertEqual(self._table.reval(self._f0, "A", "B"), [ self._A ])
+        self.assertEqual(self._table.reval(self._f1, "A", "B"), [ self._B ])
+
+        # Nested function calls
+        self.assertEqual(self._table.reval(self._f0, (self._f0, "A", "B", "C")), [ self._A ])
+        self.assertEqual(self._table.reval(self._f0, (self._f2, "A", "B", "C")), [ self._C ])
+        self.assertEqual(self._table.reval(self._f0, (self._f1, "A", "B"), "C"), [ self._B ])
+        self.assertEqual(self._table.reval(self._f1, (self._f1, "A", "B"), "C"), [ self._C ])
+
+        # Flat function calls
+        self.assertEqual(self._table.reval(self._f0, self._f0, "A", "B", "C"), [ self._A ])
+        self.assertEqual(self._table.reval(self._f0, self._f1, "A", "B", "C"), [ self._B ])
+        self.assertEqual(self._table.reval(self._f0, self._f2, "A", "B", "C"), [ self._C ])
+
+    def test_reval_generator(self):
+        """
+        Generators
+        """
+        expected = [ list(range(self._table.rows())) ]
+        actual = [column.value for column in self._table.reval(range)]
+
+        self.assertEqual(actual, expected)
+
+# ======================================================================
+# Columns
+# ======================================================================
+class TestColumn(unittest.TestCase):
     def test_eq(self):
         LEN=1
         t1 = table.Table(LEN)
@@ -272,11 +307,13 @@ class TestColumnRef(unittest.TestCase):
 # ======================================================================
 class TestTableRowIterator(unittest.TestCase):
     def setUp(self):
+        rng = lambda start : lambda rowcount : range(start, start+rowcount)
+
         self._table = table.Table(10)
         self._table.add_columns(
-            ("A", range(100, 110)),
-            ("B", range(200, 210)),
-            ("C", range(300, 310)),
+            ("A", rng(100)),
+            ("B", rng(200)),
+            ("C", rng(300)),
         )
 
     def test_iterator_all_columns(self):
@@ -313,33 +350,35 @@ class TestTableRowIterator(unittest.TestCase):
 # ======================================================================
 class TestTableJoin(unittest.TestCase):
     def setUp(self):
+        rng = lambda start : lambda rowcount : range(start, start+rowcount)
+
         tableA = self._tableA = table.Table(10)
         self._tableA.add_columns(
-            ("A", range(100, 110)),
-            ("B", range(200, 210)),
-            ("C", range(300, 310)),
+            ("A", rng(100)),
+            ("B", rng(200)),
+            ("C", rng(300)),
         )
         tableB = self._tableB = table.Table(10)
         self._tableB.add_columns(
-            ("U", range(100, 110)),
-            ("V", range(600, 610)),
-            ("W", range(700, 710)),
+            ("U", rng(100)),
+            ("V", rng(600)),
+            ("W", rng(700)),
         )
 
         self._cols = dict(
-                [(name, tableA[name]._column) for name in tableA.names()] +
-                [(name, tableB[name]._column) for name in tableB.names()]
+                [(name, tableA[name]) for name in tableA.names()] +
+                [(name, tableB[name]) for name in tableB.names()]
                 )
 
     def test_join_0(self):
         t = table.join(self._tableA, self._tableB, "A", "U")
-        expected = list(self._cols[k] for k in "ABCUVW")
+        expected = list(self._cols[k].value for k in "ABCUVW")
         expected = [[*range(len(expected[0]))]] + expected
         self.assertSequenceEqual(t.data(), expected)
 
     def test_join_1(self):
-        self._tableA["A"][2] = None
-        self._tableB["U"][5] = None
+        self._tableA["A"].value[2] = None
+        self._tableB["U"].value[5] = None
         t = table.join(self._tableA, self._tableB, "A", "U")
 
         idx = iter(range(999))
@@ -348,8 +387,8 @@ class TestTableJoin(unittest.TestCase):
         self.assertSequenceEqual(list(zip(*t.data())), expected)
 
     def test_join_2(self):
-        self._tableA["A"][4] = None
-        self._tableB["U"][3:6] = [None]*3
+        self._tableA["A"].value[4] = None
+        self._tableB["U"].value[3:6] = [None]*3
         t = table.join(self._tableA, self._tableB, "A", "U")
 
         idx = iter(range(999))

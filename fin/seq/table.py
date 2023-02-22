@@ -11,38 +11,12 @@ class RowCountMismatch(InvalidError):
 class DuplicateName(ValueError):
     pass
 
-class ColumnRef:
-    def __init__(self, table, index):
-        self._table = table
-        self._index = index
-        self._column = table._meta[index].value
-        self._meta = table._meta[index]
+def C(column):
+    if isinstance(column, Table.Column):
+        return column
 
-    def __eq__(self, other):
-        if not isinstance(other, ColumnRef):
-            return False
-
-        sm = self._meta
-        om = other._meta
-        if sm.value != om.value:
-            return False
-        if sm.name != om.name:
-            return False
-
-        return True
-
-    def __len__(self):
-        return len(self._column)
-
-    def __add__(self, o):
-        result = [v+o for v in self._column]
-        return result
-
-    def __getitem__(self, index):
-        return self._column[index]
-
-    def __setitem__(self, index, value):
-        self._column[index] = value
+    # otherwise, we assume it's a generator
+    return Table.Column(None, column)
 
 # ======================================================================
 # Table class
@@ -59,7 +33,27 @@ class Table:
 
         def __init__(self, name, value):
             self.name = name
-            self.value = value
+            self.value = list(value)
+
+        def __len__(self):
+            return len(self.value)
+
+        def __getitem__(self, index):
+            return self.value[index]
+
+        def __eq__(self, other):
+            if not isinstance(other, Table.Column):
+                return False
+
+            if self.value != other.value:
+                return False
+            if self.name != other.name:
+                return False
+
+            return True
+
+        def __repr__(self):
+            return "Column(\"{}\", {})".format(self.name, self.value)
 
     def __init__(self, rows):
         self._rows = rows
@@ -121,15 +115,15 @@ class Table:
 
         return t
 
-    def select(self, *cols):
+    def select(self, *exprs):
         """
-        Return a new table containing a sub-set of the reveiver's columns.
+        Return a new table build from the evaluation of a table expression
         """
+        columns = self.reval(exprs)
+
         t = Table(self._rows)
-        indices = [self._get_column_index(col) for col in cols]
-        for index in indices:
-            column = self._meta[index]
-            t.add_column(column.name, column.value)
+        for column in columns:
+            t.add_column(column.name, column)
 
         return t
 
@@ -142,23 +136,21 @@ class Table:
             The Original column may be specified using its index or name.
             If the name is ambiguous, the behavior is unspecified.
         """
-        column = self[name_or_index]
-        index = column._index
+        index = self._get_column_index(name_or_index)
         if index == 0:
             raise ValueError("Cannot rename column 0")
 
         self._meta[index].name = newname
 
-    def add_column(self, name, init, *cols):
+    def add_column(self, name, *exprs):
+        if name is None:
+            name = "C" + str(len(self._meta))
         if name in self.names():
             raise DuplicateName(name)
 
-        column = self.eval(init, *cols)
-
-        if column is None:
-            raise TypeError("Can't create column from 'init': " + repr(init))
-        if type(column) != list: # In case, for example, the function returns a generator
-            column = list(column)
+        column, *remainer = self.reval(*exprs)
+        if len(remainer):
+            raise ValueError("Too many columns")
         if len(column) != self._rows:
             raise RowCountMismatch("column " + name, self._rows, len(column))
 
@@ -199,48 +191,47 @@ class Table:
     # ------------------------------------------------------------------
     # Evaluation
     # ------------------------------------------------------------------
-    def eval(self, init, *cols):
+    def reval(self, head, *tail):
         """
-        Evaluate an column expression.
+        Recursive evaluation of a table expression.
 
-        A column expression can be:
-        1) A callable with the corresponding column arguments
-        2) A ColumnRef
-        3) An iterable
-        4) A constant value
-
-        When the column expression is a callable, it may return any value.
-        In all other cases, ''eval'' returns a list.
+        All user-provided functions are assumed to return a column
+        as a list of values.
         """
-        if callable(init):
-            return self.eval_from_callable(init, *cols)
-        else:
-            try:
-                it = iter(init)
-            except TypeError:
-                return self.eval_from_value(init, *cols)
+        if callable(head):
+            # It's an f-expression
+            if tail:
+                return [ C(head(self._rows, *self.reval(*tail))) ]
             else:
-                return self.eval_from_iterator(it, *cols)
+                return [ C(head(self._rows)) ]
+        else:
+            # It's a list
+            result = self.reval_item(head)
 
-    def eval_from_value(self, value):
-        return [value]*self._rows
+            for param in tail:
+                result += self.reval_item(param)
+            return result
 
-    def eval_from_column_ref(self, colref):
-        return colref._column
+    def reval_item(self, item):
+        if type(item) == str:
+            idx = self._get_column_index(item)
+            return [ self._meta[idx] ]
+        if isinstance(item, Table.Column):
+            return [ item ]
 
-    def eval_from_iterator(self, it):
-        return list(it)
+        try:
+            it = iter(item)
+        except TypeError as e:
+            pass
+        else:
+            return self.reval(*it)
 
-    def eval_from_callable(self, fct, *cols):
-        cols = [self[n]._column for n in cols]
-        result = fct(self._rows, *cols)
-
-        return result
+        return [ C([item] * self._rows) ]
 
     def __getitem__(self,c):
         c = self._get_column_index(c)
 
-        return ColumnRef(self, c)
+        return self._meta[c]
 
     def _get_column_index(self, index_or_name):
         if type(index_or_name) is str:
@@ -284,6 +275,17 @@ class Table:
         return result
 
 # ======================================================================
+# Helper for table expression evaluation
+# ======================================================================
+def column(col):
+    """
+    Return a column expression that evaluates to ''col''.
+    """
+    return lambda rowcount : col
+
+add = lambda rowcount, *cols : [sum(row) for row in zip(*cols)]
+
+# ======================================================================
 # Create tables from existing sequences
 # ======================================================================
 def table_from_data(data, headings):
@@ -299,7 +301,7 @@ def table_from_data(data, headings):
 
     t = Table(rowcount)
     for heading, column in zip(headings, data):
-        t.add_column(heading, column)
+        t.add_column(heading, lambda rc : column)
 
     return t
 
