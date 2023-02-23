@@ -152,3 +152,20 @@ class TestMapN(unittest.TestCase):
 
         self.assertSequenceEqual(actual, EXPECTED)
 
+# ======================================================================
+# Calendar functions
+# ======================================================================
+from fin.seq import table
+import ast
+class TestCalendarFunctions(unittest.TestCase):
+    def test_shift_data(self):
+        t = table.table_from_csv_file("tests/_fixtures/^FCHI.csv", "d")
+        with open("tests/_fixtures/shift_date.py") as f:
+            expected = ast.literal_eval(f.read())
+
+        t.add_column("Date2", algo.shift_date(years=1), "Date")
+        l1 = list(map(str, t._meta[1]))
+        l2 = list(map(str, t._meta[2]))
+        actual = (*zip(l1, l2),)
+
+        self.assertEqual(actual, expected)

@@ -326,7 +326,7 @@ def join(tableA, tableB, keyA, keyB=None):
     else:
         itA = tableA.row_iterator([keyA] + colsA)
         colsB.remove(keyA)
-        itB = tableA.row_iterator([keyA] + colsB)
+        itB = tableB.row_iterator([keyA] + colsB)
 
     try:
         kA = None
@@ -356,32 +356,36 @@ def join(tableA, tableB, keyA, keyB=None):
 # Create tables from CSV
 # ======================================================================
 import csv
+from fin import datetime
+
 def table_from_csv(iterator, format='', delimiter=','):
     rows = []
     reader = csv.reader(iterator, delimiter=delimiter)
     heading = next(reader)
     rows = list(reader)
-    for index, fchar in enumerate(format):
-        if fchar=='n': # NUMERIC
-            for row in rows:
-                try:
-                    row[index] = float(row[index])
-                except:
-                    row[index] = None
+    cols = []
+    names = []
+    for name, fchar, col in zip(heading, format, zip(*rows)):
+        if fchar=='-': # IGNORE
+            continue
+        elif fchar=='n': # NUMERIC
+            f = float
+        elif fchar=='d': # DATE
+            f = datetime.parseisodate
         elif fchar=='i': # INTEGER
-            for row in rows:
-                row[index] = int(row[index])
+            f = int
 
-    cols = list(zip(*rows))
-    n = 0
-    for index, fchar in enumerate(format):
-        if fchar=='-':
-            del cols[n]
-            del heading[n]
-        else:
-            n += 1
+        col = list(col)
+        for index, value in enumerate(col):
+            try:
+                col[index] = f(value)
+            except:
+                col[index] = None
 
-    return table_from_data(cols, heading)
+        names.append(name)
+        cols.append(col)
+
+    return table_from_data(cols, names)
 
 def table_from_csv_file(fname, format='', delimiter=','):
     with open(fname, newline='') as csvfile:

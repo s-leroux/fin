@@ -249,3 +249,34 @@ def volatility(n, tau=1/252):
         return map(vol)(rowcount, result)
 
     return _volatility
+
+# ======================================================================
+# Utilities
+# ======================================================================
+import fin.seq.table
+named = lambda name : lambda rowcount, col : fin.seq.table.Table.Column(name, col.value)
+
+# ======================================================================
+# Calendar functions
+# ======================================================================
+from fin import datetime
+
+def shift_date(years=0, months=0, days=0):
+    """
+    Offset a calendar date.
+    """
+    offset = datetime.CalendarDateDelta(years, months, days)
+
+    def _shift_date(rowcount, dates):
+        name = getattr(dates, "name", None)
+
+        result = [None]*rowcount
+        for idx, date in enumerate(dates):
+            try:
+                result[idx] = date+offset
+            except ValueError:
+                pass
+
+        return fin.seq.table.Table.Column(name,result)
+
+    return _shift_date

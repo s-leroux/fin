@@ -407,8 +407,8 @@ class TestCSV(unittest.TestCase):
         self.assertEqual(t.columns(), 1+3)
 
         time = t["time"]
-        self.assertEqual(time[0], "2022-01-03")
-        self.assertEqual(time[-1], "2023-02-07")
+        self.assertEqual(str(time[0]), "2022-01-03")
+        self.assertEqual(str(time[-1]), "2023-02-07")
 
         quote = t["BOURSE DIRECT"]
         self.assertEqual(quote[0], 2.73)

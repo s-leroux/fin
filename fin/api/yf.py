@@ -18,7 +18,7 @@ def get(url, _get=requests.get):
 # Historical data
 HD_URI="https://query1.finance.yahoo.com/v7/finance/download/{TICKER:}?period1={FROM:}&period2={TO:}&interval=1d&events=history&includeAdjustedClose=true"
 
-def historical_data(ticker, duration=timedelta(days=365), end=None):
+def historical_data_url(ticker, duration=timedelta(days=365), end=None):
     if end is None:
         end = datetime.now()
     start = end-duration
@@ -27,6 +27,10 @@ def historical_data(ticker, duration=timedelta(days=365), end=None):
             FROM=round(start.timestamp()),
             TO=round(end.timestamp()))
 
+    return url
+
+def historical_data(ticker, duration=timedelta(days=365), end=None):
+    url = historical_data_url(ticker, duration, end)
     r = get(url)
     if r.status_code != 200:
         raise Exception("Can't retrieve data at " + url + " status=" + str(r.status_code))
