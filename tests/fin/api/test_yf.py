@@ -15,7 +15,7 @@ class TestUtilities(unittest.TestCase):
         self.assertRegex(get.call_args['headers']['User-Agent'], "Mozilla")
 
 class TestYF(unittest.TestCase):
-    if os.environ.get('LONG_TESTS'):
+    if os.environ.get('SLOW_TESTS'):
         def test_historical_data(self):
             t = yf.historical_data("^FCHI")
             self.assertSequenceEqual(t.names(), ('#', 'Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume'))
