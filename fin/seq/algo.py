@@ -3,6 +3,9 @@
 import math
 import builtins
 
+# ======================================================================
+# Window functions
+# ======================================================================
 def window(fct, n):
     def _window(rowcount, *cols):
         i = n-1
@@ -20,15 +23,6 @@ def naive_window(fct, n):
         return fct(*[col[start:end] for col in cols])
 
     return window(_fct, n)
-
-def constantly(value):
-    """
-    Evaluates to a list made of contant values.
-    """
-    def _constantly(rowcount):
-        return [value]*rowcount
-
-    return _constantly
 
 def by_row(fct):
     """
@@ -50,20 +44,6 @@ def by_row(fct):
         return result
 
     return _by_row
-
-def shift(n):
-    """
-    Shift a column by n periods.
-
-    Sometimes called the "lag" operator.
-    """
-    def _shift(rowcount, values):
-        if n > 0:
-            return values[n:] + [None]*n
-        else:
-            return [None]*-n + values[:n]
-
-    return _shift
 
 def moving_average(n):
     return naive_window(lambda col:sum(col)/len(col), n)
@@ -194,6 +174,59 @@ def naive_variance(n):
 
     return naive_window(_variance, n)
 
+def volatility(n, tau=1/252):
+    """ The price volatility over a n-period window
+    """
+    stddev = standard_deviation(n)
+    log = math.log
+    k = math.sqrt(1/tau)
+    vol = lambda stddev : stddev*k
+
+    def _volatility(rowcount, values):
+        ui = map1(lambda curr, prev: log(curr/prev))(rowcount, values)
+        result = stddev(rowcount, ui)
+        return map(vol)(rowcount, result)
+
+    return _volatility
+
+# ======================================================================
+# Core functions
+# ======================================================================
+def constantly(value):
+    """
+    Evaluates to a list made of contant values.
+    """
+    def _constantly(rowcount):
+        return [value]*rowcount
+
+    return _constantly
+
+def shift(n):
+    """
+    Shift a column by n periods.
+
+    Sometimes called the "lag" operator.
+    """
+    def _shift(rowcount, values):
+        if n > 0:
+            return values[n:] + [None]*n
+        else:
+            return [None]*-n + values[:n]
+
+    return _shift
+
+def difference(fct, y0):
+    """ Map data using a difference(1) function y_i = f(u_i, y_i-1)
+    """
+    def _difference(rowcount, values):
+        pass
+
+    return _difference
+
+
+# ======================================================================
+# Projections
+# ======================================================================
 def map(fct):
     """ Map data using y_i = f(u_i)
     """
@@ -240,29 +273,6 @@ def map1(fct):
         return result
 
     return _map
-
-def difference(fct, y0):
-    """ Map data using a difference(1) function y_i = f(u_i, y_i-1)
-    """
-    def _difference(rowcount, values):
-        pass
-
-    return _difference
-
-def volatility(n, tau=1/252):
-    """ The price volatility over a n-period window
-    """
-    stddev = standard_deviation(n)
-    log = math.log
-    k = math.sqrt(1/tau)
-    vol = lambda stddev : stddev*k
-
-    def _volatility(rowcount, values):
-        ui = map1(lambda curr, prev: log(curr/prev))(rowcount, values)
-        result = stddev(rowcount, ui)
-        return map(vol)(rowcount, result)
-
-    return _volatility
 
 # ======================================================================
 # Utilities
