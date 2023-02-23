@@ -15,7 +15,7 @@ def window(fct, n):
             i += 1
 
         return result
-        
+
     return _window
 
 def naive_window(fct, n):
@@ -53,7 +53,7 @@ def standard_deviation(n):
     sum = builtins.sum
     a = 1.0/(n-1.0)
     b = a/n
-    
+
     def s(rowcount, values):
         buffer = [0.0]*n
         sigma_ui = 0.0
@@ -169,7 +169,7 @@ def naive_variance(n):
         ui_squared = [u*u for u in ui]
         s1 = sum(ui_squared)
         s2 = sum(ui)**2
-       
+
         return a*s1-b*s2
 
     return naive_window(_variance, n)
@@ -215,6 +215,25 @@ def shift(n):
 
     return _shift
 
+def ratio(rowcount, a, b):
+    """
+    Evaluates to the line-by-line ratio of two columns.
+
+    Formally, y_i = to a_i/b_i.
+    """
+    result = [None]*rowcount
+    for idx, a_i, b_i in zip(range(rowcount), a, b):
+        try:
+            result[idx] = a_i/b_i
+        except TypeError:
+            # One value is probably None
+            pass
+        except ZeroDivisionError:
+            # b_i is 0.0
+            result[idx] = float("inf") if a_i > 0 else float("-inf") if a_i < 0 else None
+
+    return result
+
 def difference(fct, y0):
     """ Map data using a difference(1) function y_i = f(u_i, y_i-1)
     """
@@ -223,6 +242,17 @@ def difference(fct, y0):
 
     return _difference
 
+# ======================================================================
+# Compound functions
+# ======================================================================
+def ratio_to_moving_average(n):
+    ma = mean(n)
+
+    def _ratio_to_moving_average(rowcount, a, b):
+        b = ma(rowcount, b)
+        return ratio(rowcount, a, b)
+
+    return _ratio_to_moving_average
 
 # ======================================================================
 # Projections

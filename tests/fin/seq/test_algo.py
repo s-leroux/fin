@@ -2,9 +2,10 @@ import unittest
 
 from fin.seq import algo
 
+ROUNDING=8
 def eval(fct, *cols):
     result = fct(len(cols[0]), *cols)
-    return [round(x, 8) if type(x) is float else x for x in result]
+    return [round(x, ROUNDING) if type(x) is float else x for x in result]
 
 class TestWindow(unittest.TestCase):
     def test_one_column(self):
@@ -152,6 +153,9 @@ class TestMapN(unittest.TestCase):
 
         self.assertSequenceEqual(actual, EXPECTED)
 
+# ======================================================================
+# Core functions
+# ======================================================================
 class TestShift(unittest.TestCase):
     def setUp(self):
         LEN = self.LEN = 10
@@ -170,6 +174,27 @@ class TestShift(unittest.TestCase):
         actual = eval(algo.shift(DELTA), self._list)
 
         self.assertSequenceEqual(actual, EXPECTED)
+
+class TestRatio(unittest.TestCase):
+    def test_ratio(self):
+        L=10
+        colA = list(range(-L, L+1))
+        colB = list(range(1,2*L+2))
+
+        expected = [round(a_i/b_i, ROUNDING) for a_i, b_i in zip(colA, colB)]
+        actual = eval(algo.ratio, colA, colB)
+
+        self.assertSequenceEqual(actual, expected)
+
+    def test_ratio_inf_undef(self):
+        L=10
+        colA = list(range(-L, L+1))
+        colB = [0.0]*(2*L+1)
+
+        expected = [float("-inf")]*L + [None] + [float("inf")]*L
+        actual = eval(algo.ratio, colA, colB)
+
+        self.assertSequenceEqual(actual, expected)
 
 # ======================================================================
 # Calendar functions
