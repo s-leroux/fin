@@ -1,7 +1,6 @@
 """
-Output driver for fin.seq.table.Table
+Formatters for fin.seq.table.Table
 """
-
 
 class Tabular:
     def format(self, table):
@@ -53,3 +52,4 @@ class CSV:
             result += self._delimiter.join(map(str, row)) + "\n"
 
         return result
+

@@ -72,6 +72,12 @@ class CalendarDate:
     def __lt__(self, other):
         return self._pydate < other._pydate
 
+    def __eq__(self, other):
+        return self._pydate == other._pydate
+
+    def __hash__(self):
+        return self._pydate.__hash__()
+
     def __add__(self, delta):
         """
         Create a new CalendarDate offsetted by delta.

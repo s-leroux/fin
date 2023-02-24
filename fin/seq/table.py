@@ -1,6 +1,6 @@
 from copy import copy
 
-from fin.seq import driver
+from fin.seq import formatter
 
 class InvalidError(Exception):
     pass
@@ -242,7 +242,7 @@ class Table:
         return int(index_or_name)
 
     def __str__(self):
-        return driver.Tabular().format(self)
+        return formatter.Tabular().format(self)
 
 # ======================================================================
 # Helper for table expression evaluation

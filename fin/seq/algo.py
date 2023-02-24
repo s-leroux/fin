@@ -190,6 +190,50 @@ def volatility(n, tau=1/252):
     return _volatility
 
 # ======================================================================
+# Linear trend
+# ======================================================================
+def linear_trend(rowcount, values):
+    """
+    Compute the linear trend over the full dataset.
+    """
+    sigma_y = sigma_xy = sigma_xx = 0.0
+    sigma_x = 0.0
+    n = 0
+    d = (len(values)-1) / 2.0
+    print(rowcount, len(values), d)
+    for i, value in enumerate(values):
+        try:
+            x = i-d # ensure ∑x = 0
+            sigma_x += x
+            print(i, x, sigma_x)
+            sigma_y += value
+            sigma_xy += x*value
+            sigma_xx += x*x
+            n += 1
+        except TypeError:
+            pass
+
+    print(sigma_x, sigma_y, sigma_xx, sigma_xy)
+    result = [None]*rowcount
+
+    try:
+        a = sigma_xy / sigma_xx
+        b = sigma_y / n
+        print("a,b = ", a, b)
+    except (ZeroDivisionError, TypeError):
+        pass
+    else:
+        for i in range(rowcount):
+            x = i-d
+            try:
+                result[i] = a*x + b
+            except TypeError:
+                pass
+
+    return result
+
+
+# ======================================================================
 # Core functions
 # ======================================================================
 def constantly(value):
@@ -248,8 +292,8 @@ def difference(fct, y0):
 def ratio_to_moving_average(n):
     ma = mean(n)
 
-    def _ratio_to_moving_average(rowcount, a, b):
-        b = ma(rowcount, b)
+    def _ratio_to_moving_average(rowcount, a):
+        b = ma(rowcount, a)
         return ratio(rowcount, a, b)
 
     return _ratio_to_moving_average
@@ -334,3 +378,67 @@ def shift_date(years=0, months=0, days=0):
         return fin.seq.table.Table.Column(name,result)
 
     return _shift_date
+
+def hist2(f, n, interval):
+    """
+    Apply a function to data et recuring intervals
+    """
+    assert interval > 0
+    def _hist(rowcount, data):
+        result = [None]*rowcount
+        for i, value in enumerate(data):
+            if i < interval:
+                result[i] = []
+            else:
+                result[i] = [value] + result[i-interval][:n]
+
+        result = builtins.map(f, result)
+        return result
+
+    return _hist
+
+def hist(f, n, years=0, months=0, days=0):
+    """
+    Apply a function to data at recuring intervals.
+    """
+    offset = datetime.CalendarDateDelta(years, months, days)
+    def _hist(rowcount, dates, data):
+        # First, build an index from date to row number:
+        index = { date: idx for idx, date in enumerate(dates) }
+
+        # Then build a mapping from one date to the preceeding period.
+        translation = {}
+        previous = None
+        for date in dates:
+            print(date, offset, date+offset, date+offset in index)
+            try:
+                other = date+offset
+            except ValueError:
+                continue
+
+            # Map a date to its preceeding period if it exists,
+            # else, use the closest matching date
+            if other in index:
+                translation[date] = other
+                previous = other
+            else:
+                translation[date] = previous
+        print(translation)
+
+        # Now, for each date, build a vector of the values at recuring intervals
+        result = [None]*rowcount
+        for i, date in enumerate(dates):
+            print(date, end=' ')
+            v = []
+            for j in range(n):
+                idx = index.get(date, None)
+                v.append(data[idx] if idx is not None else None)
+                date = translation.get(date, None)
+                if date is None:
+                    break
+            result[i] = f(v)
+            print()
+
+        return result
+
+    return _hist
