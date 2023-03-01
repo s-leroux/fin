@@ -245,7 +245,7 @@ class Table:
         return formatter.Tabular().format(self)
 
 # ======================================================================
-# Helper for table expression evaluation
+# Helpers for table expression evaluation
 # ======================================================================
 def column(col):
     """
@@ -256,7 +256,7 @@ def column(col):
 add = lambda rowcount, *cols : [sum(row) for row in zip(*cols)]
 
 # ======================================================================
-# Create tables from existing sequences
+# Create tables from existing data structures
 # ======================================================================
 def table_from_data(data, headings):
     if not len(data):
@@ -275,8 +275,18 @@ def table_from_data(data, headings):
 
     return t
 
+def table_from_dict(d):
+    data = []
+    headings = []
+
+    for name, column in d.items():
+        headings.append(name)
+        data.append(column)
+
+    return table_from_data(data, headings)
+
 # ======================================================================
-# Create tables from CSV
+# Join
 # ======================================================================
 def join(tableA, tableB, keyA, keyB=None):
     """

@@ -397,6 +397,24 @@ class TestTableJoin(unittest.TestCase):
         self.assertSequenceEqual(list(zip(*t.data())), expected)
 
 # ======================================================================
+# 
+# ======================================================================
+class TestFromDict(unittest.TestCase):
+    def test_load(self):
+        LEN = 10
+        A = [*range(LEN)]
+        B = [1.0]*LEN
+        t = table.table_from_dict(dict(
+            A=A,
+            B=B,
+            ))
+
+        self.assertEqual(t.rows(), LEN)
+        self.assertEqual(t.columns(), 1+2)
+        [S] = t.reval(algo.by_row(lambda a, b: a+b), "A", "B")
+        self.assertSequenceEqual(S, [a+1.0 for a in A])
+
+# ======================================================================
 # CSV
 # ======================================================================
 class TestCSV(unittest.TestCase):
