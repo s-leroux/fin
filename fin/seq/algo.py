@@ -4,26 +4,8 @@ import math
 import builtins
 
 # ======================================================================
-# Window functions
+# Adapters
 # ======================================================================
-def window(fct, n):
-    def _window(rowcount, *cols):
-        i = n-1
-        result = [None]*rowcount
-        while i < rowcount:
-            result[i] = fct(i-n+1, i+1, *cols)
-            i += 1
-
-        return result
-
-    return _window
-
-def naive_window(fct, n):
-    def _fct(start, end, *cols):
-        return fct(*[col[start:end] for col in cols])
-
-    return window(_fct, n)
-
 def by_row(fct):
     """
     Evaluates a function row by row on a list of columns.
@@ -44,6 +26,27 @@ def by_row(fct):
         return result
 
     return _by_row
+
+# ======================================================================
+# Window functions
+# ======================================================================
+def window(fct, n):
+    def _window(rowcount, *cols):
+        i = n-1
+        result = [None]*rowcount
+        while i < rowcount:
+            result[i] = fct(i-n+1, i+1, *cols)
+            i += 1
+
+        return result
+
+    return _window
+
+def naive_window(fct, n):
+    def _fct(start, end, *cols):
+        return fct(*[col[start:end] for col in cols])
+
+    return window(_fct, n)
 
 def moving_average(n):
     return naive_window(lambda col:sum(col)/len(col), n)
