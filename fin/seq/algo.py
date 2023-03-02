@@ -55,50 +55,34 @@ def standard_deviation(n):
     b = a/n
 
     def s(rowcount, values):
-        buffer = [0.0]*n
         sigma_ui = 0.0
         sigma_ui2 = 0.0
+        buffer = [None]*n
+        nones = n
         ptr = 0
-        nones = 0
         result = [None]*rowcount
-        i = 0
-        while i < n-1:
-            x = values[i]
-            buffer[i] = x
-            if x is None:
-                nones += 1
-            else:
-                sigma_ui += x
-                sigma_ui2 += x*x
 
-            i += 1
-
-        ptr = i
-        while True:
-            x = values[i]
-            buffer[ptr] = x
-            if x is None:
-                nones += 1
-            else:
-                sigma_ui += x
-                sigma_ui2 += x*x
-
-            if not nones:
-                result[i] = sqrt(a*sigma_ui2 - b*sigma_ui*sigma_ui)
-
-            i += 1
-            if i == rowcount:
-                break
-
-            ptr += 1
-            if ptr == n:
-                ptr = 0
+        for i, v in enumerate(values):
             x = buffer[ptr]
             if x is None:
                 nones -= 1
             else:
                 sigma_ui -= x
                 sigma_ui2 -= x*x
+
+            buffer[ptr] = v
+            if v is None:
+                nones += 1
+            else:
+                sigma_ui += v
+                sigma_ui2 += v*v
+
+            if not nones:
+                result[i] = sqrt(a*sigma_ui2 - b*sigma_ui*sigma_ui)
+
+            ptr += 1
+            if ptr == n:
+                ptr = 0
 
         return result
 
