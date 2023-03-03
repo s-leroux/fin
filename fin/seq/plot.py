@@ -116,7 +116,12 @@ class _Multiplot:
         for plot in self._plots:
             total_height += plot.relative_height
         current_height = total_height
+        n = len(self._plots)
+        i = 0
         for plot in self._plots:
+            i += 1
+
+            # Plot boundaries
             prev_height = current_height
             current_height -= plot.relative_height
 
@@ -126,6 +131,15 @@ class _Multiplot:
             writer(f"set rmargin at screen 0.9000\n")
             writer(f"set tmargin at screen {top:1.4f}\n")
             writer(f"set bmargin at screen {bottom:1.4f}\n")
+
+            # Plot format
+            if i < n:
+                writer("set format x \"\"\n")
+            else:
+                writer("set format x\n")
+                writer("set xtics axis\n")
+
+            # Drae the plot
             plot.write_to(writer)
 
 # ======================================================================
