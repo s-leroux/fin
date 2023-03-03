@@ -86,6 +86,11 @@ class _Multiplot:
 
         self._plots = []
 
+        self._title = None
+
+    def set_title(self, title):
+        self._title = title
+
     def write_to(self, writer):
         """
         Send the batch commands to the GNUPlot process.
@@ -131,6 +136,14 @@ class _Multiplot:
             writer(f"set rmargin at screen 0.9000\n")
             writer(f"set tmargin at screen {top:1.4f}\n")
             writer(f"set bmargin at screen {bottom:1.4f}\n")
+
+            # Plot title
+            if i == 1:
+                title = self._title
+                if title:
+                    writer(f"set title \"{title}\" noenhanced\n")
+            else:
+                writer("set title\n")
 
             # Plot format
             if i < n:
