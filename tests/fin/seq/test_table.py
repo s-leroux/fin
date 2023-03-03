@@ -18,7 +18,7 @@ class TestTable(unittest.TestCase):
         TO=100
         t = table.Table(TO-FROM)
 
-        t.add_column("X", table.column(range(FROM, TO)))
+        t.add_column(table.Column("X", range(FROM, TO)))
 
         self.assertEqual(t.rows(), TO-FROM)
         self.assertEqual(t.columns(), 1+1)
@@ -52,11 +52,22 @@ class TestTable(unittest.TestCase):
         t = table.Table(LEN)
 
         t.add_column("X", range)
-        t.add_column("Y", lambda n, xs: [x+1 for x in xs], "X")
+        t.add_column("Y", (lambda n, xs: [x+1 for x in xs], "X"))
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1+2)
         self.assertSequenceEqual(t["Y"], [x+1 for x in range(LEN)])
+
+    def test_add_column_from_other_table(self):
+        LEN=99
+        t1 = table.Table(LEN)
+        t1.add_column("X", range)
+
+        t2 = table.Table(LEN)
+        t2.add_column(t1["X"])
+
+        self.assertEqual(t2.columns(), t1.columns())
+        self.assertEqual(t2["X"], t1["X"])
 
     def test_add_column_from_algo(self):
         LEN=10
@@ -64,9 +75,9 @@ class TestTable(unittest.TestCase):
         B=list(range(300, 300+LEN))
 
         t = table.Table(LEN)
-        t.add_column("A", table.column(A))
-        t.add_column("B", table.column(B))
-        t.add_column("C", algo.by_row(lambda a, b: a+b), "A", "B")
+        t.add_column(table.Column("A", A))
+        t.add_column(table.Column("B", B))
+        t.add_column("C", (algo.by_row(lambda a, b: a+b), "A", "B"))
         self.assertSequenceEqual(t["C"], list(range(500, 500+2*LEN, 2)))
 
     def test_add_column_reject_duplicate(self):
@@ -77,13 +88,47 @@ class TestTable(unittest.TestCase):
         with self.assertRaises(table.DuplicateName):
             t.add_column("X", 1)
 
+    def test_add_columns_name_expr(self):
+        """
+        Table.add_columns() should accept (name, expr) pairs as arguments.
+        """
+        LEN=10
+        t = table.Table(LEN)
+        t.add_columns(
+                ("X", range),
+                ("Y", 2),
+                )
+
+        self.assertEqual(t.columns(), 1+2)
+        self.assertSequenceEqual(t["X"], [*range(LEN)])
+        self.assertSequenceEqual(t["Y"], [2]*LEN)
+
+    def test_add_columns_column(self):
+        """
+        Table.add_columns() should accept Column instances as arguments.
+        """
+        LEN=10
+        t1 = table.Table(LEN)
+        t1.add_columns(
+                ("X", range),
+                ("Y", 2),
+                )
+        t2 = table.Table(LEN)
+        t2.add_columns(
+                t1["X"],
+                t1["Y"],
+                )
+        self.assertEqual(t2.columns(), t1.columns())
+        self.assertSequenceEqual(t2["X"], t1["X"])
+        self.assertSequenceEqual(t2["Y"], t1["Y"])
+
     def test_naive_window(self):
         LEN=10
         A=list(range(10, 10+LEN))
 
         t = table.Table(LEN)
-        t.add_column("A", table.column(A))
-        t.add_column("B", algo.naive_window(sum, 2), "A")
+        t.add_column(table.Column("A", A))
+        t.add_column("B", (algo.naive_window(sum, 2), "A"))
         self.assertSequenceEqual(t["B"], [None, 21, 23, 25, 27, 29, 31, 33, 35, 37])
 
     def test_get_column(self):
@@ -93,9 +138,9 @@ class TestTable(unittest.TestCase):
         C=[3]*LEN
         t = table.Table(LEN)
 
-        t.add_column("A", table.column(A))
-        t.add_column("B", table.column(B))
-        t.add_column("C", table.column(C))
+        t.add_column(table.Column("A", A))
+        t.add_column(table.Column("B", B))
+        t.add_column(table.Column("C", C))
 
         # Column 0 is used for rows numbering
         self.assertEqual(t[1].value, A)
@@ -113,15 +158,15 @@ class TestTable(unittest.TestCase):
         t = table.Table(99)
 
         with self.assertRaises(table.InvalidError):
-            t.add_column("X", table.column([0.0]*100))
+            t.add_column(table.Column("X", [0.0]*100))
 
         with self.assertRaises(table.InvalidError):
-            t.add_column("X", table.column([0.0]*98))
+            t.add_column(table.Column("X", [0.0]*98))
 
     def test_rename(self):
         t = table.Table(10)
         t.add_columns(
-            ("A", lambda count : range(count)),
+            ("A", range),
             ("B", 2),
             ("C", 3),
         )

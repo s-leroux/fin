@@ -207,7 +207,7 @@ class TestCalendarFunctions(unittest.TestCase):
         with open("tests/_fixtures/shift_date.py") as f:
             expected = ast.literal_eval(f.read())
 
-        t.add_column("Date2", algo.shift_date(years=1), "Date")
+        t.add_column("Date2", (algo.shift_date(years=1), "Date"))
         l1 = list(map(str, t._meta[1]))
         l2 = list(map(str, t._meta[2]))
         actual = (*zip(l1, l2),)

@@ -385,14 +385,9 @@ def map1(fct):
     return _map
 
 # ======================================================================
-# Utilities
-# ======================================================================
-import fin.seq.table
-named = lambda name : lambda rowcount, col : fin.seq.table.Table.Column(name, col.value)
-
-# ======================================================================
 # Calendar functions
 # ======================================================================
+import fin.seq.table
 from fin import datetime
 
 def shift_date(years=0, months=0, days=0):
@@ -411,7 +406,7 @@ def shift_date(years=0, months=0, days=0):
             except ValueError:
                 pass
 
-        return fin.seq.table.Table.Column(name,result)
+        return fin.seq.table.Column(name,result)
 
     return _shift_date
 

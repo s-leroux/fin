@@ -2,6 +2,9 @@ from copy import copy
 
 from fin.seq import formatter
 
+# ======================================================================
+# Exceptions
+# ======================================================================
 class InvalidError(Exception):
     pass
 
@@ -13,12 +16,50 @@ class RowCountMismatch(InvalidError):
 class DuplicateName(ValueError):
     pass
 
+# ======================================================================
+# Utilities
+# ======================================================================
 def C(column):
-    if isinstance(column, Table.Column):
+    if isinstance(column, Column):
         return column
 
     # otherwise, we assume it's a generator
-    return Table.Column(None, column)
+    return Column(None, column)
+
+named = lambda name : lambda rowcount, col : Column(name, col.value)
+
+# ======================================================================
+# Column class
+# ======================================================================
+class Column:
+    __slots__ = (
+            "value",
+            "name",
+            )
+
+    def __init__(self, name, value):
+        self.name = name
+        self.value = list(value)
+
+    def __len__(self):
+        return len(self.value)
+
+    def __getitem__(self, index):
+        return self.value[index]
+
+    def __eq__(self, other):
+        if not isinstance(other, Column):
+            return False
+
+        if self.value != other.value:
+            return False
+        if self.name != other.name:
+            return False
+
+        return True
+
+    def __repr__(self):
+        return "Column(\"{}\", {})".format(self.name, self.value)
 
 # ======================================================================
 # Table class
@@ -27,39 +68,10 @@ class Table:
     """ A Table is a list of columns, all of the same length
         (i.e.: tables are rectangular)
     """
-    class Column:
-        __slots__ = (
-                "value",
-                "name",
-                )
-
-        def __init__(self, name, value):
-            self.name = name
-            self.value = list(value)
-
-        def __len__(self):
-            return len(self.value)
-
-        def __getitem__(self, index):
-            return self.value[index]
-
-        def __eq__(self, other):
-            if not isinstance(other, Table.Column):
-                return False
-
-            if self.value != other.value:
-                return False
-            if self.name != other.name:
-                return False
-
-            return True
-
-        def __repr__(self):
-            return "Column(\"{}\", {})".format(self.name, self.value)
 
     def __init__(self, rows):
         self._rows = rows
-        col0 = Table.Column("#", list(range(rows)))
+        col0 = Column("#", list(range(rows)))
         self._meta = [ col0 ]
 
     # ------------------------------------------------------------------
@@ -125,7 +137,7 @@ class Table:
 
         t = Table(self._rows)
         for column in columns:
-            t.add_column(column.name, column)
+            t.add_column(column)
 
         return t
 
@@ -144,24 +156,42 @@ class Table:
 
         self._meta[index].name = newname
 
-    def add_column(self, name, *exprs):
+    def add_column(self, name_or_expr, expr=None):
+        """
+        Add a column to the table.
+
+        When called with only one argument, it is assumed to have a `name` property.
+        When called with two arguments, the first one is the name of the newly
+        added column, and expr is a valid table expression whose evaluation
+        becomes the new table value.
+        """
+        if expr is None:
+            column, *remainer = self.reval(name_or_expr)
+            name = column.name
+        else:
+            column, *remainer = self.reval(expr)
+            name = name_or_expr
+
         if name is None:
             name = "C" + str(len(self._meta))
         if name in self.names():
             raise DuplicateName(name)
 
-        column, *remainer = self.reval(*exprs)
         if len(remainer):
             raise ValueError("Too many columns")
         if len(column) != self._rows:
             raise RowCountMismatch("column " + name, self._rows, len(column))
 
-        meta = Table.Column(name, column)
+        meta = Column(name, column)
         self._meta.append(meta)
 
     def add_columns(self, *col_specs):
         for col_spec in col_specs:
-            self.add_column(*col_spec)
+            if isinstance(col_spec, Column):
+                self.add_column(col_spec)
+            else:
+                # Assume col_spec is a (name, expr) pair
+                self.add_column(*col_spec)
 
     def del_column(self, index_or_name):
         """ Remove a column from the table, given it's index or name
@@ -218,7 +248,7 @@ class Table:
         if type(item) == str:
             idx = self._get_column_index(item)
             return [ self._meta[idx] ]
-        if isinstance(item, Table.Column):
+        if isinstance(item, Column):
             return [ item ]
 
         try:
@@ -247,12 +277,6 @@ class Table:
 # ======================================================================
 # Helpers for table expression evaluation
 # ======================================================================
-def column(col):
-    """
-    Return a column expression that evaluates to ''col''.
-    """
-    return lambda rowcount : col
-
 add = lambda rowcount, *cols : [sum(row) for row in zip(*cols)]
 
 # ======================================================================
@@ -271,7 +295,7 @@ def table_from_data(data, headings):
 
     t = Table(rowcount)
     for heading, column in zip(headings, data):
-        t.add_column(heading, lambda rc : column)
+        t.add_column(Column(heading, column))
 
     return t
 
