@@ -221,6 +221,26 @@ class TestTable(unittest.TestCase):
         self.assertEqual(t2[1], t[3])
         self.assertEqual(t2[2], t[0])
 
+    def test_copy(self):
+        """
+        Table.copy() should return a new table with the same columns as the receiver.
+        """
+        LEN=10
+        t1 = table.Table(LEN)
+        t1.add_columns(
+                ("X", range),
+                ("Y", 2),
+                )
+
+        t2 = t1.copy()
+
+        self.assertIsNot(t2, t1)
+        self.assertEqual(t2.rows(), t1.rows())
+        self.assertEqual(t2.columns(), t1.columns())
+        self.assertEqual(t2["X"], t1["X"])
+        self.assertEqual(t2["X"], t1["X"])
+        self.assertEqual(t2["Y"], t1["Y"])
+
 # ======================================================================
 # Table expression evaluation
 # ======================================================================

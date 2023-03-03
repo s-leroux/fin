@@ -140,6 +140,15 @@ class Table:
 
         return t
 
+    def copy(self):
+        """
+        Return a copy of the table.
+        """
+        t = Table(self._rows)
+        t.add_columns(*self)
+
+        return t
+
     # ------------------------------------------------------------------
     # Mutative methods
     # ------------------------------------------------------------------
@@ -257,6 +266,9 @@ class Table:
         c = self._get_column_index(c)
 
         return self._meta[c]
+
+    def __iter__(self):
+        return iter(self._meta)
 
     def _get_column_index(self, index_or_name):
         if type(index_or_name) is str:
