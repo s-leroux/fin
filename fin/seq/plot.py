@@ -9,7 +9,7 @@ PIPE = asyncio.subprocess.PIPE
 # ======================================================================
 # Plot elements
 # ======================================================================
-class WithLines:
+class Line:
     def __init__(self, data_index, label):
         self._data_index = data_index
         self._label = label
@@ -19,6 +19,17 @@ class WithLines:
         y = self._data_index+1
         label = self._label
         return f'$MyData using {x}:{y} title "{label}" with lines'
+
+class Bar:
+    def __init__(self, data_index, label):
+        self._data_index = data_index
+        self._label = label
+
+    def get_command(self, x_axis_index):
+        x = x_axis_index+1       # GNUPlot index are 1-based!
+        y = self._data_index+1
+        label = self._label
+        return f'$MyData using {x}:{y} title "{label}" with boxes fs solid 0.9'
 
 # ======================================================================
 # A plot
@@ -30,14 +41,24 @@ class _Plot:
         self._x_axis_index = x_axis_index
         self._elements = []
 
-    def draw(self, column_index_or_name):
+    def draw_line(self, column_index_or_name):
         """
-        Add a new drawing in a plot.
+        Add a new line drawing on a plot.
         """
         column_index = self._table._get_column_index(column_index_or_name)
         label = self._table.names()[column_index]
         self._elements.append(
-                WithLines(column_index, label)
+                Line(column_index, label)
+                )
+
+    def draw_bar(self, column_index_or_name):
+        """
+        Add a new bargraph on the plot.
+        """
+        column_index = self._table._get_column_index(column_index_or_name)
+        label = self._table.names()[column_index]
+        self._elements.append(
+                Bar(column_index, label)
                 )
 
     def write_to(self, writer):

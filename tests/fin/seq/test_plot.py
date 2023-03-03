@@ -57,7 +57,7 @@ class TestGNUPlot(unittest.TestCase):
         p = plot.GNUPlot(self.t, "D", Process=self.Process)
         with p as mp:
             pass
-        
+
         expected="""\
             $MyData << EOD
             # D V
@@ -71,34 +71,47 @@ class TestGNUPlot(unittest.TestCase):
 
         self.assertIn(dedent(expected), self.capture.getvalue())
 
-    def test_plot(self):
+    def test_plot_line(self):
         """
         The 'plot' command must be present.
         """
         p = plot.GNUPlot(self.t, "#", Process=self.Process)
         with p as mp:
             myplot = mp.new_plot()
-            myplot.draw("V")
-        
+            myplot.draw_line("V")
+
         expected='\nplot $MyData using 1:3 title "V" with lines\n'
 
         self.assertIn(expected, self.capture.getvalue())
 
-    def test_plot2(self):
+    def test_plot_line2(self):
         """
         The 'plot' command can display two line charts.
         """
         p = plot.GNUPlot(self.t, "#", Process=self.Process)
         with p as mp:
             myplot = mp.new_plot()
-            myplot.draw("V")
-            myplot.draw("#")
+            myplot.draw_line("V")
+            myplot.draw_line("#")
 
         expected=(
                 '\n'
                 'plot $MyData using 1:3 title "V" with lines,\\\n'
                 '$MyData using 1:1 title "#" with lines\n'
                 )
+
+        self.assertIn(expected, self.capture.getvalue())
+
+    def test_plot_bar(self):
+        """
+        The 'plot' command must be present.
+        """
+        p = plot.GNUPlot(self.t, "#", Process=self.Process)
+        with p as mp:
+            myplot = mp.new_plot()
+            myplot.draw_bar("V")
+
+        expected='\nplot $MyData using 1:3 title "V" with boxes'
 
         self.assertIn(expected, self.capture.getvalue())
 
