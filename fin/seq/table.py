@@ -71,8 +71,7 @@ class Table:
 
     def __init__(self, rows):
         self._rows = rows
-        col0 = Column("#", list(range(rows)))
-        self._meta = [ col0 ]
+        self._meta = [ ]
 
     # ------------------------------------------------------------------
     # Accessors
@@ -118,11 +117,11 @@ class Table:
         not only those used for evaluation of ''fct''.
         """
         cols = self.data(cols)
-        data = self.data()[1:] # ignore the row-number column
+        data = self.data()
         rows = [ row for row, flt in zip(zip(*data),zip(*cols)) if fct(*flt) ]
 
         t = Table(len(rows))
-        for meta, column in zip(self._meta[1:], zip(*rows)):
+        for meta, column in zip(self._meta, zip(*rows)):
             meta = copy(meta)
             meta.value = column
             t._meta.append(meta)
@@ -151,9 +150,6 @@ class Table:
             If the name is ambiguous, the behavior is unspecified.
         """
         index = self._get_column_index(name_or_index)
-        if index == 0:
-            raise ValueError("Cannot rename column 0")
-
         self._meta[index].name = newname
 
     def add_column(self, name_or_expr, expr=None):
@@ -197,9 +193,6 @@ class Table:
         """ Remove a column from the table, given it's index or name
         """
         index = self._get_column_index(index_or_name)
-        if index == 0:
-            raise ValueError("Cannot remove column 0")
-
         del self._meta[index]
 
     def del_columns(self, *col_specs):
@@ -321,9 +314,7 @@ def join(tableA, tableB, keyA, keyB=None):
     Rows contening the None value in their key column are ignored.
     """
     colsA = tableA.names()
-    colsA.remove("#")
     colsB = tableB.names()
-    colsB.remove("#")
     if keyB is not None and keyB != keyA:
         itA = tableA.row_iterator([keyA] + colsA)
         itB = tableB.row_iterator([keyB] + colsB)

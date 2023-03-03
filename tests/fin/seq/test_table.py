@@ -11,7 +11,7 @@ class TestTable(unittest.TestCase):
         t = table.Table(0)
 
         self.assertEqual(t.rows(), 0)
-        self.assertEqual(t.columns(), 1+0)
+        self.assertEqual(t.columns(), 0)
 
     def test_add_column_from_iterator(self):
         FROM=1
@@ -21,7 +21,7 @@ class TestTable(unittest.TestCase):
         t.add_column(table.Column("X", range(FROM, TO)))
 
         self.assertEqual(t.rows(), TO-FROM)
-        self.assertEqual(t.columns(), 1+1)
+        self.assertEqual(t.columns(), 1)
         self.assertSequenceEqual(t["X"], range(FROM, TO))
 
     def test_add_column_from_value(self):
@@ -32,7 +32,7 @@ class TestTable(unittest.TestCase):
         t.add_column("X", VALUE)
 
         self.assertEqual(t.rows(), LEN)
-        self.assertEqual(t.columns(), 1+1)
+        self.assertEqual(t.columns(), 1)
         self.assertSequenceEqual(t["X"], [VALUE]*LEN)
 
     def test_add_column_from_function_zero_param(self):
@@ -43,7 +43,7 @@ class TestTable(unittest.TestCase):
         t.add_column("X", lambda n: [VALUE]*n)
 
         self.assertEqual(t.rows(), LEN)
-        self.assertEqual(t.columns(), 1+1)
+        self.assertEqual(t.columns(), 1)
         self.assertSequenceEqual(t["X"], [VALUE]*LEN)
 
     def test_add_column_from_function_one_param(self):
@@ -55,7 +55,7 @@ class TestTable(unittest.TestCase):
         t.add_column("Y", (lambda n, xs: [x+1 for x in xs], "X"))
 
         self.assertEqual(t.rows(), LEN)
-        self.assertEqual(t.columns(), 1+2)
+        self.assertEqual(t.columns(), 2)
         self.assertSequenceEqual(t["Y"], [x+1 for x in range(LEN)])
 
     def test_add_column_from_other_table(self):
@@ -99,7 +99,7 @@ class TestTable(unittest.TestCase):
                 ("Y", 2),
                 )
 
-        self.assertEqual(t.columns(), 1+2)
+        self.assertEqual(t.columns(), 2)
         self.assertSequenceEqual(t["X"], [*range(LEN)])
         self.assertSequenceEqual(t["Y"], [2]*LEN)
 
@@ -143,16 +143,16 @@ class TestTable(unittest.TestCase):
         t.add_column(table.Column("C", C))
 
         # Column 0 is used for rows numbering
-        self.assertEqual(t[1].value, A)
-        self.assertEqual(t[2].value, B)
-        self.assertEqual(t[3].value, C)
-        self.assertEqual(t[1].name, "A")
-        self.assertEqual(t[2].name, "B")
-        self.assertEqual(t[3].name, "C")
+        self.assertEqual(t[0].value, A)
+        self.assertEqual(t[1].value, B)
+        self.assertEqual(t[2].value, C)
+        self.assertEqual(t[0].name, "A")
+        self.assertEqual(t[1].name, "B")
+        self.assertEqual(t[2].name, "C")
 
-        self.assertEqual(t["A"], t[1])
-        self.assertEqual(t["B"], t[2])
-        self.assertEqual(t["C"], t[3])
+        self.assertEqual(t["A"], t[0])
+        self.assertEqual(t["B"], t[1])
+        self.assertEqual(t["C"], t[2])
 
     def test_bad_col_length(self):
         t = table.Table(99)
@@ -171,19 +171,7 @@ class TestTable(unittest.TestCase):
             ("C", 3),
         )
         t.rename("A", "N")
-        self.assertSequenceEqual(t.names(), ("#", "N", "B", "C"))
-
-    def test_rename_column_0_is_protected(self):
-        """ It should not allow renaming column zero.
-        """
-        t = table.Table(10)
-        t.add_columns(
-            ("A", 1),
-        )
-        with self.assertRaises(ValueError):
-            t.rename("#", "N")
-        with self.assertRaises(ValueError):
-            t.rename(0, "N")
+        self.assertSequenceEqual(t.names(), ("N", "B", "C"))
 
     def test_delete(self):
         t = table.Table(10)
@@ -193,19 +181,7 @@ class TestTable(unittest.TestCase):
             ("C", 3),
         )
         t.del_column("B")
-        self.assertSequenceEqual(t.names(), ("#", "A", "C"))
-
-    def test_delete_column_0_is_protected(self):
-        """ It should not allow deleting column zero.
-        """
-        t = table.Table(10)
-        t.add_columns(
-            ("A", 1),
-        )
-        with self.assertRaises(ValueError):
-            t.del_column("#")
-        with self.assertRaises(ValueError):
-            t.del_column(0)
+        self.assertSequenceEqual(t.names(), ("A", "C"))
 
     # ------------------------------------------------------------------
     # Transformations
@@ -240,10 +216,10 @@ class TestTable(unittest.TestCase):
         )
         t2 = t.select("C","D","A")
         self.assertEqual(t2.rows(), t.rows())
-        self.assertEqual(t2.columns(), 1+3)
+        self.assertEqual(t2.columns(), 3)
+        self.assertEqual(t2[0], t[2])
         self.assertEqual(t2[1], t[3])
-        self.assertEqual(t2[2], t[4])
-        self.assertEqual(t2[3], t[1])
+        self.assertEqual(t2[2], t[0])
 
 # ======================================================================
 # Table expression evaluation
@@ -418,7 +394,6 @@ class TestTableJoin(unittest.TestCase):
     def test_join_0(self):
         t = table.join(self._tableA, self._tableB, "A", "U")
         expected = list(self._cols[k].value for k in "ABCUVW")
-        expected = [[*range(len(expected[0]))]] + expected
         self.assertSequenceEqual(t.data(), expected)
 
     def test_join_1(self):
@@ -426,9 +401,8 @@ class TestTableJoin(unittest.TestCase):
         self._tableB["U"].value[5] = None
         t = table.join(self._tableA, self._tableB, "A", "U")
 
-        idx = iter(range(999))
         expected = list(zip(*[self._cols[k] for k in "ABCUVW"]))
-        expected = [(next(idx), *r) for r in expected if None not in r]
+        expected = [r for r in expected if None not in r]
         self.assertSequenceEqual(list(zip(*t.data())), expected)
 
     def test_join_2(self):
@@ -436,9 +410,8 @@ class TestTableJoin(unittest.TestCase):
         self._tableB["U"].value[3:6] = [None]*3
         t = table.join(self._tableA, self._tableB, "A", "U")
 
-        idx = iter(range(999))
         expected = list(zip(*[self._cols[k] for k in "ABCUVW"]))
-        expected = [(next(idx), *r) for r in expected if None not in r]
+        expected = [r for r in expected if None not in r]
         self.assertSequenceEqual(list(zip(*t.data())), expected)
 
 # ======================================================================
@@ -455,7 +428,7 @@ class TestFromDict(unittest.TestCase):
             ))
 
         self.assertEqual(t.rows(), LEN)
-        self.assertEqual(t.columns(), 1+2)
+        self.assertEqual(t.columns(), 2)
         [S] = t.reval(algo.by_row(lambda a, b: a+b), "A", "B")
         self.assertSequenceEqual(S, [a+1.0 for a in A])
 
@@ -467,7 +440,7 @@ class TestCSV(unittest.TestCase):
         t = table.table_from_csv_file("tests/_fixtures/bd.csv", format="dn-n")
 
         self.assertEqual(t.rows(), 284)
-        self.assertEqual(t.columns(), 1+3)
+        self.assertEqual(t.columns(), 3)
 
         time = t["time"]
         self.assertEqual(str(time[0]), "2022-01-03")

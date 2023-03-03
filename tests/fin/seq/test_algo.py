@@ -208,8 +208,8 @@ class TestCalendarFunctions(unittest.TestCase):
             expected = ast.literal_eval(f.read())
 
         t.add_column("Date2", (algo.shift_date(years=1), "Date"))
-        l1 = list(map(str, t._meta[1]))
-        l2 = list(map(str, t._meta[2]))
+        l1 = list(map(str, t._meta[0]))
+        l2 = list(map(str, t._meta[1]))
         actual = (*zip(l1, l2),)
 
         self.assertEqual(actual, expected)

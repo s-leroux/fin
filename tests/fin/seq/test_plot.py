@@ -28,6 +28,7 @@ from textwrap import dedent
 class TestGNUPlot(unittest.TestCase):
     def setUp(self):
         self.t = t = table.Table(5)
+        t.add_column("T", range)
         t.add_column("D", 2)
         t.add_column("V", 1)
 
@@ -60,7 +61,7 @@ class TestGNUPlot(unittest.TestCase):
 
         expected="""\
             $MyData << EOD
-            # D V
+            #T D V
             0 2 1
             1 2 1
             2 2 1
@@ -75,7 +76,7 @@ class TestGNUPlot(unittest.TestCase):
         """
         The 'plot' command must be present.
         """
-        p = plot.GNUPlot(self.t, "#", Process=self.Process)
+        p = plot.GNUPlot(self.t, "T", Process=self.Process)
         with p as mp:
             myplot = mp.new_plot()
             myplot.draw_line("V")
@@ -88,16 +89,16 @@ class TestGNUPlot(unittest.TestCase):
         """
         The 'plot' command can display two line charts.
         """
-        p = plot.GNUPlot(self.t, "#", Process=self.Process)
+        p = plot.GNUPlot(self.t, "T", Process=self.Process)
         with p as mp:
             myplot = mp.new_plot()
             myplot.draw_line("V")
-            myplot.draw_line("#")
+            myplot.draw_line("T")
 
         expected=(
                 '\n'
                 'plot $MyData using 1:3 title "V" with lines,\\\n'
-                '$MyData using 1:1 title "#" with lines\n'
+                '$MyData using 1:1 title "T" with lines\n'
                 )
 
         self.assertIn(expected, self.capture.getvalue())
@@ -106,7 +107,7 @@ class TestGNUPlot(unittest.TestCase):
         """
         The 'plot' command must be present.
         """
-        p = plot.GNUPlot(self.t, "#", Process=self.Process)
+        p = plot.GNUPlot(self.t, "T", Process=self.Process)
         with p as mp:
             myplot = mp.new_plot()
             myplot.draw_bar("V")
@@ -119,7 +120,7 @@ class TestGNUPlot(unittest.TestCase):
         """
         The margins must be set.
         """
-        p = plot.GNUPlot(self.t, "#", Process=self.Process)
+        p = plot.GNUPlot(self.t, "T", Process=self.Process)
         with p as mp:
             myplot = mp.new_plot(relative_height=4)
             myplot = mp.new_plot(relative_height=1)

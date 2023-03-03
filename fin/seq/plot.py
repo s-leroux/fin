@@ -107,7 +107,7 @@ class _Multiplot:
 
     def _write_data_to(self, writer):
         data = formatter.CSV(delimiter=" ").format(self._table)
-        writer("$MyData << EOD\n")
+        writer("$MyData << EOD\n#")
         writer(data)
         writer("EOD\n")
 
