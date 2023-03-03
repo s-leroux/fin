@@ -94,6 +94,20 @@ def pattern(*events):
 
     return (_pattern, *events)
 
+def when(test, a, b):
+    """
+    Evaluates to a_i if t_i is true, else b_i.
+    """
+    def _when(rowcount, test, a, b):
+        result = [None]*rowcount
+
+        for i, (vt, va, vb) in enumerate(zip(test, a, b)):
+            result[i] = va if vt else vb
+
+        return result
+
+    return (_when, test, a, b)
+
 # ======================================================================
 # Quantifiers
 # ======================================================================

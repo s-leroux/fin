@@ -81,6 +81,23 @@ class TestPattern(unittest.TestCase):
             ))
         self.assertSequenceEqual(actual, expected)
 
+class TestWhen(unittest.TestCase):
+    def test_when(self):
+        A = 2.0
+        B = 5.0
+        LIMIT = 5
+        LEN = 10
+        T = [*range(LEN)]
+
+        t = table.table_from_dict(dict(
+            A=[A]*LEN,
+            B=[B]*LEN,
+            T=T,
+            ))
+
+        expected = [A if t > LIMIT else B for t in T]
+        [actual] = t.reval(signal.when(signal.above("T", LIMIT), "A", "B"))
+        self.assertSequenceEqual(actual, expected)
 
 # ======================================================================
 # Quantifiers

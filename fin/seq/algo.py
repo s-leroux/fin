@@ -28,6 +28,55 @@ def by_row(fct):
     return _by_row
 
 # ======================================================================
+# Accumulator
+# ======================================================================
+def acc(value, neg=False, pos=True):
+    """
+    Increase the running value when pos is true, decrease it when neg is true.
+    """
+    def _acc(rowcount, value, neg, pos):
+        result = [None]*rowcount
+        a = 0.0
+
+        for i, (vi, ni, pi) in enumerate(zip(value, neg, pos)):
+            if pi:
+                a += vi
+            if ni:
+                a -= vi
+
+            result[i] = a
+
+        return result
+
+    return (_acc, value, neg, pos)
+
+def acc2(value, buy, sell):
+    """
+    Simulate an investor that can buy and sell one share.
+
+    The investor can only sell when it owns a share.
+    """
+    def _acc(rowcount, value, buy, sell):
+        result = [None]*rowcount
+        share = 0
+        cash = 0
+        a = 0
+
+        for i, (v, b, s) in enumerate(zip(value, buy, sell)):
+            if b and not share:
+                share = 1
+                cash -= v
+            if s and share:
+                share = 0
+                cash += v
+
+            result[i] = share*v+cash
+
+        return result
+
+    return (_acc, value, buy, sell)
+
+# ======================================================================
 # Window functions
 # ======================================================================
 def window(fct, n):
