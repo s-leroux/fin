@@ -31,6 +31,19 @@ class Bar:
         label = self._label
         return f'$MyData using {x}:{y} title "{label}" with boxes fs solid 0.9'
 
+class Candlestick:
+    def __init__(self, open_index, low_index, high_index, close_index, label=""):
+        self._open_index = open_index
+        self._low_index = low_index
+        self._high_index = high_index
+        self._close_index = close_index
+        self._label = label
+
+    def get_command(self, x_axis_index):
+        x = x_axis_index+1       # GNUPlot index are 1-based!
+        label = self._label
+        return f'$MyData using {x}:{self._open_index+1}:{self._low_index+1}:{self._high_index+1}:{self._close_index+1} title "{label}" with candlesticks'
+
 # ======================================================================
 # A plot
 # ======================================================================
@@ -59,6 +72,19 @@ class _Plot:
         label = self._table.names()[column_index]
         self._elements.append(
                 Bar(column_index, label)
+                )
+
+    def draw_candlestick(self, open_index, low_index, high_index, close_index):
+        """
+        Add a new bargraph on the plot.
+        """
+        open_index = self._table._get_column_index(open_index)
+        low_index = self._table._get_column_index(low_index)
+        high_index = self._table._get_column_index(high_index)
+        close_index = self._table._get_column_index(close_index)
+        label = "" # ???
+        self._elements.append(
+                Candlestick(open_index, low_index, high_index, close_index, label)
                 )
 
     def write_to(self, writer):
@@ -109,6 +135,7 @@ class _Multiplot:
         writer("\n")
         writer("reset\n")
         writer("set multiplot\n")
+        writer("set key left top\n")
 
     def _write_data_to(self, writer):
         data = formatter.CSV(delimiter=" ").format(self._table)
