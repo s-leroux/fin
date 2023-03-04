@@ -10,91 +10,64 @@ PIPE = asyncio.subprocess.PIPE
 # Plot elements
 # ======================================================================
 class Line:
-    def __init__(self, data_index, label):
-        self._data_index = data_index
-        self._label = label
+    def __init__(self, data_column):
+        self._data_column = data_column
 
-    def get_command(self, x_axis_index):
-        x = x_axis_index+1       # GNUPlot index are 1-based!
-        y = self._data_index+1
-        label = self._label
-        return f'$MyData using {x}:{y} title "{label}" with lines'
+    def accept(self, visitor):
+        visitor.visit_line_chart(self)
 
 class Bar:
-    def __init__(self, data_index, label):
-        self._data_index = data_index
-        self._label = label
+    def __init__(self, data_column):
+        self._data_column = data_column
 
-    def get_command(self, x_axis_index):
-        x = x_axis_index+1       # GNUPlot index are 1-based!
-        y = self._data_index+1
-        label = self._label
-        return f'$MyData using {x}:{y} title "{label}" with boxes fs solid 0.9'
+    def accept(self, visitor):
+        visitor.visit_bar_chart(self)
 
 class Candlestick:
-    def __init__(self, open_index, low_index, high_index, close_index, label=""):
-        self._open_index = open_index
-        self._low_index = low_index
-        self._high_index = high_index
-        self._close_index = close_index
-        self._label = label
+    def __init__(self, open_price_column, low_price_column, high_price_column, close_price_column):
+        self._open_price_column = open_price_column
+        self._low_price_column = low_price_column
+        self._high_price_column = high_price_column
+        self._close_price_column = close_price_column
 
-    def get_command(self, x_axis_index):
-        x = x_axis_index+1       # GNUPlot index are 1-based!
-        label = self._label
-        return f'$MyData using {x}:{self._open_index+1}:{self._low_index+1}:{self._high_index+1}:{self._close_index+1} title "{label}" with candlesticks'
+    def accept(self, visitor):
+        visitor.visit_candlestick_chart(self)
 
 # ======================================================================
 # A plot
 # ======================================================================
 class _Plot:
-    def __init__(self, relative_height, table, x_axis_index):
+    def __init__(self, relative_height, table):
         self.relative_height = relative_height
         self._table = table
-        self._x_axis_index = x_axis_index
         self._elements = []
 
-    def draw_line(self, column_index_or_name):
+    def accept(self, visitor):
+        visitor.visit_plot(self)
+
+    def draw_line(self, data_column):
         """
         Add a new line drawing on a plot.
         """
-        column_index = self._table._get_column_index(column_index_or_name)
-        label = self._table.names()[column_index]
         self._elements.append(
-                Line(column_index, label)
+                Line(data_column)
                 )
 
-    def draw_bar(self, column_index_or_name):
+    def draw_bar(self, data_column):
         """
         Add a new bargraph on the plot.
         """
-        column_index = self._table._get_column_index(column_index_or_name)
-        label = self._table.names()[column_index]
         self._elements.append(
-                Bar(column_index, label)
+                Bar(data_column)
                 )
 
-    def draw_candlestick(self, open_index, low_index, high_index, close_index):
+    def draw_candlestick(self, open_price_column, low_price_column, high_price_column, close_price_column):
         """
         Add a new bargraph on the plot.
         """
-        open_index = self._table._get_column_index(open_index)
-        low_index = self._table._get_column_index(low_index)
-        high_index = self._table._get_column_index(high_index)
-        close_index = self._table._get_column_index(close_index)
-        label = "" # ???
         self._elements.append(
-                Candlestick(open_index, low_index, high_index, close_index, label)
+                Candlestick(open_price_column, low_price_column, high_price_column, close_price_column)
                 )
-
-    def write_to(self, writer):
-        writer("plot ")
-        sep = ""
-        for element in self._elements:
-            writer(sep)
-            writer(element.get_command(self._x_axis_index))
-            sep = ",\\\n"
-        writer("\n")
 
 # ======================================================================
 # A Multiplot instance
@@ -106,81 +79,25 @@ class _Multiplot:
     A multiplot is made of 1-to-n plots. All plots are based on the same table
     and uses the same x-axis.
     """
-    def __init__(self, table, x_axis_index_or_name):
+    def __init__(self, table, x_axis_column):
         self._table = table
-        self._x_axis_index = table._get_column_index(x_axis_index_or_name)
+        self._x_axis_column = x_axis_column
 
         self._plots = []
 
         self._title = None
 
+    def accept(self, visitor):
+        visitor.visit_multiplot(self)
+
     def set_title(self, title):
         self._title = title
 
-    def write_to(self, writer):
-        """
-        Send the batch commands to the GNUPlot process.
-        """
-        self._write_preamble_to(writer)
-        self._write_data_to(writer)
-        self._write_plots_to(writer)
-
     def new_plot(self, relative_height=1):
-        plot = _Plot(relative_height, self._table, self._x_axis_index)
+        plot = _Plot(relative_height, self._table)
         self._plots.append(plot)
 
         return plot
-
-    def _write_preamble_to(self, writer):
-        writer("\n")
-        writer("reset\n")
-        writer("set multiplot\n")
-        writer("set key left top\n")
-
-    def _write_data_to(self, writer):
-        data = formatter.CSV(delimiter=" ").format(self._table)
-        writer("$MyData << EOD\n#")
-        writer(data)
-        writer("EOD\n")
-
-    def _write_plots_to(self, writer):
-        total_height = 0
-        for plot in self._plots:
-            total_height += plot.relative_height
-        current_height = total_height
-        n = len(self._plots)
-        i = 0
-        for plot in self._plots:
-            i += 1
-
-            # Plot boundaries
-            prev_height = current_height
-            current_height -= plot.relative_height
-
-            top = 0.80*prev_height/total_height + 0.10
-            bottom = 0.80*current_height/total_height + 0.10
-            writer(f"set lmargin at screen 0.1000\n")
-            writer(f"set rmargin at screen 0.9000\n")
-            writer(f"set tmargin at screen {top:1.4f}\n")
-            writer(f"set bmargin at screen {bottom:1.4f}\n")
-
-            # Plot title
-            if i == 1:
-                title = self._title
-                if title:
-                    writer(f"set title \"{title}\" noenhanced\n")
-            else:
-                writer("set title\n")
-
-            # Plot format
-            if i < n:
-                writer("set format x \"\"\n")
-            else:
-                writer("set format x\n")
-                writer("set xtics axis\n")
-
-            # Drae the plot
-            plot.write_to(writer)
 
 # ======================================================================
 # GNUPlot
@@ -210,6 +127,125 @@ class _Process:
         self._process.stdin.close()
         self.returncode = self._process.wait()
 
+class _GNUPlotVisitor:
+    """
+    The class that handle conversion from the data model to a GNUPlot script.
+    """
+    def __init__(self, write):
+        self._write = write
+
+    def visit_multiplot(self, mp):
+        write = self._write
+        table = mp._table
+
+        self._multiplot = mp
+        self._table = table
+
+        # write the preamble
+        write("\n")
+        write("reset\n")
+        write("set multiplot\n")
+        write("set key left top\n")
+
+        # write the data
+        data = formatter.CSV(delimiter=" ").format(table)
+        write("$MyData << EOD\n#")
+        write(data)
+        write("EOD\n")
+        
+        # write the plots
+        total_height = 0
+        for plot in mp._plots:
+            total_height += plot.relative_height
+        current_height = total_height
+        n = len(mp._plots)
+        i = 0
+        for plot in mp._plots:
+            i += 1
+
+            # Plot boundaries
+            prev_height = current_height
+            current_height -= plot.relative_height
+
+            top = 0.80*prev_height/total_height + 0.10
+            bottom = 0.80*current_height/total_height + 0.10
+            write(f"set lmargin at screen 0.1000\n")
+            write(f"set rmargin at screen 0.9000\n")
+            write(f"set tmargin at screen {top:1.4f}\n")
+            write(f"set bmargin at screen {bottom:1.4f}\n")
+
+            # Plot title
+            if i == 1:
+                title = mp._title
+                if title:
+                    write(f"set title \"{title}\" noenhanced\n")
+            else:
+                write("set title\n")
+
+            # Plot format
+            if i < n:
+                write("set format x \"\"\n")
+            else:
+                write("set format x\n")
+                write("set xtics axis\n")
+
+            # Drae the plot
+            plot.accept(self)
+
+    def visit_plot(self, plot):
+        write = self._write
+
+        self._plot = plot
+
+        write("plot ")
+        sep = ""
+        for element in plot._elements:
+            write(sep)
+            element.accept(self)
+            sep = ",\\\n"
+        write("\n")
+
+    def visit_line_chart(self, chart):
+        write = self._write
+
+        fields = self._make_fields(
+                self._multiplot._x_axis_column,
+                chart._data_column
+                )
+        label = chart._data_column
+
+        write(f'$MyData using {fields} title "{label}" with lines')
+
+    def visit_bar_chart(self, chart):
+        write = self._write
+
+        fields = self._make_fields(
+                self._multiplot._x_axis_column,
+                chart._data_column
+                )
+
+        label = chart._data_column
+
+        write(f'$MyData using {fields} title "{label}" with boxes fs solid 0.9')
+
+    def visit_candlestick_chart(self, chart):
+        write = self._write
+
+        fields = self._make_fields(
+                self._multiplot._x_axis_column,
+                chart._open_price_column,
+                chart._low_price_column,
+                chart._high_price_column,
+                chart._close_price_column
+                )
+
+        label = "" # ???
+        write(f'$MyData using {fields} title "{label}" with candlesticks')
+
+    def _make_fields(self, *field_names):
+        table = self._table
+        return ":".join([str(1+table._get_column_index(field_name)) for field_name in field_names])
+
 class GNUPlot:
     """
     A driver that sends data to a GNUPlot process.
@@ -219,18 +255,18 @@ class GNUPlot:
     def __init__(
             self,
             table,
-            x_axis_index_or_name,
+            x_axis_column,
             *,
             log=None,
             Process=_Process
             ):
         self._table = table
-        self._x_axis_index_or_name = x_axis_index_or_name
+        self._x_axis_column = x_axis_column
         self._Process = Process
         self._log = log # For testing purposes
 
     def __enter__(self):
-        self._multiplot = _Multiplot(self._table, self._x_axis_index_or_name)
+        self._multiplot = _Multiplot(self._table, self._x_axis_column)
         return self._multiplot
 
     def __exit__(self, exc_type, exc_val, exc_tb):
@@ -243,5 +279,6 @@ class GNUPlot:
                     stdin_write(str)
             else:
                 writer = stdin_write
-            self._multiplot.write_to(writer)
+            visitor = _GNUPlotVisitor(writer)
+            self._multiplot.accept(visitor)
 
