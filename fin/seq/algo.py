@@ -314,14 +314,6 @@ def ratio(rowcount, a, b):
 
     return result
 
-def difference(fct, y0):
-    """ Map data using a difference(1) function y_i = f(u_i, y_i-1)
-    """
-    def _difference(rowcount, values):
-        pass
-
-    return _difference
-
 # ======================================================================
 # Compound functions
 # ======================================================================
