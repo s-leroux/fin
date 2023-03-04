@@ -24,8 +24,9 @@ class Bar:
         visitor.visit_bar_chart(self)
 
 class Impulse:
-    def __init__(self, data_column):
+    def __init__(self, data_column, flag_column=None):
         self._data_column = data_column
+        self._flag_column = flag_column
 
     def accept(self, visitor):
         visitor.visit_impulse_chart(self)
@@ -66,6 +67,14 @@ class _Plot:
         """
         self._elements.append(
                 Bar(data_column)
+                )
+
+    def draw_impulse(self, data_column, flag_color=None):
+        """
+        Add a new impulse graph on the plot.
+        """
+        self._elements.append(
+                Impulse(data_column, flag_color)
                 )
 
     def draw_candlestick(self, open_price_column, low_price_column, high_price_column, close_price_column):
@@ -241,14 +250,17 @@ class _GNUPlotVisitor:
     def visit_impulse_chart(self, chart):
         write = self._write
 
-        fields = self._make_fields(
+        x, y, flag = self._get_field_numbers(
                 self._multiplot._x_axis_column,
-                chart._data_column
+                chart._data_column,
+                chart._flag_column,
                 )
 
         label = chart._data_column
-
-        write(f'$MyData using {fields} title "{label}" with impulses')
+        if flag:
+            write(f'$MyData using {x}:{y}:(${flag}>0?GREEN:RED) title "{label}" with impulses lc rgbcolor variable')
+        else:
+            write(f'$MyData using {x}:{y} title "{label}" with impulses')
 
     def visit_candlestick_chart(self, chart):
         write = self._write
@@ -270,7 +282,7 @@ class _GNUPlotVisitor:
 
     def _get_field_numbers(self, *field_names):
         table = self._table
-        return [1+table._get_column_index(field_name) for field_name in field_names]
+        return [1+table._get_column_index(field_name) if field_name is not None else None for field_name in field_names]
 
     def _make_fields(self, *field_names):
         return ":".join(map(str, self._get_field_numbers(*field_names)))
@@ -289,7 +301,7 @@ class GNUPlot:
             log=None,
             Process=_Process
             ):
-        self._table = table
+        self._table = table.copy()
         self._x_axis_column = x_axis_column
         self._Process = Process
         self._log = log # For testing purposes
