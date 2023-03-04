@@ -314,6 +314,38 @@ def ratio(rowcount, a, b):
 
     return result
 
+def change(n=1):
+    """
+    Evaluates to the difference between the current value and the value n periods
+    earlier.
+
+    Formally, y_i = x_i - x_(i-n).
+    """
+    def _change(rowcount, x):
+        #
+        # According to timeit, this is the fastest algorithm I could find
+        #
+        result = []
+        store = result.append
+        it = iter(x)
+        jt = iter(x)
+
+        # Consume the n first items
+        for _ in range(n):
+            store(None)
+            next(it)
+
+        # Remaining of the list
+        for i, j in zip(it, jt):
+            try:
+                store(i-j)
+            except TypeError:
+                store(None)
+
+        return result
+
+    return _change
+
 # ======================================================================
 # Compound functions
 # ======================================================================
