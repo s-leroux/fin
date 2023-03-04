@@ -23,6 +23,13 @@ class Bar:
     def accept(self, visitor):
         visitor.visit_bar_chart(self)
 
+class Impulse:
+    def __init__(self, data_column):
+        self._data_column = data_column
+
+    def accept(self, visitor):
+        visitor.visit_impulse_chart(self)
+
 class Candlestick:
     def __init__(self, open_price_column, low_price_column, high_price_column, close_price_column):
         self._open_price_column = open_price_column
@@ -147,6 +154,9 @@ class _GNUPlotVisitor:
         write("set multiplot\n")
         write("set key left top\n")
 
+        write("RED=0x800000\n")
+        write("GREEN=0x008000\n")
+
         # write the data
         data = formatter.CSV(delimiter=" ").format(table)
         write("$MyData << EOD\n#")
@@ -228,23 +238,42 @@ class _GNUPlotVisitor:
 
         write(f'$MyData using {fields} title "{label}" with boxes fs solid 0.9')
 
-    def visit_candlestick_chart(self, chart):
+    def visit_impulse_chart(self, chart):
         write = self._write
 
         fields = self._make_fields(
+                self._multiplot._x_axis_column,
+                chart._data_column
+                )
+
+        label = chart._data_column
+
+        write(f'$MyData using {fields} title "{label}" with impulses')
+
+    def visit_candlestick_chart(self, chart):
+        write = self._write
+
+        fields = self._get_field_numbers(
                 self._multiplot._x_axis_column,
                 chart._open_price_column,
                 chart._low_price_column,
                 chart._high_price_column,
                 chart._close_price_column
                 )
+        field_spec = (
+                f"{fields[0]}:{fields[1]}:{fields[2]}:{fields[3]}:{fields[4]}"
+                f":(${fields[4]}>${fields[1]}?GREEN:RED)"
+                )
 
         label = "" # ???
-        write(f'$MyData using {fields} title "{label}" with candlesticks')
+        write(f'$MyData using {field_spec} title "{label}" with candlesticks lc rgbcolor variable')
+
+    def _get_field_numbers(self, *field_names):
+        table = self._table
+        return [1+table._get_column_index(field_name) for field_name in field_names]
 
     def _make_fields(self, *field_names):
-        table = self._table
-        return ":".join([str(1+table._get_column_index(field_name)) for field_name in field_names])
+        return ":".join(map(str, self._get_field_numbers(*field_names)))
 
 class GNUPlot:
     """
