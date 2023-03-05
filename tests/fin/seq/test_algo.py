@@ -175,6 +175,36 @@ class TestShift(unittest.TestCase):
 
         self.assertSequenceEqual(actual, EXPECTED)
 
+class TestMax(unittest.TestCase):
+    def test_max(self):
+        l = [1, 3, 3, 2, 4, 5, 3, 1, 1, 1, 1]
+        expected = [None, None, 3, 3, 4, 5, 5, 5, 3, 1, 1]
+        actual = eval(algo.max(3), l)
+
+        self.assertSequenceEqual(actual, expected)
+
+    def test_max_none(self):
+        l = [1, 3, 3, 2, 4, 5, None, 1, 1, 1, 1]
+        expected = [None, None, 3, 3, 4, 5, None, None, None, 1, 1]
+        actual = eval(algo.max(3), l)
+
+        self.assertSequenceEqual(actual, expected)
+
+class TestMin(unittest.TestCase):
+    def test_min(self):
+        l = [1, 3, 3, 2, 4, 5, 3, 1, 1, 1, 1]
+        expected = [None, None, 1, 2, 2, 2, 3, 1, 1, 1, 1]
+        actual = eval(algo.min(3), l)
+
+        self.assertSequenceEqual(actual, expected)
+
+    def test_min(self):
+        l = [1, 3, 3, 2, 4, 5, None, 1, 1, 1, 1]
+        expected = [None, None, 1, 2, 2, 2, None, None, None, 1, 1]
+        actual = eval(algo.min(3), l)
+
+        self.assertSequenceEqual(actual, expected)
+
 class TestRatio(unittest.TestCase):
     def test_ratio(self):
         L=10
