@@ -165,7 +165,8 @@ class _GNUPlotDataElement:
         self._entries = list(entries)
         self._attr = {}
         self.title = None
-        self.lc = None
+        self.lc = None # linecolor
+        self.fs = None # fillstyle
 
     def lc_rgbcolor_variable(self, entry):
         self.lc = "rgbcolor variable"
@@ -180,10 +181,14 @@ class _GNUPlotDataElement:
         parts = []
         parts.append(f"using {entries} with {kind}")
 
-        if self.title:
+        if self.title is not None:
             parts.append(f"title \"{self.title}\"")
+        else:
+            parts.append("notitle")
         if self.lc:
             parts.append(f"lc {self.lc}")
+        if self.fs:
+            parts.append(f"fs {self.fs}")
 
         return " ".join(parts)
 
@@ -278,7 +283,6 @@ class _GNUPlotVisitor:
         return self._visit_xy_chart("impulses", chart)
 
     def _visit_xy_chart(self, kind, chart, **kwargs):
-        write = self._write
         flag, *entries = self._get_field_numbers(
                 chart._flag_column,
                 self._multiplot._x_axis_column,
@@ -293,26 +297,26 @@ class _GNUPlotVisitor:
         for k,v in kwargs.items():
             setattr(element, k, v)
 
+        write = self._write
         write("$MyData ")
         write(str(element))
 
     def visit_candlestick_chart(self, chart):
-        write = self._write
-
-        fields = self._get_field_numbers(
+        entries = self._get_field_numbers(
                 self._multiplot._x_axis_column,
                 chart._open_price_column,
                 chart._low_price_column,
                 chart._high_price_column,
                 chart._close_price_column
                 )
-        field_spec = (
-                f"{fields[0]}:{fields[1]}:{fields[2]}:{fields[3]}:{fields[4]}"
-                f":(${fields[4]}>${fields[1]}?GREEN:RED)"
-                )
+        element = _GNUPlotDataElement("candlesticks", entries)
+        element.lc_rgbcolor_variable(f"(${entries[4]}>${entries[1]}?GREEN:RED)")
+        element.title = "" # ???
+        element.fs = "solid"
 
-        label = "" # ???
-        write(f'$MyData using {field_spec} title "{label}" with candlesticks lc rgbcolor variable')
+        write = self._write
+        write("$MyData ")
+        write(str(element))
 
     def _get_field_numbers(self, *field_names):
         table = self._table

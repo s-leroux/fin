@@ -25,7 +25,7 @@ class TestProcess(unittest.TestCase):
 class TestGNUPlotDataElement(unittest.TestCase):
     def test_element_core(self):
         el = plot._GNUPlotDataElement("impulses", [1,2])
-        expected = "using 1:2 with impulses"
+        expected = "using 1:2 with impulses notitle"
 
         self.assertEqual(str(el), expected)
 
@@ -41,7 +41,7 @@ class TestGNUPlotDataElement(unittest.TestCase):
         el = plot._GNUPlotDataElement("impulses", [1,2])
         el.lc_rgbcolor_variable("(column(1))")
 
-        expected = "using 1:2:(column(1)) with impulses lc rgbcolor variable"
+        expected = "using 1:2:(column(1)) with impulses notitle lc rgbcolor variable"
 
         self.assertEqual(str(el), expected)
 
