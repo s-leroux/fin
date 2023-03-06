@@ -22,9 +22,31 @@ class TestProcess(unittest.TestCase):
 # ======================================================================
 # GNUPlot
 # ======================================================================
+class TestGNUPlotDataElement(unittest.TestCase):
+    def test_element_core(self):
+        el = plot._GNUPlotDataElement("impulses", [1,2])
+        expected = "using 1:2 with impulses"
+
+        self.assertEqual(str(el), expected)
+
+    def test_element_title(self):
+        el = plot._GNUPlotDataElement("impulses", [1,2])
+        el.title = "My title"
+
+        expected = "using 1:2 with impulses title \"My title\""
+
+        self.assertEqual(str(el), expected)
+
+    def test_element_core_lc_regbolor_variable(self):
+        el = plot._GNUPlotDataElement("impulses", [1,2])
+        el.lc_rgbcolor_variable("(column(1))")
+
+        expected = "using 1:2:(column(1)) with impulses lc rgbcolor variable"
+
+        self.assertEqual(str(el), expected)
+
 import io
 from textwrap import dedent
-
 class TestGNUPlot(unittest.TestCase):
     def setUp(self):
         self.t = t = table.Table(5)
@@ -81,7 +103,7 @@ class TestGNUPlot(unittest.TestCase):
             myplot = mp.new_plot()
             myplot.draw_line("V")
 
-        expected='\nplot $MyData using 1:3 title "V" with lines\n'
+        expected='\nplot $MyData using 1:3 with lines title "V"\n'
 
         self.assertIn(expected, self.capture.getvalue())
 
@@ -97,8 +119,8 @@ class TestGNUPlot(unittest.TestCase):
 
         expected=(
                 '\n'
-                'plot $MyData using 1:3 title "V" with lines,\\\n'
-                '$MyData using 1:1 title "T" with lines\n'
+                'plot $MyData using 1:3 with lines title "V",\\\n'
+                '$MyData using 1:1 with lines title "T"\n'
                 )
 
         self.assertIn(expected, self.capture.getvalue())
@@ -112,7 +134,7 @@ class TestGNUPlot(unittest.TestCase):
             myplot = mp.new_plot()
             myplot.draw_bar("V")
 
-        expected='\nplot $MyData using 1:3 title "V" with boxes'
+        expected='\nplot $MyData using 1:3 with boxes title "V"'
 
         self.assertIn(expected, self.capture.getvalue())
 

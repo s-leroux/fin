@@ -10,15 +10,17 @@ PIPE = asyncio.subprocess.PIPE
 # Plot elements
 # ======================================================================
 class Line:
-    def __init__(self, data_column):
+    def __init__(self, data_column, flag_column=None):
         self._data_column = data_column
+        self._flag_column = flag_column
 
     def accept(self, visitor):
         visitor.visit_line_chart(self)
 
 class Bar:
-    def __init__(self, data_column):
+    def __init__(self, data_column, flag_column=None):
         self._data_column = data_column
+        self._flag_column = flag_column
 
     def accept(self, visitor):
         visitor.visit_bar_chart(self)
@@ -143,6 +145,48 @@ class _Process:
         self._process.stdin.close()
         self.returncode = self._process.wait()
 
+class _GNUPlotDataElement:
+    """
+    Helper class to build gnuplot data plot elements.
+
+    See http://www.bersch.net/gnuplot-doc/plot.html
+    """
+    def __init__(self, kind, entries):
+        """
+        Build a new gnuplot data element of the gieven kind with the specified
+        entries.
+
+        Entries are given as an iterable of key in the data source.
+        Each key can be a (1-based) index, a column's label or a valid parenthesed
+        gnuplot expression.
+
+        """
+        self._kind = kind
+        self._entries = list(entries)
+        self._attr = {}
+        self.title = None
+        self.lc = None
+
+    def lc_rgbcolor_variable(self, entry):
+        self.lc = "rgbcolor variable"
+        self._entries.append(entry)
+
+    def __str__(self):
+        """
+        Convert the receiver to a string representing a valid data plot element
+        """
+        kind = self._kind
+        entries = ":".join(map(str, self._entries))
+        parts = []
+        parts.append(f"using {entries} with {kind}")
+
+        if self.title:
+            parts.append(f"title \"{self.title}\"")
+        if self.lc:
+            parts.append(f"lc {self.lc}")
+
+        return " ".join(parts)
+
 class _GNUPlotVisitor:
     """
     The class that handle conversion from the data model to a GNUPlot script.
@@ -225,42 +269,32 @@ class _GNUPlotVisitor:
         write("\n")
 
     def visit_line_chart(self, chart):
-        write = self._write
-
-        fields = self._make_fields(
-                self._multiplot._x_axis_column,
-                chart._data_column
-                )
-        label = chart._data_column
-
-        write(f'$MyData using {fields} title "{label}" with lines')
+        return self._visit_xy_chart("lines", chart)
 
     def visit_bar_chart(self, chart):
-        write = self._write
-
-        fields = self._make_fields(
-                self._multiplot._x_axis_column,
-                chart._data_column
-                )
-
-        label = chart._data_column
-
-        write(f'$MyData using {fields} title "{label}" with boxes fs solid 0.9')
+        return self._visit_xy_chart("boxes", chart, fs="solid 0.9")
 
     def visit_impulse_chart(self, chart):
-        write = self._write
+        return self._visit_xy_chart("impulses", chart)
 
-        x, y, flag = self._get_field_numbers(
+    def _visit_xy_chart(self, kind, chart, **kwargs):
+        write = self._write
+        flag, *entries = self._get_field_numbers(
+                chart._flag_column,
                 self._multiplot._x_axis_column,
                 chart._data_column,
-                chart._flag_column,
                 )
 
-        label = chart._data_column
+        element = _GNUPlotDataElement(kind, entries)
+        element.title = chart._data_column
         if flag:
-            write(f'$MyData using {x}:{y}:(${flag}>0?GREEN:RED) title "{label}" with impulses lc rgbcolor variable')
-        else:
-            write(f'$MyData using {x}:{y} title "{label}" with impulses')
+            element.lc_rgbcolor_variable(f"(${flag}>0?GREEN:RED)")
+
+        for k,v in kwargs.items():
+            setattr(element, k, v)
+
+        write("$MyData ")
+        write(str(element))
 
     def visit_candlestick_chart(self, chart):
         write = self._write
