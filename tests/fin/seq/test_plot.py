@@ -67,20 +67,15 @@ class TestGNUPlot(unittest.TestCase):
 
         self.capture = capture = io.StringIO()
         self.Process = MyProcess
+        self.multiplot = plot.Multiplot(t, "T")
 
     def test_preamble(self):
-        p = plot.GNUPlot(self.t, "D", Process=self.Process)
-        with p as mp:
-            pass
-
+        plot.gnuplot(self.multiplot, Process=self.Process)
         self.assertIn("\nreset\n", self.capture.getvalue())
         self.assertIn("\nset multiplot\n", self.capture.getvalue())
 
     def test_data(self):
-        p = plot.GNUPlot(self.t, "D", Process=self.Process)
-        with p as mp:
-            pass
-
+        plot.gnuplot(self.multiplot, Process=self.Process)
         expected="""\
             $MyData << EOD
             #T D V
@@ -98,10 +93,9 @@ class TestGNUPlot(unittest.TestCase):
         """
         The 'plot' command must be present.
         """
-        p = plot.GNUPlot(self.t, "T", Process=self.Process)
-        with p as mp:
-            myplot = mp.new_plot()
-            myplot.draw_line("V")
+        myplot = self.multiplot.new_plot()
+        myplot.draw_line("V")
+        plot.gnuplot(self.multiplot, Process=self.Process)
 
         expected='\nplot $MyData using 1:3 with lines title "V"\n'
 
@@ -111,11 +105,10 @@ class TestGNUPlot(unittest.TestCase):
         """
         The 'plot' command can display two line charts.
         """
-        p = plot.GNUPlot(self.t, "T", Process=self.Process)
-        with p as mp:
-            myplot = mp.new_plot()
-            myplot.draw_line("V")
-            myplot.draw_line("T")
+        myplot = self.multiplot.new_plot()
+        myplot.draw_line("V")
+        myplot.draw_line("T")
+        plot.gnuplot(self.multiplot, Process=self.Process)
 
         expected=(
                 '\n'
@@ -129,10 +122,9 @@ class TestGNUPlot(unittest.TestCase):
         """
         The 'plot' command must be present.
         """
-        p = plot.GNUPlot(self.t, "T", Process=self.Process)
-        with p as mp:
-            myplot = mp.new_plot()
-            myplot.draw_bar("V")
+        myplot = self.multiplot.new_plot()
+        myplot.draw_bar("V")
+        plot.gnuplot(self.multiplot, Process=self.Process)
 
         expected='\nplot $MyData using 1:3 with boxes title "V"'
 
@@ -142,10 +134,9 @@ class TestGNUPlot(unittest.TestCase):
         """
         The margins must be set.
         """
-        p = plot.GNUPlot(self.t, "T", Process=self.Process)
-        with p as mp:
-            myplot = mp.new_plot(relative_height=4)
-            myplot = mp.new_plot(relative_height=1)
+        myplot = self.multiplot.new_plot(relative_height=4)
+        myplot = self.multiplot.new_plot(relative_height=1)
+        plot.gnuplot(self.multiplot, Process=self.Process)
 
         expected="""\
             set lmargin at screen 0.1000

@@ -90,7 +90,7 @@ class _Plot:
 # ======================================================================
 # A Multiplot instance
 # ======================================================================
-class _Multiplot:
+class Multiplot:
     """
     Interface to a multiplot.
 
@@ -321,39 +321,14 @@ class _GNUPlotVisitor:
     def _make_fields(self, *field_names):
         return ":".join(map(str, self._get_field_numbers(*field_names)))
 
-class GNUPlot:
-    """
-    A driver that sends data to a GNUPlot process.
-
-    This class is designed to be used as a context manager.
-    """
-    def __init__(
-            self,
-            table,
-            x_axis_column,
-            *,
-            log=None,
-            Process=_Process
-            ):
-        self._table = table.copy()
-        self._x_axis_column = x_axis_column
-        self._Process = Process
-        self._log = log # For testing purposes
-
-    def __enter__(self):
-        self._multiplot = _Multiplot(self._table, self._x_axis_column)
-        return self._multiplot
-
-    def __exit__(self, exc_type, exc_val, exc_tb):
-        with self._Process(['gnuplot', '-p']) as p:
-            log = self._log
-            stdin_write = p.stdin.write
-            if log is not None:
-                def writer(str):
-                    log(str)
-                    stdin_write(str)
-            else:
-                writer = stdin_write
-            visitor = _GNUPlotVisitor(writer)
-            self._multiplot.accept(visitor)
-
+def gnuplot(multiplot, *, log=None, Process=_Process):
+    with Process(['gnuplot', '-p']) as p:
+        stdin_write = p.stdin.write
+        if log is not None:
+            def writer(str):
+                log(str)
+                stdin_write(str)
+        else:
+            writer = stdin_write
+        visitor = _GNUPlotVisitor(writer)
+        multiplot.accept(visitor)
