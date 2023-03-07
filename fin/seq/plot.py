@@ -10,6 +10,20 @@ PIPE = asyncio.subprocess.PIPE
 # ======================================================================
 # Utilities
 # ======================================================================
+SI_PREFIXES = {
+        1000: "k",
+        1000000: "M",
+        }
+
+def prefix_number(x):
+    exp = 1000**math.floor(math.log(x, 1000))
+    pref = SI_PREFIXES.get(exp, None)
+
+    if not pref:
+        return format(x, "g")
+
+    return f"{round(x/exp, 3)}{pref}"
+
 def make_tics(a,b):
     """
     Return a list of tics covering the range [a, b].
@@ -342,7 +356,8 @@ class _GNUPlotVisitor:
         a, tics, b = tics[0], tics[1:-1], tics[-1]
 
         write(f"set yrange [{a}:{b}]\n")
-        write(f"set ytics ({','.join(str(i) for i in tics)})\n")
+        tics = [f"\"{prefix_number(i)}\" {i}" for i in tics]
+        write(f"set ytics ({','.join(tics)})\n")
 
 
         write("plot ")

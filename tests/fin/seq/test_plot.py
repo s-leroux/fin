@@ -6,6 +6,25 @@ from fin.seq import table
 # ======================================================================
 # Utilities
 # ======================================================================
+class TestPrefixNumber(unittest.TestCase):
+    def test_prefix_number(self):
+        use_cases = (
+                (1.2, "1.2"),
+                (12, "12"),
+                (123, "123"),
+                (1234, "1.234k"),
+                (12345, "12.345k"),
+                (123456, "123.456k"),
+                (1234567, "1.235M"),
+
+                # corner cases:
+                (152.0, "152"),
+                )
+        for x,expected in use_cases:
+            with self.subTest(x=x):
+                actual = plot.prefix_number(x)
+                self.assertEqual(actual, expected)
+
 class TestMakeTics(unittest.TestCase):
     def test_make_tics(self):
         use_cases = (
