@@ -343,6 +343,19 @@ class TestColumn(unittest.TestCase):
         self.assertNotEqual(t1["A"], t1["B"])
         self.assertNotEqual(t1["A"], t2["B"])
 
+    def test_type(self):
+        use_cases = (
+                ( [1.0]*10, float),
+                ( [1.0]*10 + [None], float),
+                ( [None] + [1.0]*10 + [None], float),
+                ( [1.0]*10 + ["X"], None),
+                )
+
+        for values, expected in use_cases:
+            with self.subTest(values=values):
+                column = table.Column("X", values)
+                self.assertEqual(column.type(), expected)
+
 # ======================================================================
 # Row iterator
 # ======================================================================

@@ -138,7 +138,7 @@ class TestGNUPlot(unittest.TestCase):
         myplot.draw_line("V")
         plot.gnuplot(self.multiplot, Process=self.Process)
 
-        expected='\nplot $MyData using 1:3 with lines title "V"\n'
+        expected='\nplot $MyData using (column(0)):3 with lines title "V"\n'
 
         self.assertIn(expected, self.capture.getvalue())
 
@@ -153,8 +153,8 @@ class TestGNUPlot(unittest.TestCase):
 
         expected=(
                 '\n'
-                'plot $MyData using 1:3 with lines title "V",\\\n'
-                '$MyData using 1:1 with lines title "T"\n'
+                'plot $MyData using (column(0)):3 with lines title "V",\\\n'
+                '$MyData using (column(0)):1 with lines title "T"\n'
                 )
 
         self.assertIn(expected, self.capture.getvalue())
@@ -167,7 +167,7 @@ class TestGNUPlot(unittest.TestCase):
         myplot.draw_bar("V")
         plot.gnuplot(self.multiplot, Process=self.Process)
 
-        expected='\nplot $MyData using 1:3 with boxes title "V"'
+        expected='\nplot $MyData using (column(0)):3 with boxes title "V"'
 
         self.assertIn(expected, self.capture.getvalue())
 

@@ -69,6 +69,30 @@ class Column:
         values = [v for v in self.values if v is not None]
         return min(values), max(values)
 
+    def type(self):
+        """
+        Return the type of data stored in the column.
+
+        Currently, the type is extrapolated from the actual data.
+        If the content of a column is homogeneous (all values of the same type or None),
+        that type is returned. Otherwise, None is returned.
+        """
+        t = None
+        it = iter(self.values)
+        for v in it:
+            if v is not None:
+                t = type(v)
+                break
+        else:
+            return None
+
+        for v in it:
+            if v is not None:
+                if type(v) is not t:
+                    return None
+
+        return t
+
 # ======================================================================
 # Table class
 # ======================================================================

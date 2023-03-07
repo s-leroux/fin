@@ -24,6 +24,22 @@ def prefix_number(x):
 
     return f"{round(x/exp, 3)}{pref}"
 
+def make_xtics(sequence, n):
+    """
+    Return a n-item sample of the sequence as (index, value) pairs.
+    """
+    result = [(0, sequence[0])]
+    l = len(sequence)
+
+    if n > 2:
+        i = inc = math.ceil(l/(n-1))
+        while i < l-1:
+            result.append((i, sequence[i]))
+            i += inc
+
+    result.append((l-1, sequence[-1]))
+    return result
+
 def make_tics(a,b):
     """
     Return a list of tics covering the range [a, b].
@@ -160,9 +176,15 @@ class Multiplot:
     A multiplot is made of 1-to-n plots. All plots are based on the same table
     and uses the same x-axis.
     """
-    def __init__(self, table, x_axis_column):
+    LABEL = "LABEL"
+
+    def __init__(self, table, x_axis_column, *, mode=None):
+        if mode is None:
+            mode = Multiplot.LABEL
+
         self._table = table
         self._x_axis_column = x_axis_column
+        self.mode = mode
 
         self._plots = []
 
@@ -278,12 +300,23 @@ class _GNUPlotVisitor:
         write("RED=0x800000\n")
         write("GREEN=0x008000\n")
 
+        # xtics
+        if mp.mode == Multiplot.LABEL:
+            write(f"set xrange [0:{table.rows()+1}]\n")
+            x_column = table[mp._x_axis_column]
+            x_tics = make_xtics(x_column, 5)
+        else:
+            raise NotImplementedError()
+
+        # Grid
+        write("set grid xtics ytics\n")
+
         # write the data
         data = formatter.CSV(delimiter=" ").format(table)
         write("$MyData << EOD\n#")
         write(data)
         write("EOD\n")
-        
+
         # write the plots
         total_height = 0
         for plot in mp._plots:
@@ -313,12 +346,13 @@ class _GNUPlotVisitor:
             else:
                 write("set title\n")
 
-            # Plot format
+            # xtics
             if i < n:
-                write("set format x \"\"\n")
+                x_tics_labels = [f"\"\" {i}" for i, v in x_tics]
             else:
-                write("set format x\n")
-                write("set xtics axis\n")
+                x_tics_labels = [f"\"{v}\" {i}" for i, v in x_tics]
+
+            write(f'set xtics axis ({",".join(x_tics_labels)})\n')
 
             # Drae the plot
             plot.accept(self)
@@ -378,13 +412,17 @@ class _GNUPlotVisitor:
         return self._visit_xy_chart("impulses", chart)
 
     def _visit_xy_chart(self, kind, chart, **kwargs):
-        flag, *entries = self._get_field_numbers(
+        flag, x, y = self._get_field_numbers(
                 chart._flag_column,
                 self._multiplot._x_axis_column,
                 chart._data_column,
                 )
 
-        element = _GNUPlotDataElement(kind, entries)
+        if self._multiplot.mode == Multiplot.LABEL:
+            element = _GNUPlotDataElement(kind, ["(column(0))", y])
+        else:
+            raise NotImplementedError()
+
         element.title = chart._data_column
         if flag:
             element.lc_rgbcolor_variable(f"(${flag}>0?GREEN:RED)")
@@ -397,15 +435,19 @@ class _GNUPlotVisitor:
         write(str(element))
 
     def visit_candlestick_chart(self, chart):
-        entries = self._get_field_numbers(
+        x, *entries = self._get_field_numbers(
                 self._multiplot._x_axis_column,
                 chart._open_price_column,
                 chart._low_price_column,
                 chart._high_price_column,
                 chart._close_price_column
                 )
-        element = _GNUPlotDataElement("candlesticks", entries)
-        element.lc_rgbcolor_variable(f"(${entries[4]}>${entries[1]}?GREEN:RED)")
+        if self._multiplot.mode == Multiplot.LABEL:
+            element = _GNUPlotDataElement("candlesticks", ["(column(0))", *entries])
+        else:
+            raise NotImplementedError()
+
+        element.lc_rgbcolor_variable(f"(${entries[3]}>${entries[0]}?GREEN:RED)")
         element.title = "" # ???
         element.fs = "solid"
 
