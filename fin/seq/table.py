@@ -26,32 +26,32 @@ def C(column):
     # otherwise, we assume it's a generator
     return Column(None, column)
 
-named = lambda name : lambda rowcount, col : Column(name, col.value)
+named = lambda name : lambda rowcount, col : Column(name, col.values)
 
 # ======================================================================
 # Column class
 # ======================================================================
 class Column:
     __slots__ = (
-            "value",
+            "values",
             "name",
             )
 
-    def __init__(self, name, value):
+    def __init__(self, name, sequence):
         self.name = name
-        self.value = list(value)
+        self.values = list(sequence)
 
     def __len__(self):
-        return len(self.value)
+        return len(self.values)
 
     def __getitem__(self, index):
-        return self.value[index]
+        return self.values[index]
 
     def __eq__(self, other):
         if not isinstance(other, Column):
             return False
 
-        if self.value != other.value:
+        if self.values != other.values:
             return False
         if self.name != other.name:
             return False
@@ -60,6 +60,14 @@ class Column:
 
     def __repr__(self):
         return "Column(\"{}\", {})".format(self.name, self.value)
+
+    def min_max(self):
+        """
+        Return the minimum and maximum values in the column.
+        None values are ignored.
+        """
+        values = [v for v in self.values if v is not None]
+        return min(values), max(values)
 
 # ======================================================================
 # Table class
@@ -89,7 +97,7 @@ class Table:
         if columns != None:
             return [self[name_or_index] for name_or_index in columns]
         else:
-            return [ it.value for it in self._meta ]
+            return [ it.values for it in self._meta ]
 
     def row_iterator(self, columns=None):
         """
@@ -123,7 +131,7 @@ class Table:
         t = Table(len(rows))
         for meta, column in zip(self._meta, zip(*rows)):
             meta = copy(meta)
-            meta.value = column
+            meta.values = column
             t._meta.append(meta)
 
         return t

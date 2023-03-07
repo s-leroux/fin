@@ -3,9 +3,41 @@ Plot 2D curves using GNUPlot
 """
 from fin.seq import formatter
 import asyncio
+import math
 
 PIPE = asyncio.subprocess.PIPE
 
+# ======================================================================
+# Utilities
+# ======================================================================
+def make_tics(a,b):
+    """
+    Return a list of tics covering the range [a, b].
+    """
+    assert a<b
+
+    N = 10
+    # First, find a scale matching the range amplitude
+    delta = b-a
+    scale = 10**math.floor(math.log(delta/N, 10))
+
+    # Adjust the extrema to the scale:
+    a = (a//scale)*scale
+    b = (b//scale+1)*scale
+
+    inc = math.ceil((b-a)/(N-1)/scale)*scale
+    result = []
+    acc = a
+    while True:
+        result.append(acc)
+        if acc > b:
+            break
+
+        acc += inc
+
+    return result
+
+    
 # ======================================================================
 # Plot elements
 # ======================================================================
@@ -13,6 +45,9 @@ class Line:
     def __init__(self, data_column, flag_column=None):
         self._data_column = data_column
         self._flag_column = flag_column
+
+    def data_columns(self):
+        return ( self._data_column, )
 
     def accept(self, visitor):
         visitor.visit_line_chart(self)
@@ -22,6 +57,9 @@ class Bar:
         self._data_column = data_column
         self._flag_column = flag_column
 
+    def data_columns(self):
+        return ( self._data_column, )
+
     def accept(self, visitor):
         visitor.visit_bar_chart(self)
 
@@ -29,6 +67,9 @@ class Impulse:
     def __init__(self, data_column, flag_column=None):
         self._data_column = data_column
         self._flag_column = flag_column
+
+    def data_columns(self):
+        return ( self._data_column, )
 
     def accept(self, visitor):
         visitor.visit_impulse_chart(self)
@@ -39,6 +80,14 @@ class Candlestick:
         self._low_price_column = low_price_column
         self._high_price_column = high_price_column
         self._close_price_column = close_price_column
+
+    def data_columns(self):
+        return (
+                self._open_price_column,
+                self._low_price_column,
+                self._high_price_column,
+                self._close_price_column,
+                )
 
     def accept(self, visitor):
         visitor.visit_candlestick_chart(self)
@@ -264,6 +313,37 @@ class _GNUPlotVisitor:
         write = self._write
 
         self._plot = plot
+
+        # early abort if the plot is empty
+        if not plot._elements:
+            return
+
+        # Veertical autoscaling
+        the_min = float("inf")
+        the_max = float("-inf")
+        for element in plot._elements:
+            for column_name in element.data_columns():
+                mi, ma = self._table[column_name].min_max()
+                if mi < the_min:
+                    the_min = mi
+                if ma > the_max:
+                    the_max = ma
+
+        # case of colmn containing only None values
+        if the_max < the_min:
+            the_min = the_max = 0.00
+
+        # case of contant values
+        if the_min == the_max:
+            the_min -= 1
+            the_max += 1
+
+        tics = make_tics(the_min, the_max)
+        a, tics, b = tics[0], tics[1:-1], tics[-1]
+
+        write(f"set yrange [{a}:{b}]\n")
+        write(f"set ytics ({','.join(str(i) for i in tics)})\n")
+
 
         write("plot ")
         sep = ""

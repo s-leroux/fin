@@ -143,9 +143,9 @@ class TestTable(unittest.TestCase):
         t.add_column(table.Column("C", C))
 
         # Column 0 is used for rows numbering
-        self.assertEqual(t[0].value, A)
-        self.assertEqual(t[1].value, B)
-        self.assertEqual(t[2].value, C)
+        self.assertEqual(t[0].values, A)
+        self.assertEqual(t[1].values, B)
+        self.assertEqual(t[2].values, C)
         self.assertEqual(t[0].name, "A")
         self.assertEqual(t[1].name, "B")
         self.assertEqual(t[2].name, "C")
@@ -314,7 +314,7 @@ class TestTableExpressionEvaluation(unittest.TestCase):
         Generators
         """
         expected = [ list(range(self._table.rows())) ]
-        actual = [column.value for column in self._table.reval(range)]
+        actual = [column.values for column in self._table.reval(range)]
 
         self.assertEqual(actual, expected)
 
@@ -413,12 +413,12 @@ class TestTableJoin(unittest.TestCase):
 
     def test_join_0(self):
         t = table.join(self._tableA, self._tableB, "A", "U")
-        expected = list(self._cols[k].value for k in "ABCUVW")
+        expected = list(self._cols[k].values for k in "ABCUVW")
         self.assertSequenceEqual(t.data(), expected)
 
     def test_join_1(self):
-        self._tableA["A"].value[2] = None
-        self._tableB["U"].value[5] = None
+        self._tableA["A"].values[2] = None
+        self._tableB["U"].values[5] = None
         t = table.join(self._tableA, self._tableB, "A", "U")
 
         expected = list(zip(*[self._cols[k] for k in "ABCUVW"]))
@@ -426,8 +426,8 @@ class TestTableJoin(unittest.TestCase):
         self.assertSequenceEqual(list(zip(*t.data())), expected)
 
     def test_join_2(self):
-        self._tableA["A"].value[4] = None
-        self._tableB["U"].value[3:6] = [None]*3
+        self._tableA["A"].values[4] = None
+        self._tableB["U"].values[3:6] = [None]*3
         t = table.join(self._tableA, self._tableB, "A", "U")
 
         expected = list(zip(*[self._cols[k] for k in "ABCUVW"]))

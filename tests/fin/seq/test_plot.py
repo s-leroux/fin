@@ -4,7 +4,29 @@ from fin.seq import plot
 from fin.seq import table
 
 # ======================================================================
-# _Process
+# Utilities
+# ======================================================================
+class TestMakeTics(unittest.TestCase):
+    def test_make_tics(self):
+        use_cases = (
+                (36,48),
+                (1912,4921),
+                (0, 0.055),
+                )
+        for a,b in use_cases:
+            with self.subTest(a=a,b=b):
+                actual = plot.make_tics(a,b)
+                msg = str(actual)
+                self.assertLessEqual(len(actual), 10, msg)
+                self.assertGreaterEqual(len(actual), 6, msg)
+                self.assertLessEqual(actual[0], a, msg)
+                self.assertGreaterEqual(actual[1], a, msg)
+                self.assertGreaterEqual(actual[-1], b, msg)
+                self.assertLessEqual(actual[-2], b, msg)
+                self.assertSequenceEqual(actual, sorted(actual), msg)
+
+# ======================================================================
+# _process
 # ======================================================================
 import subprocess
 class TestProcess(unittest.TestCase):
