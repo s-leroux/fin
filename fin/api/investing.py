@@ -26,63 +26,25 @@ def get_index_components_uri(name):
 def get_equity_uri(name):
     return EQUITY_URI.format(name)
 
-def fetch_index_components(ticker):
-    baseurl = url = get_index_components_uri(ticker)
+def text(soup):
+    return " ".join([s for s in soup.stripped_strings])
 
-    visited = set( ) # visited urls
-    stocks = {} # the stock we have found
-    pending = [ url ] # remaining urls to process
+def find_key_value_span(soup, key, default=Ellipsis):
+    """
+    Get the value in `<span>key</span><span>value</span>` patterns.
+    """
+    el_value = None
+    for el_key in soup.find_all("span"):
+        if text(el_key) == key:
+            el_value = el_key.find_next_sibling("span")
+            break
 
-    while True:
-        url = None
-        while pending and url is None:
-            url = pending.pop()
-            if url in visited:
-                url = None
+    if not el_value:
+        if default is not Ellipsis:
+            return default
+        raise KeyError(f"Key not found in document: {key}")
 
-        if url is None:
-            break # done!
-
-        print("Fetching", url)
-        r = get(url)
-        if r.status_code != 200:
-            raise Exception("Can't retrieve data at " + url + " status=" + str(r.status_code))
-
-        visited.add(url)
-        soup = BeautifulSoup(r.text, 'lxml')
-        table = soup.find('table', id='cr1')
-        
-        for link in table.find_all('a', href=re.compile("^/equities/")):
-            href = urllib.parse.urljoin(baseurl, link["href"])
-            stocks[href] = [link["title"], link.string]
-
-        for link in soup.find_all("a"):
-            href = urllib.parse.urljoin(baseurl, link.get("href", "/"))
-            if href.startswith(baseurl) and PAGE_RE.fullmatch(href[len(baseurl):]):
-                pending.append(href)
-
-    # map each componenent to its ticker
-    for url, record in stocks.items():
-        corp = record[0]
-        print("Fetching", url, "for", corp)
-        r = get(url)
-        if r.status_code != 200:
-            raise Exception("Can't retrieve data at " + url + " status=" + str(r.status_code))
-
-        soup = BeautifulSoup(r.text, 'lxml')
-        for heading in soup.find_all("h1"):
-            text = heading.string
-            try:
-                _, tail = text.split(corp)
-            except ValueError:
-                continue
-
-            m = TICKER_RE.fullmatch(tail.strip())
-            if m:
-                record.append(m[1])
-        
-    for k, v in stocks.items():
-        print(k,v)
+    return text(el_value)
 
 # ======================================================================
 # Equity
@@ -191,6 +153,7 @@ class Index:
             el_heading = soup.find("h1")
             m = EQUITY_TITLE_RE.fullmatch(el_heading.string)
             data["shortName"], data["symbol"] = m.groups()
+            data["market"] = find_key_value_span(soup, "Market:")
 
             # Retrieve the components in this page
             table = soup.find('table', id='cr1')
