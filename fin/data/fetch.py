@@ -4,6 +4,7 @@ Fetch data and populates the _data files.
 import re
 import os
 import time
+import sqlite3
 import urllib.parse
 from bs4 import BeautifulSoup
 
@@ -36,10 +37,29 @@ def find_key_value_span(soup, key, default=Ellipsis):
 
     return text(el_value)
 
+class DB:
+    def __init__(self):
+        self.con = sqlite3.connect("investing.db")
+        self.init_db()
+
+    def init_db(self):
+        con = self.con
+        con.execute("CREATE TABLE IF NOT EXISTS dump(url PRIMARY KEY, text NOT NULL)")
+
+    def store(self, url, text):
+        with self.con as con:
+            con.execute("DELETE FROM dump WHERE url = ?", (url,))
+            con.execute("INSERT INTO dump(url, text) VALUES (?, ?)", (url, text))
+
+    def close(self):
+        self.con.close()
+
 class Context:
-    def __init__(self, stem, destdir):
-        self._stem = stem
-        self._destdir = destdir
+    def __init__(self):
+        self.db = DB()
+
+    def close(self):
+        self.db.close()
 
     def handle_equity(self, scrapper, url, text):
         self.save(url, text)
@@ -78,17 +98,8 @@ class Context:
         return True
 
     def save(self, url, text):
-        stem = self._stem
-
-        assert url.startswith(stem)
-
-        filename = os.path.join(self._destdir, "_data", url[len(stem):].lstrip("/"))
-        dirname = os.path.dirname(filename)
-        os.makedirs(dirname, exist_ok=True)
-
-        print(f"Saving {filename}")
-        with open(filename, "wt") as f:
-            f.write(text)
+        print(f"Storing {url}")
+        self.db.store(url, text)
 
 
 def main():
@@ -104,11 +115,14 @@ def main():
             )
 
     scrapper = Scrapper()
-    ctx = Context("https://www.investing.com", os.path.dirname(__file__))
-    for index in indice:
-        scrapper.push(ctx.handle_index, investing.get_index_components_uri(index))
-   
-    scrapper.fetch()
+    try:
+        ctx = Context()
+        for index in indice:
+            scrapper.push(ctx.handle_index, investing.get_index_components_uri(index))
+
+        scrapper.fetch()
+    finally:
+        ctx.close()
     """
     dir_name = os.path.dirname(__file__)
     for index in indice:
