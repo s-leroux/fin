@@ -3,6 +3,7 @@ An interface to some services provided by Investing.com
 """
 
 import re
+import time
 import urllib.parse
 from bs4 import BeautifulSoup
 
@@ -70,10 +71,20 @@ class Equity:
         """
         Load and parse the page on the remote website.
         """
+        if self._loaded:
+            return
+
         url = get_equity_uri(self._name)
         print("Fetching", url)
-        r = get(url)
-        if r.status_code != 200:
+
+        while True:
+            r = get(url, retry=7)
+            if r.status_code == 200:
+                break
+            if r.status_code == 403:
+                time.sleep(20)
+                continue
+
             raise Exception("Can't retrieve data at " + url + " status=" + str(r.status_code))
 
         soup = BeautifulSoup(r.text, 'lxml')
@@ -107,6 +118,7 @@ class Equity:
 # ======================================================================
 # Index
 # ======================================================================
+_index_cache={}
 class Index:
     """
     Interface to an index page on Investing.com
@@ -125,6 +137,9 @@ class Index:
         """
         Load and parse the page on the remote website.
         """
+        if self._loaded:
+            return
+
         baseurl = url = get_index_components_uri(self._name)
         visited = set( ) # visited urls
         stocks = {} # the stock we have found
@@ -141,8 +156,15 @@ class Index:
                 break # done!
 
             print("Fetching", url)
-            r = get(url)
-            if r.status_code != 200:
+
+            while True:
+                r = get(url, retry=7)
+                if r.status_code == 200:
+                    break
+                if r.status_code == 403:
+                    time.sleep(20)
+                    continue
+
                 raise Exception("Can't retrieve data at " + url + " status=" + str(r.status_code))
 
             visited.add(url)
@@ -161,7 +183,9 @@ class Index:
                 # href = urllib.parse.urljoin(baseurl, link["href"])
                 # stocks[href] = Equity(href)[link["title"], link.string]
                 _, key = link["href"].rsplit("/", 1)
-                stocks[key] = Equity(key)
+                stocks[key] = _index_cache.get(key, None)
+                if stocks[key] is None:
+                    _index_cache[key] = stocks[key] = Equity(key)
 
             # Handle pagination
             for link in soup.find_all("a"):
