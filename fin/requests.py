@@ -5,6 +5,9 @@ import random
 from time import sleep
 import requests
 
+# ======================================================================
+# user agents
+# ======================================================================
 UAS = (
         "Mozilla/5.0 (Linux; Android 11; M2101K7AG Build/RKQ1.201022.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/110.0.5481.185 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/404.0.0.35.70;]",
         "Mozilla/5.0 (Linux; Android 11; RMX3269) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/110.0.0.0 Mobile Safari/537.36",
@@ -31,6 +34,9 @@ def _rotate_user_agent():
 def rotate_user_agent(_ua=_rotate_user_agent()):
     return next(_ua)
 
+# ======================================================================
+# Utilities
+# ======================================================================
 def cooldown(delay, _sleep=sleep):
     def _cooldown():
         nonlocal delay
@@ -40,6 +46,9 @@ def cooldown(delay, _sleep=sleep):
 
     return _cooldown
 
+# ======================================================================
+# HTTP requests
+# ======================================================================
 def get(url, *, retry=5, headers=None, _get=requests.get):
     assert retry > 0 # Actually, it is not really a *re*try since the first try counts
 
