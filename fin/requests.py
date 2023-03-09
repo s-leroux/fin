@@ -1,8 +1,9 @@
 """
 Utilities build on top of Python Requests
 """
-import requests
+import random
 from time import sleep
+import requests
 
 UAS = (
         "Mozilla/5.0 (Linux; Android 11; M2101K7AG Build/RKQ1.201022.002; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/110.0.5481.185 Mobile Safari/537.36 [FB_IAB/FB4A;FBAV/404.0.0.35.70;]",
@@ -24,7 +25,7 @@ UAS = (
 
 def _rotate_user_agent():
     while True:
-        for ua in UAS:
+        for ua in random.sample(UAS, k=len(UAS)):
             yield ua
 
 def rotate_user_agent(_ua=_rotate_user_agent()):

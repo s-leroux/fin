@@ -46,6 +46,16 @@ class DB:
         con = self.con
         con.execute("CREATE TABLE IF NOT EXISTS dump(url PRIMARY KEY, text NOT NULL)")
 
+    def exists(self, url):
+        try:
+            cur = self.con.cursor()
+            res = cur.execute("SELECT COUNT(*) FROM dump WHERE url = ?", (url,))
+            count, = res.fetchone()
+
+            return count != 0
+        finally:
+            cur.close()
+
     def store(self, url, text):
         with self.con as con:
             con.execute("DELETE FROM dump WHERE url = ?", (url,))
@@ -62,7 +72,19 @@ class Context:
         self.db.close()
 
     def handle_equity(self, scrapper, url, text):
+        # Check we have the required bits of information
+        try:
+            soup = BeautifulSoup(text, 'lxml')
+            el_json = soup.find("script", type="application/json", id="__NEXT_DATA__")
+            assert el_json is not None
+        except Exception as e:
+            print(f"Exception {e}\nwhile checking {url}")
+            # Retry later and abort current processing
+            scrapper.push(self.handle_equity, url)
+            return
+
         self.save(url, text)
+
         return True
 
     def handle_index(self, scrapper, url, text):
@@ -86,7 +108,10 @@ class Context:
         table = soup.find('table', id='cr1')
         for link in table.find_all('a', href=re.compile("^/equities/")):
             href = urllib.parse.urljoin(url, link["href"])
-            scrapper.push(self.handle_equity, href)
+            if self.db.exists(href):
+                print(f"Skipping {href}")
+            else:
+                scrapper.push(self.handle_equity, href)
 
         # Handle pagination
         for link in soup.find_all("a"):
