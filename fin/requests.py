@@ -54,6 +54,7 @@ def get(url, *, retry=5, headers=None, _get=requests.get):
 
     headers = {} if headers is None else headers.copy()
 
+    r = None
     wait = cooldown(0.5)
     while True:
         retry -= 1

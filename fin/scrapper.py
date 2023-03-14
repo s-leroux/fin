@@ -25,7 +25,7 @@ def _worker(n, handler, from_parent, to_parent):
             else:
                 handler(post, command, *args)
 
-            post("DONE")
+            post("DONE") # Wake up the manager at least one time
     finally:
         to_parent.put((0, "BYE", n))
 
@@ -52,6 +52,10 @@ class Manager:
             # worker.close() # python >3.7 only
             worker.join()
 
+    def shutdown(self):
+        for i in range(self.running):
+            self.post("QUIT")
+
     def post(self, command, *args):
         self.cid += 1
         self.from_parent.put_nowait((self.cid, command, *args))
@@ -60,6 +64,7 @@ class Manager:
 
     def wait_next_action(self):
         cid, action, *args = self.to_parent.get()
+        print("Receiving", action)
 
         if action == "BYE":
             self.running -= 1
@@ -100,12 +105,13 @@ SCRAPPER_WORKER_COUNT = 4
 class Scrapper(Manager):
     def __init__(self):
         super().__init__(SCRAPPER_WORKER_COUNT, _scrapper_worker)
-        self._visited = set()
+        self._queued = set()
         self.pending = {}
 
     def push(self, handler, *urls):
         for url in urls:
-            if url not in self._visited:
+            if url not in self._queued:
+                self._queued.add(url)
                 cid = self.post("DOWNLOAD", 0, url, 0)
                 self.pending[cid] = (handler, url)
 
@@ -121,10 +127,22 @@ class Scrapper(Manager):
 
     def do_ok(self, cid, text):
         handler, url = self.pending.pop(cid)
-        if handler(self, url, text):
-            self._visited.add(url)
+        try:
+            if handler(self, url, text):
+                return
+        except Exception as e:
+            print(e)
+
+        # Oops. Retry
+        self._queued.remove(url)
+        self.push(handler, url)
 
     def fetch(self):
         while self.pending and self.wait_next_action():
             pass
+        print("Shutting down workers")
+        self.shutdown()
+        while self.wait_next_action():
+            pass
 
+        print("Shutdown completed")

@@ -1,0 +1,327 @@
+{
+    "shortName": "CAC 40",
+    "symbol": "FCHI",
+    "market": "France",
+    "components": [
+        {
+            "isin": "FR0000120073",
+            "description": "L'Air Liquide S.A. provides gases, technologies, and services for the industrial and health sectors in Europe, the Americas, the Asia Pacific, the Middle East, and Africa. The company\u2019s Gas & Services segment offers oxygen, nitrogen, argon, hydrogen, and carbon monoxide to the metals, chemicals, refining, and energy sectors; and gases, application equipment, and associated services to the materials and energy, automotive and manufacturing, food and pharmaceuticals, technology and research, and craftsmen and retail sectors. It also supplies medical gases, hygiene products, equipment, and services to hospitals, as well as to patients in their homes; and produces and distributes healthcare specialty ingredients for the cosmetics, pharmaceutical, and vaccine markets. In addition, this segment supplies gases, materials, and services for use in the production of semi-conductors, as well as flat screens and photovoltaic panels. Its Engineering & Construction segment designs, develops, and builds industrial gas production plants for third parties; and designs and manufactures plants in the traditional, renewable, and alternative energy sectors. The company\u2019s Global Markets & Technologies segment delivers technological solutions, such as molecules, equipment, and services to support the markets of energy transition, primarily in transport, energy, and waste valorization, as well as related to deep tech in the space exploration, aerospace, fundamental sciences, and quantum computing. This segment also invests in biomethane production units, as well as develops stations for distributing natural bio-gas for vehicles and hydrogen to support clean mobility; operates biomethane production units for use in the maritime industry; and supplies gases for the offshore oil and gas platforms, offshore wind turbines, and cryogenic transportation by sea. L'Air Liquide S.A. was incorporated in 1902 and is headquartered in Paris, France.",
+            "exchange": "Paris",
+            "fullName": "Air Liquide SA",
+            "shortName": "Air Liquide",
+            "symbol": "AIRP"
+        },
+        {
+            "isin": "NL0000235190",
+            "description": "Airbus SE designs, manufactures, and delivers aerospace products, services, and solutions worldwide. It operates through three segments: Airbus, Airbus Helicopters, and Airbus Defence and Space. The Airbus segment develops, manufactures, markets, and sells commercial jet aircraft of approximately 100 seats; and regional turboprop aircraft and aircraft components, as well as provides aircraft conversion and related services. The Airbus Helicopters segment engages in the development, manufacturing, marketing, and sale of civil and military helicopters; and provision of helicopter related services. The Airbus Defence and Space segment designs, develops, delivers, and supports military aircraft, such as combat, mission, transport, tanker aircraft, and their associated services; and offers unmanned aerial systems. This segment also offers civil and defense space systems for telecommunications, earth observations, navigation, science, and orbital systems; missile systems; and space launcher systems, as well as services around data processing from platforms, secure communication, and cyber security. The company was formerly known as Airbus Group SE and changed its name to Airbus SE in April 2017. Airbus SE was incorporated in 1998 and is based in Leiden, the Netherlands.",
+            "exchange": "Paris",
+            "fullName": "Airbus Group SE",
+            "shortName": "Airbus Group",
+            "symbol": "AIR"
+        },
+        {
+            "isin": "FR0010220475",
+            "description": "Alstom SA is a France-based manufacturer of infrastructures for rail transport sector. The Company\u2019s offer includes a range of solutions including rolling stock, systems, services as well as signaling for passenger and freight railway transportation. The Company\u2019s railway services include maintenance, modernization, management of spare parts, support and technical assistance services included. The Company\u2019s railway infrastructures include infrastructures for the track laying, lines electrical power systems, electromechanical equipment, telecommunication devices and traveler information in station, terminals for automatic purchase of tickets, access to escalators, lifts for disabled, automatic landing doors on platforms, ventilation, air conditioning, and lighting systems, among others. Alstom markets its products and services worldwide.",
+            "exchange": "Paris",
+            "fullName": "Alstom SA",
+            "shortName": "Alstom",
+            "symbol": "ALSO"
+        },
+        {
+            "isin": "LU1598757687",
+            "description": "ArcelorMittal SA is a Luxembourg-based holding company. The Company, via its subsidiaries, owns and operates steel, iron ore manufacturing and coal mining facilities in Europe, North and South America, Asia, and Africa. The Company is organized in five operating segments: NAFTA; Brazil; Europe; Africa and Commonwealth of Independent States (ACIS), and Mining. The NAFTA, Brazil, Europe, and ACIS segments produce flat, long, and tubular products including slabs, hot-rolled coil, cold-rolled coil, coated steel products, among others. The Mining segment provides steel operations and comprises all mines owned by the Company in the Americas, Europe, Africa, and countries of the Commonwealth of Independent States (CIS).",
+            "exchange": "Amsterdam",
+            "fullName": "ArcelorMittal SA",
+            "shortName": "ArcelorMittal",
+            "symbol": "MT"
+        },
+        {
+            "isin": "FR0000120628",
+            "description": "AXA SA (AXA) is a France-based holding company engaged in the business of financial protection. AXA offers a broad range of products through business segments: Life & Savings, Property & Casualty, Health, Asset Management, and Banking. Its offering covers motor, household, property and general liability insurance, banking, savings vehicles, and other investment-based products for both Personal/Individual and Commercial/Group customers, as well as health, protection, and retirement products for individual or professional customers. AXA operates in seven geographical segments: France, Europe, Asia, AXA XL, the United States, International and Transversal & Central Holdings. AXA SA is the holding company of AXA Group.",
+            "exchange": "Paris",
+            "fullName": "AXA SA",
+            "shortName": "AXA",
+            "symbol": "AXAF"
+        },
+        {
+            "isin": "FR0000131104",
+            "description": "BNP Paribas SA is a France-based international banking institution. The Company organizes its businesses into two main fields of activity: Retail Banking & Services (RBS) and Corporate Institutional Banking (CIB). RBS covers Domestic Markets and International Financial Services. Domestic Markets include retail banking networks in France, Italy, Belgium, and Luxembourg, as well as certain specialized retail banking divisions. International Financial Services is composed of all the retail banking businesses out of the Eurozone, split between Europe Mediterranean and BancWest in the United States, as well as personal finance, insurance, wealth and asset management activities. CIB provides corporate banking, global markets (fixed income, currency and commodities, as well as equity and prime services), and securities services to management companies, financial institutions and other corporations. BNP Paribas SA is the parent company of the BNP Paribas Group.",
+            "exchange": "Paris",
+            "fullName": "BNP Paribas SA",
+            "shortName": "BNP Paribas",
+            "symbol": "BNPP"
+        },
+        {
+            "isin": "FR0000120503",
+            "description": "Bouygues SA, together with its subsidiaries, operates in the construction, energy, telecom, and media sectors in France and internationally. The company designs, builds, renovates, operates, and deconstructs building, infrastructure, and industrial projects; develops urban planning, residential, and commercial projects; builds and maintains roads and motorways, airport runways, ports, industrial logistics hubs, external works and amenities, reserved-lane public transport, recreational facilities, and environmental projects, as well as undertakes civil engineering, road safety, and signaling activities; produces, distributes, sells, and recycles aggregates, emulsions, asphalt mixes, ready-mix concrete, and bitumen; construction, renewal, and maintenance of rail networks; and installation and maintenance of pipes and pipelines. It also produces TF1, TMC, TFX, TF1, and LCI complementary TV channels; operates TV Breizh, Histoire TV, Ushua\u00efa TV and Serieclub channels; produces, broadcasts, and distributes content; operates la seine musicale entertainment and concert venue; produces cinemas; and entertainment and leisure comprising licenses and publishes boards games, as well as music production and live events. Further, it offers telecom services; mobile and fixed network services; and Bbox Fibre, an internet box. Additionally, the company provides design, installation, and maintenance services in various fields that include cooling and fire protection, facility management, digital and ICT, electrical, and mechanical and robotics, as well as heating, ventilation, and air conditioning. The company was founded in 1952 and is based in Paris, France.",
+            "exchange": "Paris",
+            "fullName": "Bouygues SA",
+            "shortName": "Bouygues",
+            "symbol": "BOUY"
+        },
+        {
+            "isin": "FR0000125338",
+            "description": "Capgemini SE is a France-based company specialized in consulting, technology services and digital transformation. It operates through four segments: Application services, Technology and Engineering services, Consulting services and Other Managed services. Application services designs and develops technological solutions and help customers optimize their applications, among others. Technology and Engineering services assists and supports internal information technology (IT) and engineering teams within client companies. Consulting focuses on strategy, technology, data science, and creative design to support customers in creating new models and new products and services within the digital economy. Other Managed services integrates, manages, and/or develops clients\u2019 IT infrastructure systems, among others.",
+            "exchange": "Paris",
+            "fullName": "Capgemini SE",
+            "shortName": "Capgemini",
+            "symbol": "CAPP"
+        },
+        {
+            "isin": "FR0000120172",
+            "description": "Carrefour SA is a France-based retail distribution group, which operates through four geographical segments: France, Rest of Europe, Latin America and Asia. The Group operates more than 12,000 stores and e-commerce sites in more than 30 countries across the globe. Its stores come in a variety of formats and channels, such as hypermarkets, supermarkets, convenience stores, cash & carry stores, hyper cash stores, drive and e-commerce. Its product offering includes a wide range of local fresh produce, meats prepared on site, fresh fish, as well as bakery products, consumer goods and nonfood products. Additionally, the Group offers complementary services, including package pick-up points, key copying, vehicle hire, pharmacies and health/beauty care, fuel oil delivery, financial and insurance services, together with leisure services, such as travel agencies, tickets for shows and photo services, among others. ",
+            "exchange": "Paris",
+            "fullName": "Carrefour SA",
+            "shortName": "Carrefour",
+            "symbol": "CARR"
+        },
+        {
+            "isin": "FR0000045072",
+            "description": "Cr\u00e9dit Agricole S.A. provides retail, corporate, insurance, and investment banking products and services worldwide. It operates through Asset Gathering; Large Customers; Specialised Financial Services; French Retail Banking - LCL; and International Retail Banking. The company offers banking products and services, including savings and current accounts and deposits, finance, payments, and flow management services; consumer finance products; and banking and specialized financial services. It also provides wealth management services that allow individual customers to manage, protect, and transfer their assets, as well as other asset management services; and savings/retirement, death and disability/creditor/group, and property and casualty insurance products. In addition, the company offers financing solutions for property and equipment investment and renewal requirements; trade receivable financing and management solutions for corporates; and financing services for renewable energy and public infrastructure projects, as well as leasing services. Further, it provides investment banking, structured finance, international trade finance, commercial banking, capital market, and syndication services; and asset servicing solutions for investment products, as well as various asset classes, such as execution, clearing, forex, security lending and borrowing, custody, depositary bank, fund administration, middle-office outsourcing solutions, and fund distribution support and issuer services. The company serves retail customers, corporates, banks and financial institutions, government agencies, and local authorities. Cr\u00e9dit Agricole S.A. was founded in 1894 and is headquartered in Montrouge, France. Cr\u00e9dit Agricole S.A. operates as a subsidiary of SAS Rue La Bo\u00e9tie.",
+            "exchange": "Paris",
+            "fullName": "Credit Agricole SA",
+            "shortName": "Credit Agricole",
+            "symbol": "CAGR"
+        },
+        {
+            "isin": "FR0000120644",
+            "description": "Danone SA is a France-based global food and beverage company. It operates through four segments: Essential Dairy and Plant-Based Products (EDP), Waters and Specialized Nutrition, including Early Life Nutrition and Medical Nutrition. EDP produces and distributes fresh fermented dairy products and other dairy specialties, plant-based products and beverages, coffee creamers and organic products; Waters sells bottled water and water sold in small and large containers; Early Life Nutrition offers baby formula (infant milk formula, follow-on milk, growing up milks), milk and fruit-based desserts, cereals, jars of baby food and ready-made baby food; Advanced Medical Nutrition offers adult or pediatric clinical nutrition products to be taken orally or through a tube in the event of malnutrition related to illness or other causes. The Company\u2019s brands portfolio includes Activia, Actimel, Alpro, Danette, Danonino, Danio, evian, Volvic, Nutrilon/Aptamil, Nutricia, among others. ",
+            "exchange": "Paris",
+            "fullName": "Danone SA",
+            "shortName": "Danone",
+            "symbol": "DANO"
+        },
+        {
+            "isin": "FR0014003TT8",
+            "description": "Dassault Systemes SE is a France-based software company, which provides different kind of three-dimensional (3D) solutions. Its product, 3DEXPERIENCE, is a business experience platform structured in four quadrants encompassing twelve brands: Social and Collaborative applications (including ENOVIA, 3DEXCITE, CENTRIC PLM), 3D Modeling applications (including SOLIDWORKS, CATIA, GEOVIA, BIOVIA); Simulation applications (including 3DVIA, DELMIA, SIMULIA) and Information Intelligence applications (including NETVIBES, EXALEAD,MEDIADATA). The Company's structure is devided into three sectors: Manufacturing Industries (Transportation & Mobility; Aerospace & Defense; Marine & Offshore; Industrial Equipment; High-Tech; Home & Lifestyle; Consumer Packaged Goods & Retail) Life Sciences & Healthcare (Life Sciences) - (Life Sciences) Infrastructure & Cities (Energy & Materials; Construction, Cities and Territories; Business Services).",
+            "exchange": "Paris",
+            "fullName": "Dassault Systemes SE",
+            "shortName": "Dassault Systemes",
+            "symbol": "DAST"
+        },
+        {
+            "isin": "FR0010208488",
+            "description": "Engie SA is a France-based global energy and services group. It operates through four business segments: Client Solutions, Renewables, Thermal and Networks. Client Solutions develops integrated solutions to support companies and local authorities in the zero- carbon transition. Networks operates in the gas and electricity value chain (hydrogen, natural gas and biogas) upstream of supply to customers. Renewables covers both generation and marketing of electricity from all renewable energy sources. Thermal provides generation and marketing of electricity from other energy sources, such as gas and coal. Networks comprehend Supply that combines the activities of purchases-wholesale sales and activities business to customers client solutions and Nuclear, dedicated to nuclear activities.",
+            "exchange": "Paris",
+            "fullName": "Engie SA",
+            "shortName": "Engie",
+            "symbol": "ENGIE"
+        },
+        {
+            "isin": "FR0000121667",
+            "description": "EssilorLuxottica SA is a France-based ophthalmic company. The Company designs, manufactures and markets a range of lenses, frames and sunglasses to improve and protect eyesight. It also develops and markets equipment for prescription laboratories and instruments, and services for eye care professionals. It operates through three segments: Lenses and Optical Instruments, which includes corrective lenses, optical instruments intended for opticians and optometrists; Equipment, which includes machines and consumables used by plants and prescription laboratories, and Sunglasses & Readers, which encompasses non-prescription reading glasses and non-prescription sunglasses.",
+            "exchange": "Paris",
+            "fullName": "EssilorLuxottica SA",
+            "shortName": "EssilorLuxottica",
+            "symbol": "ESLX"
+        },
+        {
+            "isin": "FR0014000MR3",
+            "description": "Eurofins Scientific SE, together with its subsidiaries, provides various analytical testing and laboratory services worldwide. The company offers a portfolio of approximately 130,000 analytical methods to evaluate the safety, identity, composition, authenticity, origin, traceability, and purity of various products. It provides services such as agroscience, including biological assessment, consumer and human, and environmental safety, product chemistry, regulatory consultancy, and seed services; agro testing; assurance, such as product inspection, auditing, certification, training and consultation of food, consumer products, and healthcare and cosmetics; biopharma, and clinical diagnostics. In addition, the company offers consumer product testing, which include product compliance and audit, testing, certifications and approvals, inspections, training courses, and digital media and cyber security for various industries; cosmetics and personal care; environment testing, including water, air, soil, waste, and other products testing; and food and feed testing that include allergen, GMO, grain, meat, nano material, pesticides, and residual DNA testing. Further, it offers audit and certification, training and consulting; and testing for persistent organic pollutants, dioxins and organic contaminants, pesticides, mycotoxins, allergens, and pathogens and vitamins, as well as analyses for genetic modifications. Additionally, the company provides forensic, genomic, maritime, materials and engineering, REACH, and technologies services. The company was founded in 1987 and is headquartered in Luxembourg City, Luxembourg.",
+            "exchange": "Paris",
+            "fullName": "Eurofins Scientific SE",
+            "shortName": "Eurofins Scientific",
+            "symbol": "EUFI"
+        },
+        {
+            "isin": "FR0000052292",
+            "description": "Hermes International SCA is a France-based company specialized in the design, manufacturing, and marketing of luxury products. The Company reports its businesses into a number segments, including Leather Goods and Saddler, which includes bags, riding, diaries and small leather goods; Ready-to-wear and Accessories, which includes Hermes ready-to-wear for men and women, belts, costume jewellery, gloves, hats and shoes; Other Hermes, which encompasses jewellery and hermes home products, such as the art of living and hermes tableware; Other product segment, which includes the production activities carried out on behalf of non-group brands, as well as the John Lobb, Saint-Louis, Puiforcat and Shang Xia products; Silk and Textiles; Perfumes, and Watches. Apart from France, Hermes International SCA is present in other countries in Europe, Asia and the Americas, among others. ",
+            "exchange": "Paris",
+            "fullName": "Hermes International SCA",
+            "shortName": "Hermes International",
+            "symbol": "HRMS"
+        },
+        {
+            "isin": "FR0000121485",
+            "description": "Kering SA offers ready-to-wear products apparel and accessories for men and women in France, the Asia-Pacific, Western Europe, North America, Japan, and internationally. It also offers leather goods and shoes; watches and jewelry; eyewear products; and fragrances and cosmetics. The company provides Gucci, Saint Laurent, Bottega Veneta, Balenciaga, Alexander McQueen, Brioni, Boucheron, Pomellato, DoDo, and Qeelin brands. It sells its products through stores and e-commerce sites. The company was formerly known as PPR SA and changed its name to Kering SA in June 2013. Kering SA was founded in 1963 and is based in Paris, France.",
+            "exchange": "Paris",
+            "fullName": "Kering SA",
+            "shortName": "Kering",
+            "symbol": "PRTP"
+        },
+        {
+            "isin": "FR0000120321",
+            "description": "L'Oreal SA is a France-based cosmetics company. The Company owns a wide range of brands organized into four division: Consumer Products, L\u2019Oreal Luxe, Professionals Products and Active Cosmetics. They include L\u2019Oreal Paris, Maybelline New York, Garnier, Lancme, Yves Saint Laurent, Giorgio Armani, Kiehl\u2019s, Krastase, La Roche-Posay and SkinCeuticals, among others. It offers a wide range of products grouped into six business segments: Skincare, Makeup, Haircare, Hair Coloring, Fragrances and Other. Skincare offering includes facial skincare, face cleaners, body care and sun protection products. The Company owns stores and ecommerce websites. It is active globally. ",
+            "exchange": "Paris",
+            "fullName": "L\u2019Oreal SA",
+            "shortName": "L'Oreal",
+            "symbol": "OREP"
+        },
+        {
+            "isin": "FR0010307819",
+            "description": "Legrand SA, formerly Legrand SNC, is a France-based company that specializes in the design, manufacture and distribution of products and systems for electrical installations and information networks. Its activity is organized around four product families: products for monitoring and controlling electrical energy, including switches, electrical connectors, thermostats, dimmers, burglar alarms, smoke detectors, audio and video connectors; energy distribution products, including circuit breakers, electrical boxes, electrical cabinets; cable management systems, including channels, mouldings, conduits, floor boxes, and structured wiring systems (voice-data-image), including wall sockets for high-speed transmission, optical fiber and copper splitters and connection panels used in telephone and computer networks. It operates through Solarfective and OCL1, the specialist in architectural lighting solutions and Afco System. Legrand operates worldwide. ",
+            "exchange": "Paris",
+            "fullName": "Legrand SA",
+            "shortName": "Legrand",
+            "symbol": "LEGD"
+        },
+        {
+            "isin": "FR0000121014",
+            "description": "LVMH Moet Hennessy Louis Vuitton SE is a France-based luxury group active in six sectors: Wines and Spirits, Fashion and Leather Goods, Perfumes and Cosmetics, Watches and Jewelry, Selective Retailing and Other Activities. Wines and Spirits owns brands, such as Moet & Chandon, Krug, Veuve Clicquot, Hennessy and Chteau d\u2019Yquem, among others. Fashion and Leather Goods owns brands, such as Luis Vuitton, Christian Dior and Givenchy, among others. Perfumes and Cosmetics owns brands, such as Parfums Christian Dior, Parfums Givenchy Guerlain, Benefit Cosmetics, Fresh and Make Up For Ever, among others. Watches and Jewelry owns brands, including TAG Heuer, Hublo, Zenith, Bulgari, Chaumet and Fred, among others. Selective Retailing owns the brands DFS, Miami Cruiseline, Sephora and Le Bon Marche Rive Gauche, among others. Other Activities includes its acquisition of Pedemonte Group, a jewelry producer and the arts brands, such as Les Echos, Royal Van Lent, and Cheval Blanc.",
+            "exchange": "Paris",
+            "fullName": "LVMH Moet Hennessy Louis Vuitton SE",
+            "shortName": "Louis Vuitton",
+            "symbol": "LVMH"
+        },
+        {
+            "isin": "FR001400AJ45",
+            "description": "Compagnie Generale des Etablissements Michelin SCA is a France-based mobility company. It operates through three segments: Automotive, Road Transportation and Specialty Businesses. Automotive, which comprises the business lines Automotive business to customers (B2C) Global Brands, Automotive B2C Regional Brands, Automotive Original Equipment and Mobility Experiences. Road Transportation comprises the business lines Long Distance Transportation, Urban Transportation and Services & Solutions. Specialty Businesses comprises the business lines Mining, Off-Highway Transportation, Two-Wheel, Aircraft and High-Tech Materials. The Company provides different kind of tires and related products and services through a dealership network. Its service offering includes truck driver assistance with Michelin Euro Assist, fleet tire advice, maintenance and management services and mobility assistance services, among others. Additionally, it provides branded lifestyle products and high-tech materials. ",
+            "exchange": "Paris",
+            "fullName": "Compagnie Generale des Etablissements Michelin SCA",
+            "shortName": "Michelin",
+            "symbol": "MICP"
+        },
+        {
+            "isin": "FR0000133308",
+            "description": "Orange S.A. provides various fixed telephony and mobile telecommunications, data transmission, and other value-added services to customers, businesses, and other telecommunications operators in France and internationally. It operates through France; Spain and Other European Countries; The Africa and Middle East; Enterprise; International Carriers & Shared Services; and Mobile Financial Services segments. The company offers mobile services, such as voice, SMS, and data; fixed broadband and narrowband services, as well as fixed network business solutions, including voice and data; and convergence packages. It also sells mobile handsets, mobile terminals, broadband equipment, connected devices, and accessories. In addition, the company provides IT and integration services comprising unified communication and collaboration services, such as LAN and telephony, consultancy, integration, and project management; hosting and infrastructure services, including cloud computing; customer relations management and other applications services; security services; and video conferencing, as well as sells related equipment. Further, it offers national and international roaming services; online advertising services; and mobile virtual network operators, network sharing, and mobile financial services, as well as sells equipment to external distributors and brokers. The company markets its products and services under the Orange brand. The company was formerly known as France Telecom and changed its name to Orange S.A. in July 2013. Orange S.A. was founded in 1990 and is headquartered in Issy-les-Moulineaux, France.",
+            "exchange": "Paris",
+            "fullName": "Orange SA",
+            "shortName": "Orange",
+            "symbol": "ORAN"
+        },
+        {
+            "isin": "FR0000120693",
+            "description": "Pernod Ricard SA is a France-based worldwide producer of wines and spirits. It operates through three geographical segments: America, Europe and Asia/Rest of the World. The Company holds a portfolio of brands, including Absolut Vodka, Ricard pastis, Ballantine\u2019s, Chivas Regal, Royal Salute, and The Glenlivet Scotch whiskies, Jameson Irish whiskey, Martell cognac, Havana Club rum, Beefeater gin, Malibu liqueur, Mumm and Perrier-Jouet champagnes, as well Jacob\u2019s Creek, Brancott Estate, Campo Viejo, and Kenwood wines, among others. ",
+            "exchange": "Paris",
+            "fullName": "Pernod Ricard SA",
+            "shortName": "Pernod Ricard",
+            "symbol": "PERP"
+        },
+        {
+            "isin": "FR0000130577",
+            "description": "Publicis Groupe SA is a France-based communication group. It provides a full range of advertising and communications services organized into four solutions hubs: Publicis Communications, Publicis Media, Publicis Sapient, and Publicis Health. Publicis Communications, the creative communications hub, includes the Leo Burnett, Saatchi & Saatchi, Publicis Worldwide, BBH, Marcel, Fallon, MSLGROUP and Prodigious networks. Publicis Sapient specializes in digital transformation services. Publicis Media is a global media agency with capabilities across investment, strategy, insights and analytics, data and technology, commerce, performance marketing and content. Publicis Health focuses on health and wellness business transformation. The Group operates in five geographical regions: Europe, North America, Asia Pacific, Latin America Middle East & Africa. ",
+            "exchange": "Paris",
+            "fullName": "Publicis Groupe SA",
+            "shortName": "Publicis Groupe",
+            "symbol": "PUBP"
+        },
+        {
+            "isin": "FR0000131906",
+            "description": "Renault SA is a France-based company that designs, manufactures and sells passenger cars and light commercial vehicles and related services. Its brand portfolio consists of Renault, Dacia (both operating globally), Alpine (active in Europe, Japan and Australia), Renault Samsung Motors (operates only in South Korea) and Lada (operates only in Russia). The Group operating segments are three: Automotive excluding AVTOVAZ, Sales Financing and AVTOVAZ. Automotive excluding AVTOVAZ consists of the Group\u2019s automotive activities comprising the production, sales, and distribution of passenger and light commercial vehicles, automobile service for the Renault, Dacia and Samsung brands and investments in Nissan, among others. Sales Financing, carried out by RCI Banque, covers the financing operations for sales of vehicles to dealers and end-users. AVTOVAZ, consists of the Russian automotive group AVTOVAZ and its parent company, the joint venture lliance Rostec Auto b.v.",
+            "exchange": "Paris",
+            "fullName": "Renault SA",
+            "shortName": "Renault",
+            "symbol": "RENA"
+        },
+        {
+            "isin": "FR0000073272",
+            "description": "Safran SA, together with its subsidiaries, engages in the aerospace and defense businesses worldwide. The company operates through three segments: Aerospace Propulsion; Aircraft Equipment, Defense and Aerosystems; and Aircraft Interiors. The Aerospace Propulsion segment designs, develops, produces, and markets propulsion and mechanical power transmission systems for commercial aircraft, military transport, training and combat aircraft, civil and military helicopters, satellites, and drones; and offers maintenance, repair, and overhaul services, as well as sells spare parts. The Aircraft Equipment, Defense and Aerosystems segment provides landing gears and brakes; nacelles and reversers; avionics, such as flight controls and onboard information systems; security systems, including evacuation slides and oxygen masks; onboard computers and fuel systems; electrical power management systems and related engineering services; and optronic equipment and sights, navigation equipment and sensors, infantry, and drones, as well as sells spare parts. The Aircraft Interiors segment designs, develops, manufactures, and markets aircraft seats for passengers and crew; cabin equipment, overhead bins, class dividers, passenger service units, cabin interior solutions, chilling systems, galleys, electrical inserts, and trolleys and cargo equipment; and water distribution equipment, lavatories, air systems, and in-flight entertainment and connectivity systems. Its products and services are used in civil and military aircraft, and helicopters. The company was incorporated in 1924 and is based in Paris, France.",
+            "exchange": "Paris",
+            "fullName": "Safran SA",
+            "shortName": "Safran",
+            "symbol": "SAF"
+        },
+        {
+            "isin": "FR0000125007",
+            "description": "Compagnie de Saint Gobain SA is a France-based group specialized in the design, manufacture and distribution of materials and solutions with the aim of improving wellbeing and quality of life across the world. The Group, through its subsidiaries, operates through three sectors: Building Distribution (BD), Construction Products (CP) and Innovative Materials (IM). The BD Sector covers the distribution activities of the Company to the suppliers. The CP sector offers both interior solutions (insulation and gypsum) and exterior solutions (industrial mortars, pipes and exterior products). The IM sector provides flat glass and high-performance materials. Its solutions span from self-cleaning windows and photovoltaic glass to smart insulation systems, water supply systems with many industrial applications. ",
+            "exchange": "Paris",
+            "fullName": "Compagnie de Saint Gobain SA",
+            "shortName": "Saint Gobain",
+            "symbol": "SGOB"
+        },
+        {
+            "isin": "FR0000120578",
+            "description": "Sanofi, a healthcare company, engages in the research, development, manufacture, and marketing of therapeutic solutions in the United States, Europe, and internationally. It operates through Pharmaceuticals, Vaccines, and Consumer Healthcare segments. The company provides specialty care, such as dupixent, neurology and immunology, rare diseases, oncology, and rare blood disorders; medicines for diabetes and cardiovascular diseases; and established prescription products. In addition, it offers poliomyelitis, pertussis, and hib pediatric vaccines; influenza, booster, meningitis, and travel and endemic vaccines, which includes hepatitis A, typhoid, cholera, yellow fever, and rabies vaccines. The company also provides cough, cold, and flu, allergy, and pain care products, as well as physical, mental, and digestive wellness products; and offers body lotions, anti-itch products, moisturizing and soothing lotions, body and foot creams, and eczema powders. Further, it has a collaboration and license agreement with Exscientia to develop up to 15 novel small-molecule for oncology and immunology; ABL Bio, Inc. to develop ABL301 for Parkinson's disease; Blackstone Life Sciences to develop pivotal studies and clinical development program; and Seagen Inc. to design, develop, and commercialize antibody-drug conjugates for cancer. Additionally, the company has a collaboration agreement with IGM Biosciences, Inc. to develop, manufacture, and commercialize IgM antibody; Skyhawk Therapeutics, Inc to discover and develop novel small molecules; and Amunix Pharmaceuticals, Inc for T-cell engagers and cytokine therapies. It also enters in a strategic collaboration with Scribe Therapeutics Inc. to develop genome editing technologies; and co-promotion service agreement with Provention Bio, Inc. for the commercialization of teplizumab. The company was formerly known as Sanofi-Aventis and changed its name to Sanofi in May 2011. Sanofi was founded in 1973 and is headquartered in Paris, France.",
+            "exchange": "Paris",
+            "fullName": "Sanofi SA",
+            "shortName": "Sanofi",
+            "symbol": "SASY"
+        },
+        {
+            "isin": "FR0000121972",
+            "description": "Schneider Electric S.E. engages in the energy management and industrial automation business worldwide. The company offers busway and cable support products, circuit breakers and switches, contactors and protection relays, electrical car charging, electrical protection and control products, energy management software solutions, transfer switches, surge protection and power conditioning products, power monitoring and control products, power quality and power factor correction products, pushbuttons, switches, pilot lights and joysticks, field services, load banks, and switchboards and enclosures. It also provides access control, building management, controllers, expansion modules, servers and HMIs, fire and security products, sensors, valve and valve actuator, variable speed and frequency drives, electric relays, feeder automation, grid automation and SCADA software products, medium voltage switchgears and transformers, outdoor equipment, substation automation products, and switchgear components. In addition, the company offers critical power and cooling services, data center cooling and software, IT power distribution products, prefabricated data center modules, racks and accessories, security and environmental monitoring, and uninterruptible power supply products; home automation and security, installation materials and systems, and light switches and electrical sockets; and boxes and interface, human machine interface, industrial automation software, industrial communication, measurement and control relays, measurement and instrumentation, motion control and robotics, motor starters and protection components, signaling units, solar and energy storage, power supplies, power protection and transformers, process control and safety, RFID systems, and other industrial automation and control products, as well as PLC, PAC, and dedicated controllers. The company was founded in 1836 and is headquartered in Rueil-Malmaison, France.",
+            "exchange": "Paris",
+            "fullName": "Schneider Electric SE",
+            "shortName": "Schneider Electric",
+            "symbol": "SCHN"
+        },
+        {
+            "isin": "FR0000130809",
+            "description": "Societe Generale SA is a France-based financial services group. The Group offers a wide range of advisory services and tailored financial solutions to secure transactions, protect and manage assets and savings, and help its clients finance their projects. It operates through three segments: French Retail Banking, International Retail Banking & Financial Services and Global Banking and Investor Solutions. French Retail Banking includes the domestic networks Societe Generale, Credit du Nord and Boursorama. International Retail Banking & Financial Services consists of International Retail Banking (consumer finance activities), Financial Services to Corporates (operational vehicle leasing and fleet management, equipment and vendor finance) and Insurance Activities. Global Banking and Investor Solutions comprises Global Markets and Investors Services, Financing and Advisory, Asset and Wealth Management. The Group is active globally. ",
+            "exchange": "Paris",
+            "fullName": "Societe Generale SA",
+            "shortName": "Societe Generale",
+            "symbol": "SOGN"
+        },
+        {
+            "isin": "NL00150001Q9",
+            "description": "Stellantis N.V. engages in the design, engineering, manufacturing, distribution, and sale of automobiles and light commercial vehicles, engines, transmission systems, metallurgical products, mobility services, and production systems worldwide. It provides luxury and premium passenger vehicles; pickup trucks, sport utility vehicles, and commercial vehicles; and parts and services, as well as retail and dealer financing, leasing, and rental services. The company offers its products under the Abarth, Alfa Romeo, Chrysler, Citro\u00ebn, DS, Dodge, Fiat, Jeep, Maserati, Ram, Opel, Lancia, Vauxhall, Peugeot, Teksid, and Comau brand names. It sells its products directly, as well as through distributors and dealers. The company was founded in 1899 and is based in Hoofddorp, the Netherlands.",
+            "exchange": "Paris",
+            "fullName": "Stellantis NV",
+            "shortName": "Stellantis NV",
+            "symbol": "STLAM"
+        },
+        {
+            "isin": "NL0000226223",
+            "description": "STMicroelectronics N.V., together with its subsidiaries, designs, develops, manufactures, and sells semiconductor products in Europe, the Middle East, Africa, the Americas, and the Asia Pacific. The company operates through Automotive and Discrete Group; Analog, MEMS and Sensors Group; and Microcontrollers and Digital ICs Group segments. The Automotive and Discrete Group segment offers automotive integrated circuits (ICs), and discrete and power transistor products. The Analog, MEMS and Sensors Group segment provides industrial application-specific integrated circuits (ASICs) and application-specific standard products (ASSPs); general purpose analog products; custom analog ICs; wireless charging solutions; galvanic isolated gate drivers; low and high voltage amplifiers, comparators, and current-sense amplifiers; MasterGaN, a solution that integrates a silicon driver and GaN power transistors in a single package; wireline and wireless connectivity ICs; touch screen controllers; micro-electro-mechanical systems (MEMS) products, including sensors or actuators; and optical sensing solutions. The Microcontrollers and Digital ICs Group segment offers general purpose and secure microcontrollers; radio frequency (RF) and electrically erasable programmable read-only memories; and RF, digital, and mixed-signal ASICs. It also provides assembly and other services. The company sells its products through distributors and retailers, as well as through sales representatives. It serves automotive, industrial, personal electronics and communications equipment, and computers and peripherals markets. STMicroelectronics N.V. was incorporated in 1987 and is headquartered in Geneva, Switzerland.",
+            "exchange": "Paris",
+            "fullName": "STMicroelectronics NV",
+            "shortName": "STMicroelectronics",
+            "symbol": "STM"
+        },
+        {
+            "isin": "FR0000051807",
+            "description": "Teleperformance SE, together with its subsidiaries, engages in the provision of outsourced customer and citizen experience management, and related services in France and internationally. The company operates in two segments, Core Services and Digital Integrated Business Services, and Specialized Services. The Core Services and Digital Integrated Business Services segment offers customer and citizen care; customer relationship operations; technical support; and technical assistance and customer acquisition services, as well as back-office solutions and integrated services, including social media content moderation services and data labeling for automation solutions; and knowledge services in the field of analytics solutions, automated systems, and artificial intelligence. The company also manages business processes, as well as provides digital platform, consulting, and data analysis services; and business process outsourcing services for government agencies. The Specialized Services segment provides on-line interpretation, visa application management, health management services, and accounts receivable credit management services. It also offers digital recruitment process outsourcing; consumer health management business services and related digital solutions integration; translation and interpreting services; and business process outsourcing services for government agencies in the United States. The company serves automotive, energy and utilities, insurance, public sector, technology, travel and hospitality, and banking and financial services, as well as healthcare, media, retail and e-commerce, crypto, cargo, telecom, and video games industries. Teleperformance SE was incorporated in 1989 and is headquartered in Paris, France.",
+            "exchange": "Paris",
+            "fullName": "Teleperformance SE",
+            "shortName": "Teleperformance",
+            "symbol": "TEPRF"
+        },
+        {
+            "isin": "FR0000121329",
+            "description": "Thales SA is a France-based technology company. It provides a wide range of solutions divided into three segments: Aerospace, Transport and Defense and Security. Aerospace provides onboard electronic equipment designed to increase flight safety and reliability, civil and military aircraft simulators, onboard connectivity and in-flight entertainment, onboard equipment and functions for aircraft piloting, navigation and control as well as equipment, payloads, satellites, systems and services for the space sector. Transport offers railway signaling, telecommunications, supervision systems and ticketing solutions. Defense and Security offers radio communications products, network and infrastructure systems, protection systems, critical information systems and cybersecurity. It operates globally. ",
+            "exchange": "Paris",
+            "fullName": "Thales",
+            "shortName": "Thales",
+            "symbol": "TCFP"
+        },
+        {
+            "isin": "FR0000120271",
+            "description": "TotalEnergies SE is a France-based oil and gas company. It operates through four segments: Exploration and Production, Gas, Renewables & Power, Refining & Chemicals and Marketing & Services. Exploration & Production encompasses the exploration and production activities. Gas, Renewables & Power comprises gas activities conducted downstream of the production process and concerns natural gas, liquefied natural gas (LNG) and liquefied petroleum gas (LPG), as well as power generation, gas and power trading and marketing. It also develops renewable energy activities (excluding biotechnologies) and the power storage. Energy efficiency activities are represented through a dedicated Innovation & Energy Efficiency division. Refining & Chemicals encompasses refining and petrochemical activities and Hutchinson\u2019s operations. It also includes oil Trading & Shipping activities. Marketing & Services includes worldwide supply and marketing activities in the oil products and services field.",
+            "exchange": "Paris",
+            "fullName": "TotalEnergies SE",
+            "shortName": "TotalEnergies SE",
+            "symbol": "TTEF"
+        },
+        {
+            "isin": "FR0000124141",
+            "description": "Veolia Environnement SA designs and provides water, waste, and energy management solutions worldwide. The company is involved in the resource management, production, and delivery of drinking water and industrial process water; collection, treatment, and recycling of wastewater; and design and construction of treatment and network infrastructure. It also provides waste collection, waste material recovery, waste-to-energy, organic waste material recovery, hazardous waste treatment, dismantling and remediation, urban cleaning, and industrial maintenance and cleaning services. In addition, the company engages in the operation and maintenance of heating and cooling networks; development of energy services to reduce the energy consumption and CO2 emissions of buildings; optimization of industrial utilities, such as steam generation, cooling, electricity, compressed air; and energy use related to processes and industrial buildings, as well as produces electricity from biomass. The company was formerly known as Vivendi Environnement and changed its name to Veolia Environnement SA in 2003. Veolia Environnement SA was founded in 1853 and is based in Aubervilliers, France.",
+            "exchange": "Paris",
+            "fullName": "Veolia Environnement VE SA",
+            "shortName": "Veolia Environnement",
+            "symbol": "VIE"
+        },
+        {
+            "isin": "FR0000125486",
+            "description": "Vinci SA is a France-based company active in the concessions and construction industry worldwide. It manages three segments: Concessions, Contracting and VINCI Immobilier. Concessions covers the concessions management activities through VINCI Autoroutes (motorways in France), VINCI Airports (airports in France and abroad) and Other concessions (different infrastructures in France and abroad). Contracting comprises VINCI Energies, providing industry services, electrical grid and transport infrastructure, among others; Eurovia, offering building and maintenance of roads, motorways, railways, urban infrastructure, production of asphalt mixes, quarries and VINCI Construction, which designs and constructs buildings, civil engineering infrastructure, specialized civil engineering, water and pipeline infrastructure, among others. VINCI Immobilier is active in different kind of property development. ",
+            "exchange": "Paris",
+            "fullName": "Vinci SA",
+            "shortName": "Vinci",
+            "symbol": "SGEF"
+        },
+        {
+            "isin": "FR0000127771",
+            "description": "Vivendi SE is a France-based integrated content, media and communications group operating throughout the entire media value chain. It operates through seven segments: Universal Music Group, Canal+ Group, Havas, Gameloft, Vivendi Village, New Initiatives and Corporate. Universal Music Group is engaged in recorded music, music publishing and merchandising. Canal+ Group includes pay-television (TV), production, sales and distribution of movies and TV series. Havas is a global communications group. Gameloft develops and publishes games for all digital platforms. Vivendi Village groups together Vivendi Ticketing (Europe and the United States), the venues L\u2019Olympia and Theatre de l\u2019Oeuvre in Paris, among others. New Initiatives includes Dailymotion, a video content aggregation and distribution platform; Vivendi Content, for new content creation and Group Vivendi Africa, developing ultra-high-speed Internet service in Africa. Corporate provides central services to the group. ",
+            "exchange": "Paris",
+            "fullName": "Vivendi SA",
+            "shortName": "Vivendi",
+            "symbol": "VIV"
+        },
+        {
+            "isin": "FR0013326246",
+            "description": "Unibail-Rodamco-Westfield SE (URW), formerly known as Unibail Rodamco is a France-based group operating in the commercial real estate industry. The Group is engaged in the development, construction, and management of real estate in Europe and United States. Its assets portfolio is divided into three main business segments: Retail, which includes 84 shopping centers in France, Central Europe, Spain, Austria, Germany, United Kingdom, the Netherlands, United States and others; Offices & Others, where URW develops and owns office buildings and hotels located mainly in the Paris central business district and La Defense, it also owns office, hotel and residential assets in the United States; and Convention and Exhibition segment is located in the Paris region and consists of real estate venues and services company: Viparis. Viparis is owned jointly with the Chamber of Commerce and Industry of Paris Ile-de-France (CCIR) and operated by URW.",
+            "exchange": "Amsterdam",
+            "fullName": "WFD Unibail Rodamco NV",
+            "shortName": "WFD Unibail Rodamco",
+            "symbol": "URW"
+        },
+        {
+            "isin": "FR0011981968",
+            "description": "Worldline SA provides payments and transactional services to financial institutions, merchants, corporations, and government agencies in Northern Europe, Central and Eastern Europe, Southern Europe, and internationally. The company operates through Merchant Services; Financial Services; and Mobility & e-Transactional Services segments. The Merchant Services segment offers commercial acquiring, terminal, omnichannel payment acceptance, and digital retail services. The Financial Services segment provides issuing processing, acquiring processing, digital banking, and account payments; deploys transformative technologies; manages risk and fraud; and optimizes processes. The Mobility & e-Transactional Services segment offers trusted digitization, e-ticketing, and e-consumer and mobility. The company was formerly known as Atos Worldline S.A.S. and changed its name to Worldline SA in April 2014. Worldline SA was founded in 1973 and is headquartered in Puteaux, France.",
+            "exchange": "Paris",
+            "fullName": "Worldline SA",
+            "shortName": "Worldline SA",
+            "symbol": "WLN"
+        }
+    ]
+}

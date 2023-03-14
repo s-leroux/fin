@@ -1,0 +1,399 @@
+{
+    "shortName": "Euro Stoxx 50",
+    "symbol": "STOXX50E",
+    "market": "Germany",
+    "components": [
+        {
+            "isin": "DE000A1EWWW0",
+            "description": "adidas AG, together with its subsidiaries, designs, develops, distributes, and markets athletic and sports lifestyle products worldwide. It offers footwear; apparel; and accessories and gear, such as bags and balls under the adidas brand. It sells its products through approximately 2,200 own-retail stores; mono-branded franchise stores and shop-in-shops; and wholesale and its e-commerce channels. The company was formerly known as adidas-Salomon AG and changed its name to adidas AG in June 2006. adidas AG was founded in 1920 and is headquartered in Herzogenaurach, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Adidas AG",
+            "shortName": "Adidas",
+            "symbol": "ADSGn"
+        },
+        {
+            "isin": "NL0012969182",
+            "description": "Adyen NV, formerly Adyen BV, is provider of mobile, online and point-of-sale (POS) payment solutions based in the Netherlands. It operates an online platform enabling merchants to accept payments internationally and from all sales channels, such as online shops, mobile payments from applications and Websites, and POS, such as countertops, mobile terminals, tablets and cash registers, among others. The platform covers the entire payment chain, including technical, contractual, reconciliation and settlement processes. The platform is available in the form of ready-to-use payment pages (HPP), application programming interface (API), and client-side encryption solution (EE). The Company\u2019s customers include Mango, KLM, Netflix, Superdry, Uber, Groupon and Crocs, among others. It has offices in the Netherlands, the United Kingdom, France, Germany, Belgium, Brazil, China, Australia, Mexico, Singapore, Spain, Sweden and the United States.",
+            "exchange": "Amsterdam",
+            "fullName": "Adyen NV",
+            "shortName": "Adyen",
+            "symbol": "ADYEN"
+        },
+        {
+            "isin": "NL0011794037",
+            "description": "Koninklijke Ahold Delhaize N.V. operates retail food stores and e-commerce primarily in the United States and Europe. The company\u2019s stores offer produce, dairy, meat, deli, bakery, seafood, and frozen products; grocery, dairy, and beer and wine; floral, pet food, health and beauty care, kitchen and cookware, gardening tools, general merchandise articles, electronics, newspapers and magazines, tobacco, etc.; gasoline; and pharmacy products. It operates its supermarkets, convenience stores, and online stores under the Food Lion, Stop & Shop, The GIANT Company, Hannaford, Giant Food, FreshDirect, Albert Heijn, bol.com, Etos, Gall & Gall, Delhaize, Albert, Alfa Beta Vassilopoulos, Mega Image, and Delhaize Serbia brands. The company was formerly known as Koninklijke Ahold N.V. and changed its name to Koninklijke Ahold Delhaize N.V. in July 2016. Koninklijke Ahold Delhaize N.V. was founded in 1867 and is headquartered in Zaandam, the Netherlands.",
+            "exchange": "Amsterdam",
+            "fullName": "Koninklijke Ahold Delhaize NV",
+            "shortName": "Ahold Delhaize",
+            "symbol": "AD"
+        },
+        {
+            "isin": "FR0000120073",
+            "description": "L'Air Liquide S.A. provides gases, technologies, and services for the industrial and health sectors in Europe, the Americas, the Asia Pacific, the Middle East, and Africa. The company\u2019s Gas & Services segment offers oxygen, nitrogen, argon, hydrogen, and carbon monoxide to the metals, chemicals, refining, and energy sectors; and gases, application equipment, and associated services to the materials and energy, automotive and manufacturing, food and pharmaceuticals, technology and research, and craftsmen and retail sectors. It also supplies medical gases, hygiene products, equipment, and services to hospitals, as well as to patients in their homes; and produces and distributes healthcare specialty ingredients for the cosmetics, pharmaceutical, and vaccine markets. In addition, this segment supplies gases, materials, and services for use in the production of semi-conductors, as well as flat screens and photovoltaic panels. Its Engineering & Construction segment designs, develops, and builds industrial gas production plants for third parties; and designs and manufactures plants in the traditional, renewable, and alternative energy sectors. The company\u2019s Global Markets & Technologies segment delivers technological solutions, such as molecules, equipment, and services to support the markets of energy transition, primarily in transport, energy, and waste valorization, as well as related to deep tech in the space exploration, aerospace, fundamental sciences, and quantum computing. This segment also invests in biomethane production units, as well as develops stations for distributing natural bio-gas for vehicles and hydrogen to support clean mobility; operates biomethane production units for use in the maritime industry; and supplies gases for the offshore oil and gas platforms, offshore wind turbines, and cryogenic transportation by sea. L'Air Liquide S.A. was incorporated in 1902 and is headquartered in Paris, France.",
+            "exchange": "Paris",
+            "fullName": "Air Liquide SA",
+            "shortName": "Air Liquide",
+            "symbol": "AIRP"
+        },
+        {
+            "isin": "NL0000235190",
+            "description": "Airbus SE designs, manufactures, and delivers aerospace products, services, and solutions worldwide. It operates through three segments: Airbus, Airbus Helicopters, and Airbus Defence and Space. The Airbus segment develops, manufactures, markets, and sells commercial jet aircraft of approximately 100 seats; and regional turboprop aircraft and aircraft components, as well as provides aircraft conversion and related services. The Airbus Helicopters segment engages in the development, manufacturing, marketing, and sale of civil and military helicopters; and provision of helicopter related services. The Airbus Defence and Space segment designs, develops, delivers, and supports military aircraft, such as combat, mission, transport, tanker aircraft, and their associated services; and offers unmanned aerial systems. This segment also offers civil and defense space systems for telecommunications, earth observations, navigation, science, and orbital systems; missile systems; and space launcher systems, as well as services around data processing from platforms, secure communication, and cyber security. The company was formerly known as Airbus Group SE and changed its name to Airbus SE in April 2017. Airbus SE was incorporated in 1998 and is based in Leiden, the Netherlands.",
+            "exchange": "Paris",
+            "fullName": "Airbus Group SE",
+            "shortName": "Airbus Group",
+            "symbol": "AIR"
+        },
+        {
+            "isin": "DE0008404005",
+            "description": "Allianz SE, together with its subsidiaries, provides property-casualty insurance, life/health insurance, and asset management products and services worldwide. The company\u2019s Property-Casualty segment offers various insurance products, including motor liability and own damage, accident, general liability, fire and property, legal expense, credit, and travel to private and corporate customers. Its Life/Health segment provides a range of life and health insurance products on an individual and a group basis, such as annuities, endowment and term insurance, and unit-linked and investment-oriented products, as well as private and supplemental health, and long-term care insurance products. The company\u2019s Asset Management segment offers institutional and retail asset management products and services to third-party investors comprising equity and fixed income funds, and multi-assets; and alternative investment products that include real estate, infrastructure debt/equity, real assets, liquid alternatives, and solutions. Its Corporate and Other segment provides banking services for retail clients, as well as digital investment services. Allianz SE was founded in 1890 and is headquartered in Munich, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Allianz SE VNA O.N.",
+            "shortName": "Allianz",
+            "symbol": "ALVG"
+        },
+        {
+            "isin": "BE0974293251",
+            "description": "Anheuser-Busch Inbev SA is a Belgium-based company. The Company is primarily engaged in the manufacturing of beer. The Company operates through seven segments: North America, Mexico, Latin America North, Latin America South, Europe, Asia Pacific, and Global Export and Holding Companies. The Company's brand portfolio includes global brands, such as Budweiser, Corona and Stella Artois; international brands, including Beck's, Leffe and Hoegaarden, and local champions, such as Bud Light, Skol, Brahma, Antarctica, Quilmes, Victoria, Modelo Especial, Michelob Ultra, Harbin, Sedrin, Klinskoye, Sibirskaya Korona, Chernigivske, Cass and Jupiler. The Company's soft drinks business consists of both own production and agreements with PepsiCo related to bottling and distribution arrangements between its various subsidiaries and PepsiCo. Ambev, which is a subsidiary of the Company, is a PepsiCo bottler. Brands that are distributed under these agreements are Pepsi, 7UP and Gatorade. ",
+            "exchange": "Brussels",
+            "fullName": "Anheuser Busch Inbev SA NV",
+            "shortName": "Anheuser Busch Inbev",
+            "symbol": "ABI"
+        },
+        {
+            "isin": "NL0010273215",
+            "description": "ASML Holding N.V. is a holding company based in the Netherlands. The Company operates through its subsidiaries in the Netherlands, the United States, Italy, France, Germany, the United Kingdom, Ireland, Belgium, South Korea, Taiwan, Singapore, China, Hong Kong, Japan, Malaysia and Israel. The Company operates through one business segment which is engage in development, production, marketing, sales, upgrading and servicing of advanced semiconductor equipment systems, consisting of lithography, metrology and inspection systems. The Company offers TWINSCAN systems, equipped with lithography system with a mercury lamp as light source (i-line), Krypton Fluoride (KrF) and Argon Fluoride (ArF) light sources for processing wafers for manufacturing environments for which imaging at a small resolution is required. TWINSCAN systems also include immersion lithography systems (TWINSCAN immersion systems). ",
+            "exchange": "Amsterdam",
+            "fullName": "ASML Holding NV",
+            "shortName": "ASML Holding",
+            "symbol": "ASML"
+        },
+        {
+            "isin": "FR0000120628",
+            "description": "AXA SA (AXA) is a France-based holding company engaged in the business of financial protection. AXA offers a broad range of products through business segments: Life & Savings, Property & Casualty, Health, Asset Management, and Banking. Its offering covers motor, household, property and general liability insurance, banking, savings vehicles, and other investment-based products for both Personal/Individual and Commercial/Group customers, as well as health, protection, and retirement products for individual or professional customers. AXA operates in seven geographical segments: France, Europe, Asia, AXA XL, the United States, International and Transversal & Central Holdings. AXA SA is the holding company of AXA Group.",
+            "exchange": "Paris",
+            "fullName": "AXA SA",
+            "shortName": "AXA",
+            "symbol": "AXAF"
+        },
+        {
+            "isin": "DE000BASF111",
+            "description": "BASF SE operates as a chemical company worldwide. It operates through six segments: Chemicals, Materials, Industrial Solutions, Surface Technologies, Nutrition & Care, and Agricultural Solutions. The Chemicals segment provides petrochemicals and intermediates. The Materials segment offers advanced materials and their precursors for applications and systems, such as isocyanates, polyamides, and inorganic basic products, as well as specialties for plastics and plastics processing industries. The Industrial Solutions segment develops and markets ingredients and additives for industrial applications, such as polymer dispersions, resins, additives, electronic materials, and antioxidants for automotive, plastics, paints and coatings, electronics, and energy and resource industries. The Surface Technologies segment provides chemical solutions and automotive OEM, which include refinish coatings, surface treatment, catalysts, battery materials, and precious and base metal services for the automotive and chemical sectors. The Nutrition & Care segment offers ingredients for consumer goods in the areas of nutrition, home, personal care, and technical applications; and serves the food and feed producers, pharmaceutical, cosmetics, detergents, cleaners, and crop protection industries. The Agricultural Solutions segment provides seeds and seed treatment products, as well as fungicides, herbicides, insecticides, and biological solutions; and digital farming solutions. BASF SE was founded in 1865 and is headquartered in Ludwigshafen am Rhein, Germany.",
+            "exchange": "Xetra",
+            "fullName": "BASF SE NA O.N.",
+            "shortName": "BASF",
+            "symbol": "BASFn"
+        },
+        {
+            "isin": "DE000BAY0017",
+            "description": "Bayer Aktiengesellschaft, together its subsidiaries, operates as a life science company worldwide. It operates through Pharmaceuticals, Consumer Health, and Crop Science segments. The Pharmaceuticals segment offers prescription products primarily for cardiology and women\u2019s health care; specialty therapeutics in the areas of oncology, hematology, and ophthalmology; and diagnostic imaging equipment and contrast agents, as well as cell and gene therapy. The Consumer Health segment markets nonprescription over-the-counter medicines, medical products, medicated skincare products, nutritional supplements, and self-care solutions in dermatology, nutritional supplements, pain and cardiovascular risk prevention, digestive health, allergy, and cold and cough. The Crop Science segment offers chemical and biological crop protection products, improved plant traits, seeds, digital solution, and pest and weed control products, as well as customer service for agriculture. This segment also provides breeding, propagation, and production/processing of seeds, including seed dressing. The company has a collaboration agreement with MD Anderson Cancer Center to develop oncology drugs; research and license agreement with Dewpoint Therapeutics, Inc. for the development of new treatments for cardiovascular and gynecological diseases; collaboration agreement with Exscientia Ltd, Foundation Medicine Inc., and Evotec AG; research collaboration with Arvinas Inc.; strategic research partnership with University of Oxford to develop novel gynecological therapies; and Kyoto University to identify new drugs candidates for the treatment of pulmonary diseases. It distributes its products through wholesalers, pharmacies and pharmacy chains, supermarkets, online and other retailers, and hospitals, as well as directly to farmers. Bayer Aktiengesellschaft was founded in 1863 and is headquartered in Leverkusen, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Bayer AG NA",
+            "shortName": "Bayer",
+            "symbol": "BAYGn"
+        },
+        {
+            "isin": "ES0113211835",
+            "description": "Banco Bilbao Vizcaya Argentaria, S.A., together with its subsidiaries, provides retail banking, wholesale banking, and asset management services. It offers current accounts; and demand, savings, overnight, time, term, and subordinated deposits. The company also provides loan products; deals in securities; leasing, factoring, brokerage, and asset management services; and manages pension and investment funds. In addition, it offers credit cards; corporate and investment banking services; insurance products and services; and real estate services. The company provides its products through online and mobile channels. It operates in Spain, Mexico, South America, the United States, Turkey, Asia, and rest of Europe. Banco Bilbao Vizcaya Argentaria, S.A. was founded in 1857 and is headquartered in Bilbao, Spain.",
+            "exchange": "Madrid",
+            "fullName": "Banco Bilbao Vizcaya Argentaria SA",
+            "shortName": "BBVA",
+            "symbol": "BBVA"
+        },
+        {
+            "isin": "DE0005190003",
+            "description": "Bayerische Motoren Werke Aktiengesellschaft, together with its subsidiaries, develops, manufactures, and sells automobiles and motorcycles, and spare parts and accessories worldwide. It operates through Automotive, Motorcycles, and Financial Services segments. The Automotive segment is involved in the development, manufacture, assembling, and sale of automobiles, spare parts, accessories, and mobility services under the BMW, MINI, and Rolls-Royce brands. This segment sells its products through independent and authorized dealerships. The Motorcycles segment develops, manufactures, assembles, and sells motorcycles and scooters under the BMW Motorrad brand name, as well as spare parts and accessories. The Financial Services segment engages in automobile leasing, retail and dealership financing, multi-brand fleet, customer deposit, and insurance activities; and the provision of fleet management services under the Alphabet brand. The company was founded in 1916 and is based in Munich, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Bayerische Motoren Werke AG",
+            "shortName": "BMW ST",
+            "symbol": "BMWG"
+        },
+        {
+            "isin": "FR0000131104",
+            "description": "BNP Paribas SA is a France-based international banking institution. The Company organizes its businesses into two main fields of activity: Retail Banking & Services (RBS) and Corporate Institutional Banking (CIB). RBS covers Domestic Markets and International Financial Services. Domestic Markets include retail banking networks in France, Italy, Belgium, and Luxembourg, as well as certain specialized retail banking divisions. International Financial Services is composed of all the retail banking businesses out of the Eurozone, split between Europe Mediterranean and BancWest in the United States, as well as personal finance, insurance, wealth and asset management activities. CIB provides corporate banking, global markets (fixed income, currency and commodities, as well as equity and prime services), and securities services to management companies, financial institutions and other corporations. BNP Paribas SA is the parent company of the BNP Paribas Group.",
+            "exchange": "Paris",
+            "fullName": "BNP Paribas SA",
+            "shortName": "BNP Paribas",
+            "symbol": "BNPP"
+        },
+        {
+            "isin": "IE0001827041",
+            "description": "CRH PLC is an Ireland-based company, which operates a building materials business in both North America and Europe. Its segments include Americas Materials, Europe Materials and Building Products. Americas Materials segment provides asphalt paving services and to produces and supplies a range of materials including cement, aggregates, ready mixed concrete and asphalt. These materials are used in construction projects, including public infrastructure, commercial buildings and homes. Europe Materials segment is engaged in the manufacture and supply of cement, lime, aggregates, asphalt, ready mixed concrete and concrete products, as well as paving and construction services. It operates across Western, Central and Eastern Europe as well as the Philippines in Asia. Building Products segment includes businesses operating across a portfolio of building product-related platforms, including architectural products, infrastructure products, construction accessories and building envelopes.",
+            "exchange": "Ireland",
+            "fullName": "CRH PLC",
+            "shortName": "CRH",
+            "symbol": "CRH"
+        },
+        {
+            "isin": "DE0007100000",
+            "description": "Mercedes-Benz Group AG operates as an automotive company in Germany and internationally. The company develops, manufactures, and sells passenger cars comprising premium and luxury vehicles of the Mercedes-Benz brand, including the Mercedes-AMG, G-Class, Mercedes-Maybach, and Mercedes-EQ brands, as well as small cars under the smart brand; ecosystem of Mercedes-Benz under the Mercedes me brand; and vans under the Mercedes-Benz and Freightliner brands, as well as related spare parts and accessories. It also provides financing and leasing packages for end-customers and dealers; automotive insurance brokerage and banking services; car subscription and car rental, and fleet management, as well as digital services for charging and payment; and mobility services. The company was formerly known as Daimler AG and changed its name to Mercedes-Benz Group AG in February 2022. Mercedes-Benz Group AG was founded in 1886 and is headquartered in Stuttgart, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Mercedes Benz Group AG",
+            "shortName": "Daimler",
+            "symbol": "MBGn"
+        },
+        {
+            "isin": "FR0000120644",
+            "description": "Danone SA is a France-based global food and beverage company. It operates through four segments: Essential Dairy and Plant-Based Products (EDP), Waters and Specialized Nutrition, including Early Life Nutrition and Medical Nutrition. EDP produces and distributes fresh fermented dairy products and other dairy specialties, plant-based products and beverages, coffee creamers and organic products; Waters sells bottled water and water sold in small and large containers; Early Life Nutrition offers baby formula (infant milk formula, follow-on milk, growing up milks), milk and fruit-based desserts, cereals, jars of baby food and ready-made baby food; Advanced Medical Nutrition offers adult or pediatric clinical nutrition products to be taken orally or through a tube in the event of malnutrition related to illness or other causes. The Company\u2019s brands portfolio includes Activia, Actimel, Alpro, Danette, Danonino, Danio, evian, Volvic, Nutrilon/Aptamil, Nutricia, among others. ",
+            "exchange": "Paris",
+            "fullName": "Danone SA",
+            "shortName": "Danone",
+            "symbol": "DANO"
+        },
+        {
+            "isin": "DE0005810055",
+            "description": "Deutsche B\u00f6rse AG operates as an exchange organization in Europe, the United States, and the Asia-Pacific. The company operates through seven segments: Eurex (Financial Derivatives), EEX (Commodities), 360T (Foreign Exchange), Xetra (Cash Equities), Clearstream (Post-Trading), IFS (Investment Fund Services), and Qontigo (index and analytics business). The company engages in the electronic trading of derivatives, electricity and gas products, emission rights, and foreign exchange; operating of Eurex Repo over the counter (OTC) trading platform and electronic clearing architecture; and operating as a central counterparty for on-and-off exchange derivatives, repo transactions, and OTC and exchange-traded derivatives. It also operates in the cash market through Xetra, B\u00f6rse Frankfurt, and Tradegate trading venues; operates as a central counterparty for equities and bonds; and provides listing services. In addition, the company offers custody and settlement services for securities; investment fund services; global securities financing services; and collateral management, as well as secured money, market transaction, and repos and securities lending transaction services. Further, it develops and markets indices, as well as portfolio management and risk analysis software; markets licenses for trading and market signals; provides technology and reporting solutions for external customers; and offers link-up of trading participants. Deutsche B\u00f6rse AG was founded in 1585 and is headquartered in Eschborn, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Deutsche Boerse AG",
+            "shortName": "Deutsche Boerse",
+            "symbol": "DB1Gn"
+        },
+        {
+            "isin": "DE0005552004",
+            "description": "Deutsche Post AG operates as a mail and logistics company in Germany, rest of Europe, the Americas, the Asia Pacific, the Middle East, and Africa. The company operates through five segments: Express; Global Forwarding, Freight; Supply Chain; eCommerce Solutions; and Post & Parcel Germany. The Express segment offers time-definite courier and express services to business and private customers. The Global Forwarding, Freight segment provides air, ocean, and overland freight forwarding services; and offers multimodal and sector-specific solutions. This segment\u2019s business model is based on brokering transport services between customers and freight carriers. The Supply Chain segment delivers customized supply chain solutions to its customers based on modular components, including warehousing and transport services; and value-added services, such as e-fulfilment and returns management, lead logistics partner, real estate solutions, service logistics, and packaging solutions for various industrial sectors. The eCommerce Solutions segment provides parcel delivery and cross-border non-time definite international services. The Post & Parcel Germany segment transports and delivers mail communication, parcels, physical and hybrid letters, and special products for the delivery of goods; and offers additional services, such as registered mail, cash on delivery, and insured items. This segment also provides digital products, including stamps with data matrix codes and various postal services. Deutsche Post AG was founded in 1490 and is headquartered in Bonn, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Deutsche Post AG NA O.N.",
+            "shortName": "Deutsche Post",
+            "symbol": "DPWGn"
+        },
+        {
+            "isin": "DE0005557508",
+            "description": "Deutsche Telekom AG, together with its subsidiaries, provides integrated telecommunication services. The company operates through five segments: Germany, United States, Europe, Systems Solutions, and Group Development. It offers fixed-network services, including voice and data communication services based on fixed-network and broadband technology; and sells terminal equipment and other hardware products, as well as services to resellers. The company also provides mobile voice and data services to consumers and business customers; sells mobile devices and other hardware products; and sells mobile services to resellers and to companies that purchases and markets network services to third parties, such as mobile virtual network operators. In addition, it offers internet services; internet-based TV products and services; and information and communication technology systems for multinational corporations and public sector institutions with an infrastructure of data centers and networks under the T-Systems brand, as well as call center services. Further, the company provides wireless communications services; and cloud services, digital solutions, security, and advisory solutions. The company has 248 million mobile customers and 22 million broadband customers, as well as 26 million fixed-network lines. The company was incorporated in 1995 and is headquartered in Bonn, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Deutsche Telekom AG Na",
+            "shortName": "Deutsche Telekom AG",
+            "symbol": "DTEGn"
+        },
+        {
+            "isin": "IT0003128367",
+            "description": "Enel SpA is an Italy-based multinational power company and an integrated operator in the global power, gas and renewables markets. The Company is active in Europe and is present in more than 30 countries, producing energy with over 86 gigawatt (GW) of installed capacity. Enel distributes electricity through a network of over 2.2 million kilometers, supplying 74 million business and household end users globally. Enel's renewables arm Enel Green Power supplies energy with more than 46 GW of wind, solar, geothermal and hydropower plants installed in Europe, the Americas, Africa, Asia and Oceania. Enel X is Enel's global business line focusing on energy-related products and services including distribution systems and batteries, smart lighting and energy and electric mobility.",
+            "exchange": "Milan",
+            "fullName": "Enel",
+            "shortName": "Enel",
+            "symbol": "ENEI"
+        },
+        {
+            "isin": "IT0003132476",
+            "description": "Eni SpA (Eni) is an Italy-based company engaged in the exploration, development and production of hydrocarbons, in the supply and marketing of gas, liquefied natural gas (LNG) and power, in the refining and marketing of petroleum products, in the production and marketing of basic petrochemicals, plastics and elastomers and in commodity trading. The Company's segments include Exploration & Production, Gas & Power, and Refining & Marketing. Its Exploration & Production segment engages in oil and natural gas exploration and field development and production, as well as LNG operations in over 40 countries, including Italy, Libya, Egypt, Norway, the United Kingdom, Angola, Congo, Nigeria, the United States, Kazakhstan, Algeria, Australia, Venezuela, Iraq, Ghana and Mozambique. Its Gas & Power segment engages in supply, trading and marketing of gas, LNG and electricity, international gas transport activities and commodity trading and derivatives.",
+            "exchange": "Milan",
+            "fullName": "Eni SpA",
+            "shortName": "Eni SpA",
+            "symbol": "ENI"
+        },
+        {
+            "isin": "FR0000121667",
+            "description": "EssilorLuxottica SA is a France-based ophthalmic company. The Company designs, manufactures and markets a range of lenses, frames and sunglasses to improve and protect eyesight. It also develops and markets equipment for prescription laboratories and instruments, and services for eye care professionals. It operates through three segments: Lenses and Optical Instruments, which includes corrective lenses, optical instruments intended for opticians and optometrists; Equipment, which includes machines and consumables used by plants and prescription laboratories, and Sunglasses & Readers, which encompasses non-prescription reading glasses and non-prescription sunglasses.",
+            "exchange": "Paris",
+            "fullName": "EssilorLuxottica SA",
+            "shortName": "EssilorLuxottica",
+            "symbol": "ESLX"
+        },
+        {
+            "isin": "IE00BWT6H894",
+            "description": "Flutter Entertainment plc is an Ireland-based global sports-betting and gaming company. The Company operates through four divisions: UK & Ireland, Australia, International, and US. The UK & Ireland division includes Sky Betting and Gaming, Paddy Power, Betfair and Tombola brands offering a range of sportsbook, exchange and gaming services across the United Kingdom and Ireland, along with over 600 Paddy Power betting shops. The Australia division includes Sportsbet brand that offers online sport betting. The International division includes PokerStars, Adjarabet, Betfair and Junglee, operating in multiple jurisdictions around the world, offering a range of sportsbook, exchange, and gaming services. The US division includes FanDuel, TVG, Stardust, FOX Bet and PokerStars brands, offering regulated real money and free-to-play sports betting, online gaming, daily fantasy sports and online racing wagering products to customers across various states in the United States.",
+            "exchange": "London",
+            "fullName": "Flutter Entertainment PLC",
+            "shortName": "Flutter Entertainment",
+            "symbol": "FLTRF"
+        },
+        {
+            "isin": "FR0000052292",
+            "description": "Hermes International SCA is a France-based company specialized in the design, manufacturing, and marketing of luxury products. The Company reports its businesses into a number segments, including Leather Goods and Saddler, which includes bags, riding, diaries and small leather goods; Ready-to-wear and Accessories, which includes Hermes ready-to-wear for men and women, belts, costume jewellery, gloves, hats and shoes; Other Hermes, which encompasses jewellery and hermes home products, such as the art of living and hermes tableware; Other product segment, which includes the production activities carried out on behalf of non-group brands, as well as the John Lobb, Saint-Louis, Puiforcat and Shang Xia products; Silk and Textiles; Perfumes, and Watches. Apart from France, Hermes International SCA is present in other countries in Europe, Asia and the Americas, among others. ",
+            "exchange": "Paris",
+            "fullName": "Hermes International SCA",
+            "shortName": "Hermes International",
+            "symbol": "HRMS"
+        },
+        {
+            "isin": "ES0144580Y14",
+            "description": "Iberdrola, S.A. engages in the generation, transmission, distribution, and supply of electricity in Spain and internationally. It generates and markets electrical power using renewable sources, such as onshore and offshore wind, hydro, solar photovoltaic, combined cycle gas, nuclear, and biomass, as well as through installation of batteries. The company is also involved in the purchase and sale of electricity and gas on wholesale markets; development of green hydrogen projects; and distribution and sale of gas. It has a total installed capacity of 58,320 MW, including 38,138 MW of renewable installed capacity; and operates 1.2 million kilometers of electricity transmission and distribution lines, as well as serves 36.11 million consumers. In addition, the company offers energy storage, heat pumps, self-consumption, and electric vehicles for residential customers; and management of energy facilities, as well as supplies green H2, industrial heat, etc. to industrial customers. Iberdrola, S.A. was founded in 1840 and is headquartered in Bilbao, Spain.",
+            "exchange": "Madrid",
+            "fullName": "Iberdrola",
+            "shortName": "Iberdrola",
+            "symbol": "IBE"
+        },
+        {
+            "isin": "ES0148396007",
+            "description": "Industria de Dise\u00f1o Textil, S.A. engages in the retail and online distribution of clothing, footwear, accessories, and household textile products through various commercial concepts. Its retail concepts include Zara, Pull & Bear, Massimo Dutti, Bershka, Stradivarius, Oysho, Zara Home, and Uterq\u00fce. As of July 13, 2021, the company operated 6,829 stores in 96 markets; and online stores in 216 markets. It is also involved in textile manufacturing, design, financial services, real estate, logistics, insurance, and combined heat and power plant, and construction businesses. The company operates in Spain, rest of Europe, the Americas, and internationally. Industria de Dise\u00f1o Textil, S.A. was founded in 1963 and is based in Corunna, Spain.",
+            "exchange": "Madrid",
+            "fullName": "Industria de Diseno Textil SA",
+            "shortName": "Inditex",
+            "symbol": "ITX"
+        },
+        {
+            "isin": "DE0006231004",
+            "description": "Infineon Technologies AG designs, develops, manufactures, and markets semiconductors and related system solutions worldwide. Its Automotive segment offers automotive microcontrollers; 3D ToF, magnetic, and pressure sensors; discrete power semiconductors; IGBT modules; industrial microcontrollers; power and radar sensor ICs; transceivers; SiC diodes, MOSEFTs, and modules; and voltage regulators for use in assistance and safety systems, comfort electronics, infotainment, powertrain, and security products. The company\u2019s Industrial Power Control segment provides bare dies, discrete IGBTs and driver ICs; SiC diodes, MOSFETs, and modules; and IGBT modules and stacks for home appliances, industrial drives, industrial power supplies, industrial robotics, industrial vehicles, and traction, as well as for energy generation, storage, and transmission. Its Power & Sensor Systems segment offers gas and pressure sensors, and MEMS microphones chips; 3D ToF sensors; control ICs; discrete low-, mid-, and high-voltage power MOSFET; customized chips; GaN power switches; GPS low-noise amplifiers; low-voltage and high-voltage driver ICs; radar sensor ICs; RF antenna switches and power transistors; transient voltage suppressor diodes; SiC diode and MOSFETs; and USB controllers for use in audio amplifiers, automotive electronics, BLDC motors, cellular communications infrastructure, electric vehicle charging stations, human machine interaction, IoT, LED and conventional lighting systems, microinverter, mobile devices, power management, and special applications in harsh environments. The company\u2019s Connected Secure Systems segment provides connectivity solutions, embedded security controllers, microcontrollers, and security controllers for authentication, automotive, consumer electronics, government identification document, IoT, mobile communication, payment system, ticketing, access control, and trusted computing applications. Infineon Technologies AG is headquartered in Neubiberg, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Infineon Technologies AG NA O.N.",
+            "shortName": "Infineon",
+            "symbol": "IFXGn"
+        },
+        {
+            "isin": "NL0011821202",
+            "description": "ING Groep N.V. (ING) is a financial institution. The Company offers banking services. The Company's segments include Retail Netherlands, which offers current and savings accounts, business lending, mortgages and other consumer lending in the Netherlands; Retail Belgium, which offers products that are similar to those in the Netherlands; Retail Germany, which offers current and savings accounts, mortgages and other customer lending; Retail Other, which offers products that are similar to those in the Netherlands, and Wholesale Banking, which offers wholesale banking activities (a full range of products from cash management to corporate finance), real estate and lease. The Company's Retail Banking business lines provide products and services to individuals, small and medium-sized enterprises (SMEs) and mid-corporates. ING's banking activities in Australia are undertaken by ING Bank (Australia) Limited (trading as ING Direct) and ING Bank NV Sydney Branch.",
+            "exchange": "Amsterdam",
+            "fullName": "ING Groep NV",
+            "shortName": "ING Groep",
+            "symbol": "INGA"
+        },
+        {
+            "isin": "IT0000072618",
+            "description": "Intesa Sanpaolo S.p.A. is an Italy-based banking company. It operates through six business segments: Banca dei Territori, IMI Corporate & Investment Banking, International Subsidiary Banks, Asset Management, Private Banking and Insurance. Banca dei Territori includes the traditional lending and deposit collecting activities in Italy and related financial services. IMI Corporate & Investment Banking covers corporate banking, investment banking and public finance in Italy and abroad. International Subsidiary Banks oversees the Company's commercial operations on international markets through commercial banking subsidiaries and associates. Private Banking provides private and high net worth individuals with specific products and services. Asset Management develops asset management solutions. Insurance oversees the management of the subsidiaries Intesa Sanpaolo Vita S.p.A. and Fideuram Vita S.p.A., as well as develops a mix of insurance products. The Bank has an international presence.",
+            "exchange": "Milan",
+            "fullName": "Intesa Sanpaolo SpA",
+            "shortName": "Intesa Sanpaolo",
+            "symbol": "ISP"
+        },
+        {
+            "isin": "FR0000121485",
+            "description": "Kering SA offers ready-to-wear products apparel and accessories for men and women in France, the Asia-Pacific, Western Europe, North America, Japan, and internationally. It also offers leather goods and shoes; watches and jewelry; eyewear products; and fragrances and cosmetics. The company provides Gucci, Saint Laurent, Bottega Veneta, Balenciaga, Alexander McQueen, Brioni, Boucheron, Pomellato, DoDo, and Qeelin brands. It sells its products through stores and e-commerce sites. The company was formerly known as PPR SA and changed its name to Kering SA in June 2013. Kering SA was founded in 1963 and is based in Paris, France.",
+            "exchange": "Paris",
+            "fullName": "Kering SA",
+            "shortName": "Kering",
+            "symbol": "PRTP"
+        },
+        {
+            "isin": "FI0009013403",
+            "description": "Kone Oyj is a Finland-based company which operates within elevator and escalator industry. The Company provides its customers with elevators, escalators, automatic doors and integrated solutions to improve the customer experience in and between buildings. In addition, KONE offers maintenance and modernization services for existing equipment. The KONE business idea is to serve its customers by providing solutions throughout the entire lifecycle of the equipment, beginning from the installation of new equipment to the maintenance and modernization during their lifecycle and the full replacement of the equipment. The Company operates around the world. ",
+            "exchange": "Helsinki",
+            "fullName": "KONE Oyj",
+            "shortName": "KONE Oyj",
+            "symbol": "KNEBV"
+        },
+        {
+            "isin": "FR0000120321",
+            "description": "L'Oreal SA is a France-based cosmetics company. The Company owns a wide range of brands organized into four division: Consumer Products, L\u2019Oreal Luxe, Professionals Products and Active Cosmetics. They include L\u2019Oreal Paris, Maybelline New York, Garnier, Lancme, Yves Saint Laurent, Giorgio Armani, Kiehl\u2019s, Krastase, La Roche-Posay and SkinCeuticals, among others. It offers a wide range of products grouped into six business segments: Skincare, Makeup, Haircare, Hair Coloring, Fragrances and Other. Skincare offering includes facial skincare, face cleaners, body care and sun protection products. The Company owns stores and ecommerce websites. It is active globally. ",
+            "exchange": "Paris",
+            "fullName": "L\u2019Oreal SA",
+            "shortName": "L'Oreal",
+            "symbol": "OREP"
+        },
+        {
+            "isin": "FR0000121014",
+            "description": "LVMH Moet Hennessy Louis Vuitton SE is a France-based luxury group active in six sectors: Wines and Spirits, Fashion and Leather Goods, Perfumes and Cosmetics, Watches and Jewelry, Selective Retailing and Other Activities. Wines and Spirits owns brands, such as Moet & Chandon, Krug, Veuve Clicquot, Hennessy and Chteau d\u2019Yquem, among others. Fashion and Leather Goods owns brands, such as Luis Vuitton, Christian Dior and Givenchy, among others. Perfumes and Cosmetics owns brands, such as Parfums Christian Dior, Parfums Givenchy Guerlain, Benefit Cosmetics, Fresh and Make Up For Ever, among others. Watches and Jewelry owns brands, including TAG Heuer, Hublo, Zenith, Bulgari, Chaumet and Fred, among others. Selective Retailing owns the brands DFS, Miami Cruiseline, Sephora and Le Bon Marche Rive Gauche, among others. Other Activities includes its acquisition of Pedemonte Group, a jewelry producer and the arts brands, such as Les Echos, Royal Van Lent, and Cheval Blanc.",
+            "exchange": "Paris",
+            "fullName": "LVMH Moet Hennessy Louis Vuitton SE",
+            "shortName": "Louis Vuitton",
+            "symbol": "LVMH"
+        },
+        {
+            "isin": "DE0008430026",
+            "description": "M\u00fcnchener R\u00fcckversicherungs-Gesellschaft Aktiengesellschaft in M\u00fcnchen engages in the insurance and reinsurance businesses worldwide. The company operates through five segments: Life and Health Reinsurance; Property-Casualty Reinsurance; ERGO Life and Health Germany; ERGO Property-Casualty Germany; and ERGO International. It offers life and health reinsurance solutions, such as financial market risks, data analytics, claims handling and underwriting, medical research, health market, capital management, and digital underwriting and analytics, as well as MIRA digital suite; and property and casualty reinsurance solutions, including agricultural risk, data analytics, infrastructure risk profiler, remote inspection, retroactive reinsurance, insurance linked securities, location risk, risk transfer, and cyber, as well as NatCatSERVICE for natural catastrophe loss database, REALYTIX ZERO, IMPROVEX, cert2go, consulting for product development, prospective structured reinsurance, and Vahana AI for motor claims. The company also provides solutions for industry clients, such as IoT cover, earnings quality insurance protection, captive insurance and risk transfer, liability, weather risks, space and satellite insurance, bioenergy plant performance insurance, solar energy insurance, wind farm insurance, mining insurance, construction projects covers and services, aviation insurance, power and utilities, oil and gas companies insurance, industrial cyber insurance, risk suite, data and location risk intelligence, digital risks, PV warranty insurance, parametric, Insure AI, liquidation damage cover, and natural catastrophes solutions. In addition, it offers life, property-casualty, health, legal protection, and travel insurance products under the ERGO brand name. The company was founded in 1880 and is based in Munich, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Munich Reinsurance",
+            "shortName": "Munich Re Group",
+            "symbol": "MUVGn"
+        },
+        {
+            "isin": "FR0000120693",
+            "description": "Pernod Ricard SA is a France-based worldwide producer of wines and spirits. It operates through three geographical segments: America, Europe and Asia/Rest of the World. The Company holds a portfolio of brands, including Absolut Vodka, Ricard pastis, Ballantine\u2019s, Chivas Regal, Royal Salute, and The Glenlivet Scotch whiskies, Jameson Irish whiskey, Martell cognac, Havana Club rum, Beefeater gin, Malibu liqueur, Mumm and Perrier-Jouet champagnes, as well Jacob\u2019s Creek, Brancott Estate, Campo Viejo, and Kenwood wines, among others. ",
+            "exchange": "Paris",
+            "fullName": "Pernod Ricard SA",
+            "shortName": "Pernod Ricard",
+            "symbol": "PERP"
+        },
+        {
+            "isin": "NL0000009538",
+            "description": "Koninklijke Philips NV is the Netherlands-based health technology company. The Company's segments include Personal Health businesses, Diagnosis & Treatment businesses, Connected Care & Health Informatics businesses, HealthTech Other and Legacy Items. The Personal Health businesses segment is engaged in the health continuum, delivering integrated, connected solutions that support healthier lifestyles and those living with chronic disease. The Diagnosis & Treatment businesses segment delivers precision medicine and treatment, and therapy. The Connected Care & Health Informatics businesses segment provides consumers, care givers and clinicians with digital solutions that facilitate care by enabling precision medicine and population health management. The HealthTech Other segment comprises such items, as innovation, emerging businesses, royalties, among others. The Legacy Items segment consists mainly of separation costs, legacy legal items, legacy pension costs, among others.",
+            "exchange": "Amsterdam",
+            "fullName": "Koninklijke Philips NV",
+            "shortName": "Philips",
+            "symbol": "PHG"
+        },
+        {
+            "isin": "NL0013654783",
+            "description": "Prosus NV, formerly Myriad International Holdings NV, is a Netherland-based global consumer Internet group. The Company is organized into six business areas: Classifieds, Payments & Fintech, Food delivery, Etail, Ventures and Travel. It also holds investments in listed Social & Internet assets. The Classifieds business area manages mobile and digital marketplaces. The Payments & Fintech business area includes PayU, a Payment Service Platform. The Food delivery business area manages food delivery companies. The Travel business area operates a travel online platform. The Etail business area includes business to consumer e-commerce companies. The Venture business area looks for and invests in early stage companies. ",
+            "exchange": "Amsterdam",
+            "fullName": "Prosus",
+            "shortName": "Prosus",
+            "symbol": "PRX"
+        },
+        {
+            "isin": "FR0000073272",
+            "description": "Safran SA, together with its subsidiaries, engages in the aerospace and defense businesses worldwide. The company operates through three segments: Aerospace Propulsion; Aircraft Equipment, Defense and Aerosystems; and Aircraft Interiors. The Aerospace Propulsion segment designs, develops, produces, and markets propulsion and mechanical power transmission systems for commercial aircraft, military transport, training and combat aircraft, civil and military helicopters, satellites, and drones; and offers maintenance, repair, and overhaul services, as well as sells spare parts. The Aircraft Equipment, Defense and Aerosystems segment provides landing gears and brakes; nacelles and reversers; avionics, such as flight controls and onboard information systems; security systems, including evacuation slides and oxygen masks; onboard computers and fuel systems; electrical power management systems and related engineering services; and optronic equipment and sights, navigation equipment and sensors, infantry, and drones, as well as sells spare parts. The Aircraft Interiors segment designs, develops, manufactures, and markets aircraft seats for passengers and crew; cabin equipment, overhead bins, class dividers, passenger service units, cabin interior solutions, chilling systems, galleys, electrical inserts, and trolleys and cargo equipment; and water distribution equipment, lavatories, air systems, and in-flight entertainment and connectivity systems. Its products and services are used in civil and military aircraft, and helicopters. The company was incorporated in 1924 and is based in Paris, France.",
+            "exchange": "Paris",
+            "fullName": "Safran SA",
+            "shortName": "Safran",
+            "symbol": "SAF"
+        },
+        {
+            "isin": "FR0000120578",
+            "description": "Sanofi, a healthcare company, engages in the research, development, manufacture, and marketing of therapeutic solutions in the United States, Europe, and internationally. It operates through Pharmaceuticals, Vaccines, and Consumer Healthcare segments. The company provides specialty care, such as dupixent, neurology and immunology, rare diseases, oncology, and rare blood disorders; medicines for diabetes and cardiovascular diseases; and established prescription products. In addition, it offers poliomyelitis, pertussis, and hib pediatric vaccines; influenza, booster, meningitis, and travel and endemic vaccines, which includes hepatitis A, typhoid, cholera, yellow fever, and rabies vaccines. The company also provides cough, cold, and flu, allergy, and pain care products, as well as physical, mental, and digestive wellness products; and offers body lotions, anti-itch products, moisturizing and soothing lotions, body and foot creams, and eczema powders. Further, it has a collaboration and license agreement with Exscientia to develop up to 15 novel small-molecule for oncology and immunology; ABL Bio, Inc. to develop ABL301 for Parkinson's disease; Blackstone Life Sciences to develop pivotal studies and clinical development program; and Seagen Inc. to design, develop, and commercialize antibody-drug conjugates for cancer. Additionally, the company has a collaboration agreement with IGM Biosciences, Inc. to develop, manufacture, and commercialize IgM antibody; Skyhawk Therapeutics, Inc to discover and develop novel small molecules; and Amunix Pharmaceuticals, Inc for T-cell engagers and cytokine therapies. It also enters in a strategic collaboration with Scribe Therapeutics Inc. to develop genome editing technologies; and co-promotion service agreement with Provention Bio, Inc. for the commercialization of teplizumab. The company was formerly known as Sanofi-Aventis and changed its name to Sanofi in May 2011. Sanofi was founded in 1973 and is headquartered in Paris, France.",
+            "exchange": "Paris",
+            "fullName": "Sanofi SA",
+            "shortName": "Sanofi",
+            "symbol": "SASY"
+        },
+        {
+            "isin": "ES0113900J37",
+            "description": "Banco Santander, S.A. provides various retail and commercial banking products and services to individuals, small and medium-sized enterprises, and large companies worldwide. It offers demand and time deposits, and current and savings accounts; mortgages, consumer finance, syndicated corporate loans, structured financing, cash management, export and agency finance, trade and working capital solutions, and corporate finance; and insurance products. The company also provides cash, asset, and wealth management; and private banking services. In addition, it is involved in the corporate banking; treasury, risk hedging, foreign trade, confirming, custody, and investment banking activities. The company was formerly known as Banco Santander Central Hispano S.A. and changed its name to Banco Santander, S.A. in June 2007. Banco Santander, S.A. was founded in 1856 and is headquartered in Madrid, Spain.",
+            "exchange": "Madrid",
+            "fullName": "Banco Santander",
+            "shortName": "Santander",
+            "symbol": "SAN"
+        },
+        {
+            "isin": "DE0007164600",
+            "description": "SAP SE, together with its subsidiaries, provides enterprise application software products worldwide. The company operates through Applications, Technology & Services; Qualtrics; Business Network; and Sustainability segments. It offers SAP S/4HANA that offers software capabilities for finance, risk and project management, procurement, manufacturing, supply chain and asset management, and research and development; SAP SuccessFactors solutions for human resources, including HR and payroll, talent and employee experience management, and people and workforce analytics; spend management solutions that covers direct and indirect spend, travel and expense, and external workforce management. The company also provides SAP customer experience solutions; SAP Business Technology platform that enables customers and partners to build, integrate, and extend applications in a cloud-native way; and SAP Business Network that enables companies to collaborate with trading partners for supply chain visibility. In addition, it offers SAP Signavio help customers to scan their operations to understand and improve their business process landscape; Experience Management solutions; SAP\u2019s industry cloud solutions that provides modular solutions addressing industry-specific functions; and sustainability-related solutions. SAP SE was founded in 1972 and is headquartered in Walldorf, Germany.",
+            "exchange": "Xetra",
+            "fullName": "SAP SE",
+            "shortName": "SAP",
+            "symbol": "SAPG"
+        },
+        {
+            "isin": "FR0000121972",
+            "description": "Schneider Electric S.E. engages in the energy management and industrial automation business worldwide. The company offers busway and cable support products, circuit breakers and switches, contactors and protection relays, electrical car charging, electrical protection and control products, energy management software solutions, transfer switches, surge protection and power conditioning products, power monitoring and control products, power quality and power factor correction products, pushbuttons, switches, pilot lights and joysticks, field services, load banks, and switchboards and enclosures. It also provides access control, building management, controllers, expansion modules, servers and HMIs, fire and security products, sensors, valve and valve actuator, variable speed and frequency drives, electric relays, feeder automation, grid automation and SCADA software products, medium voltage switchgears and transformers, outdoor equipment, substation automation products, and switchgear components. In addition, the company offers critical power and cooling services, data center cooling and software, IT power distribution products, prefabricated data center modules, racks and accessories, security and environmental monitoring, and uninterruptible power supply products; home automation and security, installation materials and systems, and light switches and electrical sockets; and boxes and interface, human machine interface, industrial automation software, industrial communication, measurement and control relays, measurement and instrumentation, motion control and robotics, motor starters and protection components, signaling units, solar and energy storage, power supplies, power protection and transformers, process control and safety, RFID systems, and other industrial automation and control products, as well as PLC, PAC, and dedicated controllers. The company was founded in 1836 and is headquartered in Rueil-Malmaison, France.",
+            "exchange": "Paris",
+            "fullName": "Schneider Electric SE",
+            "shortName": "Schneider Electric",
+            "symbol": "SCHN"
+        },
+        {
+            "isin": "DE0007236101",
+            "description": "Siemens Aktiengesellschaft, a technology company, focuses in the areas of automation and digitalization in Europe, Commonwealth of Independent States, Africa, the Middle East, the Americas, Asia, and Australia. It operates through Digital Industries, Smart Infrastructure, Mobility, Siemens Healthineers, and Siemens Financial Services segments. The Digital Industries segment offers automation systems and software for factories, numerical control systems, motors, drives and inverters, and integrated automation systems for machine tools and production machines; process control systems, machine-to-machine communication products, sensors and radio frequency identification systems; software for production and product lifecycle management, and simulation and testing of mechatronic systems; and cloud-based industrial Internet of Things operating systems. The Smart Infrastructure segment offers products, systems, solutions, services, and software to support sustainable transition in energy generation from fossil and renewable sources; sustainable buildings and communities; and buildings, electrification, and electrical products. The Mobility segment provides passenger and freight transportation, such as vehicles, trams and light rail, and commuter trains, as well as trains and passenger coaches; locomotives for freight or passenger transport and solutions for automated transportation; products and solutions for rail automation; electrification products; and intermodal solutions. The Siemens Healthineers segment develops, manufactures, and sells various diagnostic and therapeutic products and services; and provides clinical consulting services. The Siemens Financial Services segment offers debt and equity investments; leasing, lending, and working capital financing solutions; and equipment, project, and structured financing solutions. Siemens Aktiengesellschaft was founded in 1847 and is headquartered in Munich, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Siemens AG Class N",
+            "shortName": "Siemens AG",
+            "symbol": "SIEGn"
+        },
+        {
+            "isin": "NL00150001Q9",
+            "description": "Stellantis N.V. engages in the design, engineering, manufacturing, distribution, and sale of automobiles and light commercial vehicles, engines, transmission systems, metallurgical products, mobility services, and production systems worldwide. It provides luxury and premium passenger vehicles; pickup trucks, sport utility vehicles, and commercial vehicles; and parts and services, as well as retail and dealer financing, leasing, and rental services. The company offers its products under the Abarth, Alfa Romeo, Chrysler, Citro\u00ebn, DS, Dodge, Fiat, Jeep, Maserati, Ram, Opel, Lancia, Vauxhall, Peugeot, Teksid, and Comau brand names. It sells its products directly, as well as through distributors and dealers. The company was founded in 1899 and is based in Hoofddorp, the Netherlands.",
+            "exchange": "Milan",
+            "fullName": "Stellantis NV",
+            "shortName": "Stellantis NV",
+            "symbol": "STLAM"
+        },
+        {
+            "isin": "FR0000120271",
+            "description": "TotalEnergies SE is a France-based oil and gas company. It operates through four segments: Exploration and Production, Gas, Renewables & Power, Refining & Chemicals and Marketing & Services. Exploration & Production encompasses the exploration and production activities. Gas, Renewables & Power comprises gas activities conducted downstream of the production process and concerns natural gas, liquefied natural gas (LNG) and liquefied petroleum gas (LPG), as well as power generation, gas and power trading and marketing. It also develops renewable energy activities (excluding biotechnologies) and the power storage. Energy efficiency activities are represented through a dedicated Innovation & Energy Efficiency division. Refining & Chemicals encompasses refining and petrochemical activities and Hutchinson\u2019s operations. It also includes oil Trading & Shipping activities. Marketing & Services includes worldwide supply and marketing activities in the oil products and services field.",
+            "exchange": "Paris",
+            "fullName": "TotalEnergies SE",
+            "shortName": "TotalEnergies SE",
+            "symbol": "TTEF"
+        },
+        {
+            "isin": "FR0000125486",
+            "description": "Vinci SA is a France-based company active in the concessions and construction industry worldwide. It manages three segments: Concessions, Contracting and VINCI Immobilier. Concessions covers the concessions management activities through VINCI Autoroutes (motorways in France), VINCI Airports (airports in France and abroad) and Other concessions (different infrastructures in France and abroad). Contracting comprises VINCI Energies, providing industry services, electrical grid and transport infrastructure, among others; Eurovia, offering building and maintenance of roads, motorways, railways, urban infrastructure, production of asphalt mixes, quarries and VINCI Construction, which designs and constructs buildings, civil engineering infrastructure, specialized civil engineering, water and pipeline infrastructure, among others. VINCI Immobilier is active in different kind of property development. ",
+            "exchange": "Paris",
+            "fullName": "Vinci SA",
+            "shortName": "Vinci",
+            "symbol": "SGEF"
+        },
+        {
+            "isin": "DE0007664039",
+            "description": "Volkswagen AG manufactures and sells automobiles primarily in Europe, North America, South America, and the Asia-Pacific. The company operates in four segments: Passenger Cars and Light Commercial Vehicles, Commercial Vehicles, Power Engineering, and Financial Services. The Passenger Cars and Light Commercial Vehicles segment develops vehicles, engines, and vehicle software; and light commercial vehicles; and produces and sells passenger cars and related parts. The Commercial Vehicles segment develops, produces, and sells trucks and buses; and offers parts and related services. The Power Engineering segment offers large-bore diesel engines, turbomachinery, and propulsion components. The Financial Services segment provides dealer and customer financing, leasing, banking and insurance, fleet management, and mobility services. The company also offers motorcycles. It provides its products under the Volkswagen Passenger Cars, Audi, \u0160KODA, SEAT, Bentley, Porsche, Volkswagen Commercial Vehicles, Scania, MAN, Lamborghini, Ducati, and Bugatti brands. Volkswagen AG was founded in 1937 and is based in Wolfsburg, Germany. Volkswagen AG operates as a subsidiary of Porsche Automobil Holding SE.",
+            "exchange": "Xetra",
+            "fullName": "Volkswagen AG VZO O.N.",
+            "shortName": "Volkswagen VZO",
+            "symbol": "VOWG_p"
+        },
+        {
+            "isin": "DE000A1ML7J1",
+            "description": "Vonovia SE operates as an integrated residential real estate company in Europe. It operates through five segments: Rental, Value-Add, Recurring Sales, Development, and Deutsche Wohnen. The company offers property management services; apartments and property-related services; and value-added services, including maintenance and modernization of properties, craftsmen and residential environment organization, residential environment organization, condominium administration, cable TV, metering, energy supply, and insurances services. It also engages in the sale of individual condominiums and single-family houses; and project development activities. As of December 31, 2021, the company had 565,334 residential units; 168,015 garages and parking spaces; and 9,289 commercial units, as well as managed 71,173 residential units for other owners in Germany, Austria, and Sweden. The company was formerly known as Deutsche Annington Immobilien SE and changed its name to Vonovia SE in August 2015. Vonovia SE was founded in 1998 and is headquartered in Bochum, Germany.",
+            "exchange": "Xetra",
+            "fullName": "Vonovia SE",
+            "shortName": "Vonovia",
+            "symbol": "VNAn"
+        }
+    ]
+}
