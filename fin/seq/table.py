@@ -69,6 +69,19 @@ class Column:
         values = [v for v in self.values if v is not None]
         return min(values), max(values)
 
+    def slice(self, start, end=None):
+        """
+        Return a new column containing a copy of the data in the range [start;end)
+
+        Negative values for `start` or `end` are not allowed.
+        """
+        if end is None:
+            end = len(self.values)
+
+        assert end >= start >= 0
+
+        return Column(self.name, self.values[start:end])
+
     def type(self):
         """
         Return the type of data stored in the column.
@@ -178,6 +191,29 @@ class Table:
         """
         t = Table(self._rows)
         t.add_columns(*self)
+
+        return t
+
+    def lstrip(self, columns=None):
+        """
+        Return a a new table with rows at the start containing None removed.
+
+        If columns is defined is is assumed to be a sequence of column names.
+        In that case, only those columns are checked.
+        """
+        columns = self.data(columns)
+        none_row = (None,)*len(columns)
+        try:
+            for i, row in enumerate(zip(*columns)):
+                if row != none_row:
+                    break
+        except TypeError:
+            pass
+
+        end = self._rows
+        t = Table(end-i)
+        for col in self._meta:
+            t.add_column(col.slice(i, end))
 
         return t
 

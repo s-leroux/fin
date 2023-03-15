@@ -241,6 +241,27 @@ class TestTable(unittest.TestCase):
         self.assertEqual(t2["X"], t1["X"])
         self.assertEqual(t2["Y"], t1["Y"])
 
+    def test_ltrip(self):
+        LEN=10
+        LIMIT=3
+        limit=lambda n : [None if x < LIMIT else x for x in range(n)]
+        t1 = table.Table(LEN)
+        t1.add_columns(
+                ("X", limit),
+                ("Y", limit),
+                ("Z", limit),
+                )
+        t2 = t1.lstrip()
+        self.assertIsNot(t2, t1)
+        self.assertEqual(t2.columns(), t1.columns())
+        self.assertEqual(t2.rows(), t1.rows()-LIMIT)
+        self.assertSequenceEqual(t2["X"].values, [*range(LIMIT, LEN)])
+        self.assertSequenceEqual(t2["Y"].values, [*range(LIMIT, LEN)])
+        self.assertSequenceEqual(t2["Z"].values, [*range(LIMIT, LEN)])
+
+
+
+
 # ======================================================================
 # Table expression evaluation
 # ======================================================================
@@ -355,6 +376,21 @@ class TestColumn(unittest.TestCase):
             with self.subTest(values=values):
                 column = table.Column("X", values)
                 self.assertEqual(column.type(), expected)
+
+    def test_slice(self):
+        LEN=10
+        column = table.Column("X", range(LEN))
+        use_cases = (
+                ( 0, LEN ),
+                ( 0, LEN+1 ),
+                ( 1, LEN ),
+                ( 1, LEN // 2 + 1),
+                )
+
+        for use_case in use_cases:
+            with self.subTest(use_case=use_case):
+                start, end = use_case
+                self.assertSequenceEqual(column.slice(start, end).values, column.values[start:end])
 
 # ======================================================================
 # Row iterator

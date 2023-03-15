@@ -73,6 +73,8 @@ class CalendarDate:
         return self._pydate < other._pydate
 
     def __eq__(self, other):
+        if type(other) != CalendarDate:
+            return False
         return self._pydate == other._pydate
 
     def __hash__(self):
