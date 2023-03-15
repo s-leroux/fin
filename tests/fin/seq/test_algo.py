@@ -153,6 +153,16 @@ class TestMapN(unittest.TestCase):
 
         self.assertSequenceEqual(actual, EXPECTED)
 
+class TestLine(unittest.TestCase):
+    def test_line(self):
+        LEN = 10
+        X = [*range(LEN)]
+        Y = X.copy()
+        EXPECTED=X.copy()
+        actual = eval(*algo.line(1,6,X,Y))
+
+        self.assertSequenceEqual(actual, EXPECTED)
+
 # ======================================================================
 # Core functions
 # ======================================================================

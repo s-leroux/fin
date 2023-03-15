@@ -155,7 +155,7 @@ class Table:
     # ------------------------------------------------------------------
     def filter(self, fct, *cols):
         """
-        Return a new table containing only rows for whom ''fct'' evaluates to
+        Return a new table containing only rows for whom ''fct(*cols)'' evaluates to
         True.
 
         The returned table contains all the columns of the original table,

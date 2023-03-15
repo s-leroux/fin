@@ -2,6 +2,7 @@
 """
 import math
 import builtins
+import bisect
 from collections import deque
 
 # ======================================================================
@@ -474,6 +475,42 @@ def map1(fct):
         return result
 
     return _map
+
+def _index(col, x, *, bsearch=bisect.bisect_left):
+    idx = bsearch(col, x)
+    if idx == len(col) or col[idx] != x:
+        raise ValueError
+
+    return idx
+
+def line(x1, x2, x_col, y1_col, y2_col=None):
+    """
+    Extrapolate a linear trend by two points.
+    """
+    if y2_col is None:
+        y2_col = y1_col
+
+    def _line(rowcount, x_col, y1_col, y2_col):
+        x1_idx = _index(x_col, x1)
+        x2_idx = _index(x_col, x2)
+        y1 = y1_col[x1_idx]
+        y2 = y2_col[x2_idx]
+
+        if y1 is None or y2 is None:
+            return [None]*rowcount
+
+        # y = a+bx
+        b = (y2-y1)/(x2_idx-x1_idx)
+        a = y1-b*x1_idx
+        result = []
+        push = result.append
+
+        for i in range(rowcount):
+            push(a+b*i)
+
+        return result
+
+    return _line, x_col, y1_col, y2_col
 
 # ======================================================================
 # Calendar functions
