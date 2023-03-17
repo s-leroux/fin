@@ -16,11 +16,20 @@ SI_PREFIXES = {
         }
 
 def prefix_number(x):
+    if x == 0:
+        return "0"
+
+    if x < 0:
+        sign = -1
+        x = -x
+    else:
+        sign = 1
+
     exp = 1000**math.floor(math.log(x, 1000))
     pref = SI_PREFIXES.get(exp, None)
 
     if not pref:
-        return format(x, "g")
+        return format(x*sign, "g")
 
     return f"{round(x/exp, 3)}{pref}"
 

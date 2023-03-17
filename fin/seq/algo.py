@@ -102,7 +102,41 @@ def naive_window(fct, n):
     return window(_fct, n)
 
 def moving_average(n):
-    return naive_window(lambda col:sum(col)/len(col), n)
+    """
+    Compute the simple moving average over a n-period window.
+    """
+    def _moving_average(rowcount, values):
+        result = []
+        push = result.append
+        sigma_x = 0
+        buffer = [None]*n
+        nones = n
+        ptr = 0
+
+        for v in values:
+            x = buffer[ptr]
+            if x is None:
+                nones -= 1
+            else:
+                sigma_x -= x
+
+            buffer[ptr] = v
+            if v is None:
+                nones += 1
+            else:
+                sigma_x += v
+
+            if not nones:
+                push(sigma_x/n)
+            else:
+                push(None)
+
+            ptr += 1
+            if ptr == n:
+                ptr = 0
+
+        return result
+    return _moving_average
 
 def standard_deviation(n):
     sqrt = math.sqrt
@@ -228,6 +262,22 @@ def volatility(n, tau=1/252):
         return map(vol)(rowcount, result)
 
     return _volatility
+
+def beta(n):
+    """
+    Compute the Beta between two columns over a n-period window.
+    """
+    def _beta(col_x, col_y):
+        try:
+            x_bar = sum(col_x)/n
+            y_bar = sum(col_y)/n
+        except TypeError:
+            return None
+
+        covar = [(x-x_bar)*(y-y_bar) for x, y in zip(col_x, col_y)]
+        var = [(x-x_bar)**2 for x in col_x]
+        return sum(covar)/sum(var)
+    return naive_window(_beta, n)
 
 # ======================================================================
 # Linear trend
