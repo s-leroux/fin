@@ -272,6 +272,29 @@ class TestTable(unittest.TestCase):
         self.assertEqual(t2.rows(), t1.rows())
         self.assertSequenceEqual(t2["Y"].values, [*range(1, LEN+1, 1)])
 
+    def test_group(self):
+        LEN=40
+        t1 = table.Table(LEN)
+        t1.add_columns(
+                ("X", lambda n : [x//5 for x in range(n)]),
+                ("Y1", range),
+                ("Y2", range),
+                ("Y3", range),
+                ("Z", lambda n : [x//10 for x in range(n)]),
+                )
+        t2 = t1.group("X", dict(
+            Y1=min,
+            Y2=max,
+            Y3=sum,
+            ))
+        self.assertIsNot(t2, t1)
+        self.assertEqual(t2.columns(), t1.columns())
+        self.assertSequenceEqual(t2["X"], [*range(LEN//5)])
+        self.assertSequenceEqual(t2["Y1"], [x*5 for x in range(LEN//5)])
+        self.assertSequenceEqual(t2["Y2"], [x*5+4 for x in range(LEN//5)])
+        self.assertSequenceEqual(t2["Y3"], [x*5*5+10 for x in range(LEN//5)])
+
+
 # ======================================================================
 # Table expression evaluation
 # ======================================================================

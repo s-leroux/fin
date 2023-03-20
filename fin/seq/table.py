@@ -60,7 +60,7 @@ class Column:
         return True
 
     def __repr__(self):
-        return "Column(\"{}\", {})".format(self.name, self.value)
+        return "Column(\"{}\", {})".format(self.name, self.values)
 
     def min_max(self):
         """
@@ -229,6 +229,36 @@ class Table:
             it.sort(key=operator.itemgetter(self._get_column_index(column)))
 
         return table_from_data([*zip(*it)], self.names())
+
+    def group(self, expr, aggregate_functions = {}):
+        """
+        Return a new table with consecutive rows producing the same value for expr()
+        grouped together.
+        """
+        def default_mapping(values):
+            return values[0]
+
+        def aggregate(dest, src):
+            row = [aggregate_functions.get(name, default_mapping)(column) for name, *column in zip(names, *src)]
+            dest.append(row)
+
+        names = self.names()
+        rows = self.row_iterator()
+        keys, = self.reval(expr)
+        prev = object()
+        group = []
+        result = []
+        for key, row in zip(keys, rows):
+            if key != prev:
+                prev = key
+                if group:
+                    aggregate(result, group)
+                group = []
+            group.append(row)
+        if group:
+            aggregate(result, group)
+
+        return table_from_data([*zip(*result)], self.names())
 
     # ------------------------------------------------------------------
     # Mutative methods
