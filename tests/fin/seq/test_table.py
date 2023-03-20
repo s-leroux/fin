@@ -259,8 +259,18 @@ class TestTable(unittest.TestCase):
         self.assertSequenceEqual(t2["Y"].values, [*range(LIMIT, LEN)])
         self.assertSequenceEqual(t2["Z"].values, [*range(LIMIT, LEN)])
 
-
-
+    def test_sort(self):
+        LEN=10000
+        t1 = table.Table(LEN)
+        t1.add_columns(
+                ("X", range),
+                ("Y", lambda n : [*range(n,0,-1)]),
+                )
+        t2 = t1.sort("Y")
+        self.assertIsNot(t2, t1)
+        self.assertEqual(t2.columns(), t1.columns())
+        self.assertEqual(t2.rows(), t1.rows())
+        self.assertSequenceEqual(t2["Y"].values, [*range(1, LEN+1, 1)])
 
 # ======================================================================
 # Table expression evaluation

@@ -1,3 +1,4 @@
+import operator
 from copy import copy
 
 from fin.seq import formatter
@@ -216,6 +217,18 @@ class Table:
             t.add_column(col.slice(i, end))
 
         return t
+
+    def sort(self, columns=None):
+        """
+        Return a new table with the same data but with rows sorted according to `columns`.
+        """
+        if columns is None:
+            columns = self.names()
+        it = [*self.row_iterator()]
+        for column in columns:
+            it.sort(key=operator.itemgetter(self._get_column_index(column)))
+
+        return table_from_data([*zip(*it)], self.names())
 
     # ------------------------------------------------------------------
     # Mutative methods
