@@ -290,8 +290,11 @@ class _GNUPlotVisitor:
     """
     The class that handle conversion from the data model to a GNUPlot script.
     """
-    def __init__(self, write):
+    def __init__(self, write, *, term="wxt", size=(640,384), font="Sans,10"):
         self._write = write
+        self._term = term
+        self._font = font
+        self._width, self._height = size
 
     def visit_multiplot(self, mp):
         write = self._write
@@ -303,6 +306,7 @@ class _GNUPlotVisitor:
         # write the preamble
         write("\n")
         write("reset\n")
+        write(f"set term {self._term} size {self._width},{self._height} font \"{self._font}\"\n")
         write("set multiplot\n")
         write("set key left top\n")
 
@@ -471,7 +475,7 @@ class _GNUPlotVisitor:
     def _make_fields(self, *field_names):
         return ":".join(map(str, self._get_field_numbers(*field_names)))
 
-def gnuplot(multiplot, *, log=None, Process=_Process):
+def gnuplot(multiplot, *, log=None, Process=_Process, **kwargs):
     with Process(['gnuplot', '-p']) as p:
         stdin_write = p.stdin.write
         if log is not None:
@@ -480,5 +484,5 @@ def gnuplot(multiplot, *, log=None, Process=_Process):
                 stdin_write(str)
         else:
             writer = stdin_write
-        visitor = _GNUPlotVisitor(writer)
+        visitor = _GNUPlotVisitor(writer, **kwargs)
         multiplot.accept(visitor)
