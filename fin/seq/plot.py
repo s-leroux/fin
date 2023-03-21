@@ -4,6 +4,8 @@ Plot 2D curves using GNUPlot
 from fin.seq import formatter
 import asyncio
 import math
+import collections
+from numbers import Number
 
 PIPE = asyncio.subprocess.PIPE
 
@@ -33,7 +35,34 @@ def prefix_number(x):
 
     return f"{round(x/exp, 3)}{pref}"
 
-def make_xtics(sequence, n):
+# ======================================================================
+# managing tics
+# ======================================================================
+class Tics:
+    def __init__(self, items=()):
+        self._tics = ()
+        if items:
+            self.extend(items)
+
+    def extend(self, items):
+        items = set((item, format(item, "-10.04f")) if isinstance(item, Number) else item for item in items)
+        items = items.union(self._tics)
+
+        self._tics = sorted(items)
+
+    def __len__(self):
+        return len(self._tics)
+
+    def __iter__(self):
+        return iter(self._tics)
+
+    def __getitem__(self, key):
+        return self._tics[key]
+
+    def __repr__(self):
+        return f"Tics({tuple(self._tics)})"
+
+def make_tics_from_sequence(n, sequence):
     """
     Return a n-item sample of the sequence as (index, value) pairs.
     """
@@ -47,34 +76,33 @@ def make_xtics(sequence, n):
             i += inc
 
     result.append((l-1, sequence[-1]))
-    return result
+    return Tics(result)
 
-def make_tics(a,b):
+def make_tics_from_range(n, a, b):
     """
     Return a list of tics covering the range [a, b].
     """
     assert a<b
 
-    N = 10
     # First, find a scale matching the range amplitude
     delta = b-a
-    scale = 10**math.floor(math.log(delta/N, 10))
+    scale = 10**math.floor(math.log(delta/n, 10))
 
     # Adjust the extrema to the scale:
     a = (a//scale)*scale
     b = (b//scale+1)*scale
 
-    inc = math.ceil((b-a)/(N-1)/scale)*scale
+    inc = math.ceil((b-a)/(n-1)/scale)*scale
     result = []
     acc = a
     while True:
-        result.append(acc)
+        result.append((acc, prefix_number(acc)))
         if acc > b:
             break
 
         acc += inc
 
-    return result
+    return Tics(result)
 
     
 # ======================================================================
@@ -317,7 +345,7 @@ class _GNUPlotVisitor:
         if mp.mode == Multiplot.LABEL:
             write(f"set xrange [0:{table.rows()+1}]\n")
             x_column = table[mp._x_axis_column]
-            x_tics = make_xtics(x_column, 5)
+            x_tics = make_tics_from_sequence(5, x_column)
         else:
             raise NotImplementedError()
 
@@ -399,11 +427,11 @@ class _GNUPlotVisitor:
             the_min -= 1
             the_max += 1
 
-        tics = make_tics(the_min, the_max)
+        tics = list(make_tics_from_range(7, the_min, the_max))
         a, tics, b = tics[0], tics[1:-1], tics[-1]
 
-        write(f"set yrange [{a}:{b}]\n")
-        tics = [f"\"{prefix_number(i)}\" {i}" for i in tics]
+        write(f"set yrange [{a[0]}:{b[0]}]\n")
+        tics = [f"\"{i[1]}\" {i[0]}" for i in tics]
         write(f"set ytics ({','.join(tics)})\n")
 
 

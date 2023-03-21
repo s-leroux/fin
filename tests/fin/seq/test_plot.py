@@ -34,14 +34,14 @@ class TestMakeTics(unittest.TestCase):
                 )
         for a,b in use_cases:
             with self.subTest(a=a,b=b):
-                actual = plot.make_tics(a,b)
+                actual = plot.make_tics_from_range(10, a, b)
                 msg = str(actual)
                 self.assertLessEqual(len(actual), 10, msg)
                 self.assertGreaterEqual(len(actual), 6, msg)
-                self.assertLessEqual(actual[0], a, msg)
-                self.assertGreaterEqual(actual[1], a, msg)
-                self.assertGreaterEqual(actual[-1], b, msg)
-                self.assertLessEqual(actual[-2], b, msg)
+                self.assertLessEqual(actual[0][0], a, msg)
+                self.assertGreaterEqual(actual[1][0], a, msg)
+                self.assertGreaterEqual(actual[-1][0], b, msg)
+                self.assertLessEqual(actual[-2][0], b, msg)
                 self.assertSequenceEqual(actual, sorted(actual), msg)
 
 # ======================================================================
