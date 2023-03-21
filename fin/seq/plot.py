@@ -167,9 +167,13 @@ class _Plot:
         self.relative_height = relative_height
         self._table = table
         self._elements = []
+        self.poi = Tics()
 
     def accept(self, visitor):
         visitor.visit_plot(self)
+
+    def add_poi(self, *items):
+        self.poi.extend(items)
 
     def draw_line(self, data_column):
         """
@@ -178,6 +182,7 @@ class _Plot:
         self._elements.append(
                 Line(data_column)
                 )
+        self.add_poi(*self._table[data_column].min_max())
 
     def draw_bar(self, data_column):
         """
@@ -335,6 +340,7 @@ class _GNUPlotVisitor:
         write("\n")
         write("reset\n")
         write(f"set term {self._term} size {self._width},{self._height} font \"{self._font}\"\n")
+        write("set style textbox opaque\n")
         write("set multiplot\n")
         write("set key left top\n")
 
@@ -374,6 +380,16 @@ class _GNUPlotVisitor:
 
             top = 0.80*prev_height/total_height + 0.10
             bottom = 0.80*current_height/total_height + 0.10
+            # POI
+            if len(plot.poi):
+                write(f"set tmargin at screen {top:1.4f}\n")
+                write(f"set bmargin at screen {bottom:1.4f}\n")
+                write(f"set lmargin at screen 0.9000\n")
+                write(f"set rmargin at screen 0.9900\n")
+                write(f"unset label\n")
+                for poi in plot.poi:
+                    write(f"set label \"{poi[1]}\" at graph 1.00, first {poi[0]} offset graph 0.1, 0 point ps 1 pt 1 right boxed\n")
+                # write(f"replot\n")
             write(f"set lmargin at screen 0.1000\n")
             write(f"set rmargin at screen 0.9000\n")
             write(f"set tmargin at screen {top:1.4f}\n")
@@ -395,8 +411,10 @@ class _GNUPlotVisitor:
 
             write(f'set xtics axis ({",".join(x_tics_labels)})\n')
 
-            # Drae the plot
+            # Draw the plot
             plot.accept(self)
+
+
 
     def visit_plot(self, plot):
         write = self._write
