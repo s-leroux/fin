@@ -139,6 +139,9 @@ def sma(n):
         return result
     return _sma
 
+# ======================================================================
+# Stats
+# ======================================================================
 def standard_deviation(n):
     """
     Compute the Standard Deviation over a n-period window.
@@ -184,21 +187,46 @@ def standard_deviation(n):
 
     return s
 
-def naive_variance(n):
-    """ The variance over a n-periode time frame
+def variance(n):
     """
-    sum = builtins.sum
+    Compute the Variance over a n-period window.
+    """
     a = 1.0/(n-1.0)
     b = a/n
 
-    def _variance(ui):
-        ui_squared = [u*u for u in ui]
-        s1 = sum(ui_squared)
-        s2 = sum(ui)**2
+    def s(rowcount, values):
+        sigma_ui = 0.0
+        sigma_ui2 = 0.0
+        buffer = [None]*n
+        nones = n
+        ptr = 0
+        result = []
+        push = result.append
 
-        return a*s1-b*s2
+        for i, v in enumerate(values):
+            x = buffer[ptr]
 
-    return naive_window(_variance, n)
+            try:
+                sigma_ui -= x
+                sigma_ui2 -= x*x
+            except TypeError:
+                nones -= 1
+
+            buffer[ptr] = v
+            ptr += 1
+            if ptr == n:
+                ptr = 0
+
+            try:
+                sigma_ui += v
+                sigma_ui2 += v*v
+            except TypeError:
+                nones += 1
+
+            push(None if nones else a*sigma_ui2 - b*sigma_ui*sigma_ui)
+
+        return result
+    return s
 
 def volatility(n, tau=1/252):
     """ The price volatility over a n-period window

@@ -59,6 +59,25 @@ class TestStandardDeviation(unittest.TestCase):
             36.00462933,
         ])
 
+    def test_variance(self):
+        actual = eval(
+            algo.variance(5),
+            [x**2 for x in range(10, 20)],
+        )
+
+        self.assertSequenceEqual(actual, [
+            None,
+            None,
+            None,
+            None,
+            1443.5,
+            1693.5,
+            1963.5,
+            2253.5,
+            2563.5,
+            2893.5,
+        ])
+
     def test_propagate_nones(self):
         data = [x**2 for x in range(10, 20)]
         data[5] = None
