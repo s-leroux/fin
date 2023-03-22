@@ -146,45 +146,18 @@ def standard_deviation(n):
     """
     Compute the Standard Deviation over a n-period window.
     """
+    var = variance(n)
     sqrt = math.sqrt
-    sum = builtins.sum
-    a = 1.0/(n-1.0)
-    b = a/n
 
     def s(rowcount, values):
-        sigma_ui = 0.0
-        sigma_ui2 = 0.0
-        buffer = [None]*n
-        nones = n
-        ptr = 0
+        values = var(rowcount, values)
         result = []
         push = result.append
 
-        for i, v in enumerate(values):
-            x = buffer[ptr]
-
-            try:
-                sigma_ui -= x
-                sigma_ui2 -= x*x
-            except TypeError:
-                nones -= 1
-
-            buffer[ptr] = v
-            ptr += 1
-            if ptr == n:
-                ptr = 0
-
-            try:
-                sigma_ui += v
-                sigma_ui2 += v*v
-            except TypeError:
-                nones += 1
-
-            push(None if nones else sqrt(a*sigma_ui2 - b*sigma_ui*sigma_ui))
-
+        for v in values:
+            push(None if v is None else sqrt(v))
 
         return result
-
     return s
 
 def variance(n):
