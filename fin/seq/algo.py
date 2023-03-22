@@ -140,6 +140,9 @@ def sma(n):
     return _sma
 
 def standard_deviation(n):
+    """
+    Compute the Standard Deviation over a n-period window.
+    """
     sqrt = math.sqrt
     sum = builtins.sum
     a = 1.0/(n-1.0)
@@ -151,52 +154,35 @@ def standard_deviation(n):
         buffer = [None]*n
         nones = n
         ptr = 0
-        result = [None]*rowcount
+        result = []
+        push = result.append
 
         for i, v in enumerate(values):
             x = buffer[ptr]
-            if x is None:
-                nones -= 1
-            else:
+
+            try:
                 sigma_ui -= x
                 sigma_ui2 -= x*x
+            except TypeError:
+                nones -= 1
 
             buffer[ptr] = v
-            if v is None:
-                nones += 1
-            else:
-                sigma_ui += v
-                sigma_ui2 += v*v
-
-            if not nones:
-                result[i] = sqrt(a*sigma_ui2 - b*sigma_ui*sigma_ui)
-
             ptr += 1
             if ptr == n:
                 ptr = 0
 
+            try:
+                sigma_ui += v
+                sigma_ui2 += v*v
+            except TypeError:
+                nones += 1
+
+            push(None if nones else sqrt(a*sigma_ui2 - b*sigma_ui*sigma_ui))
+
+
         return result
 
     return s
-
-def naive_standard_deviation(n):
-    variance = naive_variance(n)
-    sqrt = math.sqrt
-
-    def _standard_deviation(rowcount, values):
-        result = variance(rowcount, values)
-        i = 0
-        while i < rowcount:
-            try:
-                result[i] = sqrt(result[i])
-            except TypeError:
-                pass
-
-            i+=1
-        return result
-
-    return _standard_deviation
-
 
 def naive_variance(n):
     """ The variance over a n-periode time frame

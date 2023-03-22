@@ -59,23 +59,6 @@ class TestStandardDeviation(unittest.TestCase):
             36.00462933,
         ])
 
-    def test_naive_standard_deviation(self):
-        """ check if the default implementation is consistent with
-            the naive implementation
-        """
-        WINDOW_SIZE=4
-        vector = [x**2 for x in range(10, 20)]
-        s1 = eval(
-            algo.naive_standard_deviation(WINDOW_SIZE),
-            vector,
-        )
-        s2 = eval(
-            algo.standard_deviation(WINDOW_SIZE),
-            vector,
-        )
-
-        self.assertSequenceEqual(s1, s2)
-
     def test_propagate_nones(self):
         data = [x**2 for x in range(10, 20)]
         data[5] = None
