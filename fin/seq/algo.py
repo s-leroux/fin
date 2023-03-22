@@ -118,25 +118,23 @@ def sma(n):
 
         for v in values:
             x = buffer[ptr]
-            if x is None:
-                nones -= 1
-            else:
+            try:
                 sigma_x -= x
+            except TypeError:
+                nones -=1
 
             buffer[ptr] = v
-            if v is None:
-                nones += 1
-            else:
-                sigma_x += v
-
-            if not nones:
-                push(sigma_x/n)
-            else:
-                push(None)
-
             ptr += 1
             if ptr == n:
                 ptr = 0
+
+            try:
+                sigma_x += v
+            except TypeError:
+                nones +=1
+
+            push(None if nones else sigma_x/n)
+
 
         return result
     return _sma
@@ -199,41 +197,6 @@ def naive_standard_deviation(n):
 
     return _standard_deviation
 
-def mean(n):
-    """ The mean over a n-period window
-    """
-    def _mean(rowcount, values):
-        result = [None]*rowcount
-        cache = [None]*n
-        nones = n
-        ptr = 0
-
-        acc = 0.0
-        i = 0
-        while i < rowcount:
-            try:
-                acc -= cache[ptr]
-            except TypeError:
-                nones -=1
-
-            x = values[i]
-            cache[ptr] = x
-            ptr += 1
-            if ptr == n:
-                ptr = 0
-
-            try:
-                acc += x
-                if not nones:
-                    result[i] = acc/n
-            except TypeError:
-                nones += 1
-
-            i += 1
-
-        return result
-
-    return _mean
 
 def naive_variance(n):
     """ The variance over a n-periode time frame
@@ -565,7 +528,7 @@ def change(n=1):
 # Compound functions
 # ======================================================================
 def ratio_to_moving_average(n):
-    ma = mean(n)
+    ma = sma(n)
 
     def _ratio_to_moving_average(rowcount, a):
         b = ma(rowcount, a)
