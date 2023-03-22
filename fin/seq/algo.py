@@ -101,11 +101,14 @@ def naive_window(fct, n):
 
     return window(_fct, n)
 
-def moving_average(n):
+# ======================================================================
+# Technical indicator
+# ======================================================================
+def sma(n):
     """
-    Compute the simple moving average over a n-period window.
+    Compute the Simple Moving Average over a n-period window.
     """
-    def _moving_average(rowcount, values):
+    def _sma(rowcount, values):
         result = []
         push = result.append
         sigma_x = 0
@@ -136,7 +139,7 @@ def moving_average(n):
                 ptr = 0
 
         return result
-    return _moving_average
+    return _sma
 
 def standard_deviation(n):
     sqrt = math.sqrt

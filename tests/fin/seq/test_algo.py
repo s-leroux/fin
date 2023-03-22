@@ -29,10 +29,10 @@ class TestByRow(unittest.TestCase):
         self.assertSequenceEqual(actual, list(range(300, 300+2*LEN, 2)))
 
 
-class TestMovingAverage(unittest.TestCase):
-    def test_moving_average(self):
+class TestSimpleMovingAverage(unittest.TestCase):
+    def test_sma(self):
         actual = eval(
-            algo.moving_average(2),
+            algo.sma(2),
             list(range(10, 20)),
         )
 
