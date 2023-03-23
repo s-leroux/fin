@@ -134,6 +134,26 @@ class TestVolatility(unittest.TestCase):
 
         self.assertSequenceEqual(actual, OUTPUT)
 
+class TestBestFit(unittest.TestCase):
+    def test_best_fit(self):
+        actual = eval(
+                algo.best_fit,
+                [
+                    1,
+                    4,
+                    4,
+                    4,
+                    7,
+                ]
+        )
+
+        self.assertSequenceEqual(actual, [
+            1.6,
+            2.8,
+            4.0,
+            5.2,
+            6.4,
+        ])
 
 class TestBeta(unittest.TestCase):
     def test_beta(self):

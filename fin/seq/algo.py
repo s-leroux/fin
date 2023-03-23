@@ -243,23 +243,16 @@ def beta(n):
         return sum(covar)/sum(var)
     return naive_window(_beta, n)
 
-# ======================================================================
-# Linear trend
-# ======================================================================
-def linear_trend(rowcount, values):
+def best_fit(rowcount, values):
     """
-    Compute the linear trend over the full dataset.
+    Compute the Linear Best Fit over the full dataset.
     """
     sigma_y = sigma_xy = sigma_xx = 0.0
-    sigma_x = 0.0
     n = 0
     d = (len(values)-1) / 2.0
-    print(rowcount, len(values), d)
     for i, value in enumerate(values):
         try:
             x = i-d # ensure ∑x = 0
-            sigma_x += x
-            print(i, x, sigma_x)
             sigma_y += value
             sigma_xy += x*value
             sigma_xx += x*x
@@ -267,13 +260,11 @@ def linear_trend(rowcount, values):
         except TypeError:
             pass
 
-    print(sigma_x, sigma_y, sigma_xx, sigma_xy)
     result = [None]*rowcount
 
     try:
         a = sigma_xy / sigma_xx
         b = sigma_y / n
-        print("a,b = ", a, b)
     except (ZeroDivisionError, TypeError):
         pass
     else:
