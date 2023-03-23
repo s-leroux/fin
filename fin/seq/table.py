@@ -83,6 +83,14 @@ class Column:
 
         return Column(self.name, self.values[start:end])
 
+    def alter(self, **kwargs):
+        """
+        Create a new column with the same values but altered metadata.
+        """
+        name = kwargs.get("name", None) or self.name
+
+        return Column(name, self.values)
+
     def type(self):
         """
         Return the type of data stored in the column.
@@ -363,6 +371,9 @@ class Table:
             return [ self._meta[idx] ]
         if isinstance(item, Column):
             return [ item ]
+        if isinstance(item, dict): # collections.abc.Mapping ?
+            col, =  self.reval(item["expr"])
+            return [ col.alter(**item) ]
 
         try:
             it = iter(item)
@@ -476,7 +487,7 @@ def join(tableA, tableB, keyA, keyB=None):
 import csv
 from fin import datetime
 
-def table_from_csv(iterator, format='', delimiter=','):
+def table_from_csv(iterator, format='', delimiter=',', select=None):
     rows = []
     reader = csv.reader(iterator, delimiter=delimiter)
     heading = next(reader)
@@ -503,7 +514,11 @@ def table_from_csv(iterator, format='', delimiter=','):
         names.append(name)
         cols.append(col)
 
-    return table_from_data(cols, names)
+    result = table_from_data(cols, names)
+    if select:
+        result = result.select(*select)
+
+    return result
 
 def table_from_csv_file(fname, format='', delimiter=','):
     with open(fname, newline='') as csvfile:

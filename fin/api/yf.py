@@ -21,12 +21,12 @@ def historical_data_url(ticker, duration=timedelta(days=365), end=None):
 
     return url
 
-def historical_data(ticker, duration=timedelta(days=365), end=None):
+def historical_data(ticker, duration=timedelta(days=365), end=None, select=None):
     url = historical_data_url(ticker, duration, end)
     r = get(url)
     if r.status_code != 200:
         raise Exception("Can't retrieve data at " + url + " status=" + str(r.status_code))
 
-    t = table.table_from_csv(r.text.splitlines(), format="dnnnnni")
+    t = table.table_from_csv(r.text.splitlines(), format="dnnnnni", select=select)
     return t
 

@@ -372,6 +372,18 @@ class TestTableExpressionEvaluation(unittest.TestCase):
 
         self.assertEqual(actual, expected)
 
+    def test_reval_dictionary(self):
+        """
+        Dictionary
+        """
+        NAME="Test"
+        expected = table.Column(NAME, [ a+b for a,b in zip(self._A, self._B)])
+        fct = lambda rowcount, col_a, col_b : [ a+b for a,b in zip(col_a, col_b) ]
+
+        actual, = self._table.reval({"name": NAME, "expr": (fct, "A", "B")})
+
+        self.assertEqual(actual, expected)
+
 # ======================================================================
 # Columns
 # ======================================================================
