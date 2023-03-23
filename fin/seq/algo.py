@@ -219,7 +219,7 @@ def volatility(n, tau=1/252):
 
     def _volatility(rowcount, values):
         # 1. Continuously compounded return for each period
-        ui = map1(lambda curr, prev: log(curr/prev))(rowcount, values)
+        ui = map_change(lambda curr, prev: log(curr/prev))(rowcount, values)
         # 2. Standard deviation
         result = stddev(rowcount, ui)
         # 3. Annualized values
@@ -561,8 +561,9 @@ def mapn(fct):
 
     return _mapn
 
-def map1(fct):
-    """ Map data using y_i = f(u_i, u_i-1)
+def map_change(fct):
+    """
+    Map data using y_i = f(u_i, u_i-1)
     """
     def _map(rowcount, values):
         result = [None]*rowcount

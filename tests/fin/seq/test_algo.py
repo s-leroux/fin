@@ -188,12 +188,12 @@ class TestBeta(unittest.TestCase):
 
         self.assertSequenceEqual(actual, EXPECTED)
 
-class TestMap1(unittest.TestCase):
-    def test_map1(self):
+class TestMapChange(unittest.TestCase):
+    def test_map_change(self):
         INPUT=list(range(1,10))
         OUTPUT = [None, *range(3, 19, 2)]
 
-        actual = eval(algo.map1(lambda a,b: a+b), INPUT)
+        actual = eval(algo.map_change(lambda a,b: a+b), INPUT)
 
         self.assertSequenceEqual(actual, OUTPUT)
 
