@@ -227,22 +227,6 @@ def volatility(n, tau=1/252):
 
     return _volatility
 
-def beta(n):
-    """
-    Compute the Beta between two columns over a n-period window.
-    """
-    def _beta(col_x, col_y):
-        try:
-            x_bar = sum(col_x)/n
-            y_bar = sum(col_y)/n
-        except TypeError:
-            return None
-
-        covar = [(x-x_bar)*(y-y_bar) for x, y in zip(col_x, col_y)]
-        var = [(x-x_bar)**2 for x in col_x]
-        return sum(covar)/sum(var)
-    return naive_window(_beta, n)
-
 def best_fit(rowcount, values):
     """
     Compute the Linear Best Fit over the full dataset.
@@ -276,6 +260,57 @@ def best_fit(rowcount, values):
                 pass
 
     return result
+
+# ======================================================================
+# Greeks
+# ======================================================================
+def delta(n=1):
+    """
+    Compute the Rate Of Change of a series over a period of time.
+
+    Formally, y_i = x_i - x_(i-n).
+    """
+    def _delta(rowcount, x):
+        #
+        # According to timeit, this is the fastest algorithm I could find
+        #
+        result = []
+        store = result.append
+        it = iter(x)
+        jt = iter(x)
+
+        # Consume the n first items
+        for _ in range(n):
+            store(None)
+            next(it)
+
+        # Remaining of the list
+        for i, j in zip(it, jt):
+            try:
+                store(i-j)
+            except TypeError:
+                store(None)
+
+        return result
+
+    return _delta
+
+def beta(n):
+    """
+    Compute the Beta between two columns over a n-period window.
+    """
+    def _beta(col_x, col_y):
+        try:
+            x_bar = sum(col_x)/n
+            y_bar = sum(col_y)/n
+        except TypeError:
+            return None
+
+        covar = [(x-x_bar)*(y-y_bar) for x, y in zip(col_x, col_y)]
+        var = [(x-x_bar)**2 for x in col_x]
+        return sum(covar)/sum(var)
+    return naive_window(_beta, n)
+
 
 # ======================================================================
 # Indicators
@@ -480,38 +515,6 @@ def ratio(rowcount, a, b):
             result[idx] = float("inf") if a_i > 0 else float("-inf") if a_i < 0 else None
 
     return result
-
-def change(n=1):
-    """
-    Evaluates to the difference between the current value and the value n periods
-    earlier.
-
-    Formally, y_i = x_i - x_(i-n).
-    """
-    def _change(rowcount, x):
-        #
-        # According to timeit, this is the fastest algorithm I could find
-        #
-        result = []
-        store = result.append
-        it = iter(x)
-        jt = iter(x)
-
-        # Consume the n first items
-        for _ in range(n):
-            store(None)
-            next(it)
-
-        # Remaining of the list
-        for i, j in zip(it, jt):
-            try:
-                store(i-j)
-            except TypeError:
-                store(None)
-
-        return result
-
-    return _change
 
 # ======================================================================
 # Compound functions

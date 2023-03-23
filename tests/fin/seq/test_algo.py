@@ -291,17 +291,17 @@ class TestRatio(unittest.TestCase):
 
         self.assertSequenceEqual(actual, expected)
 
-class TestChange(unittest.TestCase):
-    def test_change(self):
+class TestDelta(unittest.TestCase):
+    def test_delta(self):
         LEN=10
         col = [*range(LEN)]
 
         expected = [None] + [1]*(LEN-1)
-        actual = eval(algo.change(), col)
+        actual = eval(algo.delta(), col)
 
         self.assertSequenceEqual(actual, expected)
 
-    def test_change_with_none(self):
+    def test_delta_with_none(self):
         LEN=10
         IDX=5
         col = [*range(LEN)]
@@ -310,7 +310,7 @@ class TestChange(unittest.TestCase):
         expected = [None] + [1]*(LEN-1)
         expected[IDX] = None
         expected[IDX+1] = None
-        actual = eval(algo.change(), col)
+        actual = eval(algo.delta(), col)
 
         self.assertSequenceEqual(actual, expected)
 
