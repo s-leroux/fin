@@ -314,6 +314,21 @@ class TestDelta(unittest.TestCase):
 
         self.assertSequenceEqual(actual, expected)
 
+class TestMap(unittest.TestCase):
+    def test_map_is_mapn1(self):
+        """
+        Ensure that algo.map() is functionally identical to algo.mapn()
+        with only one column.
+        """
+        LEN=10
+        col = [*range(LEN)]
+        fct = lambda x : x*2
+
+        map_result = eval(algo.map(fct), col)
+        mapn_result = eval(algo.mapn(fct), col)
+
+        self.assertSequenceEqual(map_result, mapn_result)
+
 # ======================================================================
 # Calendar functions
 # ======================================================================

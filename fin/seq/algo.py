@@ -532,30 +532,30 @@ def ratio_to_moving_average(n):
 # Projections
 # ======================================================================
 def map(fct):
-    """ Map data using y_i = f(u_i)
+    """
+    Map data using a user-provided function.
+
+    Handle None gracefully (as opposed to `builtins.map`)
+
+    Formally, y_i = f(u_i)
     """
     def _map(rowcount, values):
-        result = [None]*rowcount
-        i = rowcount
-        while i:
-            i -= 1
-            x = values[i]
-            result[i] = fct(x) if x is not None else None
-
-        return result
+        return [fct(x) if x is not None else None for x in values]
 
     return _map
 
 def mapn(fct):
-    """ Map data using y_i = f(u_i0 .. u_in)
+    """
+    Map data using y_i = f(u_i0 .. u_in)
     """
     def _mapn(rowcount, *values):
-        result = [None]*rowcount
+        result = []
+        push = result.append
         for i, row in enumerate(zip(*values)):
             try:
-                result[i] = fct(*row)
+                push(fct(*row))
             except TypeError:
-                pass
+                push(None)
 
         return result
 
