@@ -212,11 +212,14 @@ class TestLine(unittest.TestCase):
     def test_line(self):
         LEN = 10
         X = [*range(LEN)]
-        Y = X.copy()
-        EXPECTED=X.copy()
-        actual = eval(*algo.line(1,6,X,Y))
-
-        self.assertSequenceEqual(actual, EXPECTED)
+        Y = [x*10.0 for x in X]
+        EXPECTED=Y.copy()
+        for a in range(LEN):
+            for b in range(LEN):
+                if a != b:
+                    with self.subTest(locals=locals()):
+                        actual = eval(algo.line(a,b), X, Y)
+                        self.assertSequenceEqual(actual, EXPECTED)
 
 # ======================================================================
 # Core functions

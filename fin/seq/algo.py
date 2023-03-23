@@ -580,20 +580,23 @@ def map_change(fct):
     return _map
 
 def _index(col, x, *, bsearch=bisect.bisect_left):
+    """
+    Return the index of x in col, assuming col is sorted is ascending order.
+    """
     idx = bsearch(col, x)
     if idx == len(col) or col[idx] != x:
         raise ValueError
 
     return idx
 
-def line(x1, x2, x_col, y1_col, y2_col=None):
+def line(x1, x2):
     """
-    Extrapolate a linear trend by two points.
+    Compute the line passing by (x1, y1_x1) and (x2, y2_x2).
     """
-    if y2_col is None:
-        y2_col = y1_col
+    def _line(rowcount, x_col, y1_col, y2_col=None):
+        if y2_col is None:
+            y2_col = y1_col
 
-    def _line(rowcount, x_col, y1_col, y2_col):
         x1_idx = _index(x_col, x1)
         x2_idx = _index(x_col, x2)
         y1 = y1_col[x1_idx]
@@ -613,7 +616,7 @@ def line(x1, x2, x_col, y1_col, y2_col=None):
 
         return result
 
-    return _line, x_col, y1_col, y2_col
+    return _line
 
 # ======================================================================
 # Calendar functions
