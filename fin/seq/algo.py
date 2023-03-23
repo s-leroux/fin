@@ -202,7 +202,15 @@ def variance(n):
     return s
 
 def volatility(n, tau=1/252):
-    """ The price volatility over a n-period window
+    """
+    Compute the Annualized Historical Volatility over a n-period window.
+
+    In practice this is the standard deviation of the day-to-day return.
+
+    Parameters:
+        n: the number of periods in the window. Often 20 or 21 for dayly data
+            (corresponding to the number of trading days in one month)
+        tau: inverse of the number of periods in one year
     """
     stddev = standard_deviation(n)
     log = math.log
@@ -210,8 +218,11 @@ def volatility(n, tau=1/252):
     vol = lambda stddev : stddev*k
 
     def _volatility(rowcount, values):
+        # 1. Continuously compounded return for each period
         ui = map1(lambda curr, prev: log(curr/prev))(rowcount, values)
+        # 2. Standard deviation
         result = stddev(rowcount, ui)
+        # 3. Annualized values
         return map(vol)(rowcount, result)
 
     return _volatility
