@@ -123,8 +123,9 @@ class Table:
         (i.e.: tables are rectangular)
     """
 
-    def __init__(self, rows):
+    def __init__(self, rows, *, name=""):
         self._rows = rows
+        self._name = str(name)
         self._meta = [ ]
 
     # ------------------------------------------------------------------
@@ -135,6 +136,9 @@ class Table:
 
     def rows(self):
         return self._rows
+
+    def name(self):
+        return self._name
 
     def data(self, columns=None):
         """
@@ -155,7 +159,10 @@ class Table:
         return zip(*self.data(columns))
 
     def names(self):
-        """ Return the column names
+        """
+        Return the column names
+
+        TODO: Rename this method
         """
         return [meta.name for meta in self._meta]
 
@@ -174,7 +181,7 @@ class Table:
         data = self.data()
         rows = [ row for row, flt in zip(zip(*data),zip(*cols)) if fct(*flt) ]
 
-        t = Table(len(rows))
+        t = Table(len(rows), name=self.name())
         for meta, column in zip(self._meta, zip(*rows)):
             meta = copy(meta)
             meta.values = column
@@ -188,7 +195,7 @@ class Table:
         """
         columns = self.reval(exprs)
 
-        t = Table(self._rows)
+        t = Table(self._rows, name=self.name())
         for column in columns:
             t.add_column(column)
 
@@ -198,7 +205,7 @@ class Table:
         """
         Return a copy of the table.
         """
-        t = Table(self._rows)
+        t = Table(self._rows, name=self.name())
         t.add_columns(*self)
 
         return t
@@ -220,7 +227,7 @@ class Table:
             pass
 
         end = self._rows
-        t = Table(end-i)
+        t = Table(end-i, name=self.name())
         for col in self._meta:
             t.add_column(col.slice(i, end))
 
@@ -409,7 +416,7 @@ add = lambda rowcount, *cols : [sum(row) for row in zip(*cols)]
 # ======================================================================
 # Create tables from existing data structures
 # ======================================================================
-def table_from_data(data, headings):
+def table_from_data(data, headings, *, name=""):
     if not len(data):
         rowcount = 0
     else:
@@ -420,7 +427,7 @@ def table_from_data(data, headings):
             if len(col) != rowcount:
                 raise InvalidError()
 
-    t = Table(rowcount)
+    t = Table(rowcount, name=name)
     for heading, column in zip(headings, data):
         t.add_column(Column(heading, column))
 
@@ -487,7 +494,7 @@ def join(tableA, tableB, keyA, keyB=None):
 import csv
 from fin import datetime
 
-def table_from_csv(iterator, format='', delimiter=',', select=None):
+def table_from_csv(iterator, format='', *, delimiter=',', select=None, **kwargs):
     rows = []
     reader = csv.reader(iterator, delimiter=delimiter)
     heading = next(reader)
@@ -514,12 +521,15 @@ def table_from_csv(iterator, format='', delimiter=',', select=None):
         names.append(name)
         cols.append(col)
 
-    result = table_from_data(cols, names)
+    result = table_from_data(cols, names, **kwargs)
     if select:
         result = result.select(*select)
 
     return result
 
-def table_from_csv_file(fname, format='', delimiter=','):
+def table_from_csv_file(fname, format='', *, name=None, delimiter=','):
+    if name is None:
+        name = str(fname)
+
     with open(fname, newline='') as csvfile:
-        return table_from_csv(csvfile, format=format, delimiter=delimiter)
+        return table_from_csv(csvfile, format=format, name=name, delimiter=delimiter)

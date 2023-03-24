@@ -230,7 +230,7 @@ class Multiplot:
 
         self._plots = []
 
-        self._title = None
+        self._title = table.name()
 
     def accept(self, visitor):
         visitor.visit_multiplot(self)

@@ -27,6 +27,6 @@ def historical_data(ticker, duration=timedelta(days=365), end=None, select=None)
     if r.status_code != 200:
         raise Exception("Can't retrieve data at " + url + " status=" + str(r.status_code))
 
-    t = table.table_from_csv(r.text.splitlines(), format="dnnnnni", select=select)
+    t = table.table_from_csv(r.text.splitlines(), name=ticker, format="dnnnnni", select=select)
     return t
 
