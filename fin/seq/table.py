@@ -316,6 +316,8 @@ class Table:
         meta = Column(name, column)
         self._meta.append(meta)
 
+        return meta
+
     def add_columns(self, *col_specs):
         for col_spec in col_specs:
             if isinstance(col_spec, Column):
@@ -446,7 +448,7 @@ def table_from_dict(d):
 # ======================================================================
 # Join
 # ======================================================================
-def join(tableA, tableB, keyA, keyB=None):
+def join(tableA, tableB, keyA, keyB=None, *, name=None):
     """
     Join tableA and tableB using their respective columns keyA and keyB.
 
@@ -456,6 +458,9 @@ def join(tableA, tableB, keyA, keyB=None):
     """
     colsA = tableA.names()
     colsB = tableB.names()
+    if name is None:
+        name = f"{tableA.name()}, {tableB.name()}"
+
     if keyB is not None and keyB != keyA:
         itA = tableA.row_iterator([keyA] + colsA)
         itB = tableB.row_iterator([keyB] + colsB)
@@ -486,7 +491,7 @@ def join(tableA, tableB, keyA, keyB=None):
     except StopIteration:
         pass
 
-    return table_from_data(list(zip(*result)), colsA + colsB)
+    return table_from_data(list(zip(*result)), colsA + colsB, name=name)
 
 # ======================================================================
 # Create tables from CSV
