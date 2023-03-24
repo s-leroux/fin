@@ -182,7 +182,9 @@ class _Plot:
         self._elements.append(
                 Line(data_column)
                 )
-        self.add_poi(*self._table[data_column].min_max())
+
+        column = self._table[data_column]
+        self.add_poi(*column.min_max(), column[-1])
 
     def draw_bar(self, data_column):
         """
