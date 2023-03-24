@@ -6,6 +6,7 @@ import bisect
 from collections import deque
 
 from fin.utils.log import console
+from fin.seq.column import Column, get_column_name
 
 # ======================================================================
 # Adapters
@@ -136,7 +137,7 @@ def sma(n):
             push(None if nones else sigma_x/n)
 
 
-        return result
+        return Column(f"SMA({n}), {get_column_name(values)}", result)
     return _sma
 
 # ======================================================================
@@ -514,7 +515,7 @@ def ratio(rowcount, a, b):
             # b_i is 0.0
             result[idx] = float("inf") if a_i > 0 else float("-inf") if a_i < 0 else None
 
-    return result
+    return Column(f"{get_column_name(a)}/{get_column_name(b)}", result)
 
 # ======================================================================
 # Compound functions
