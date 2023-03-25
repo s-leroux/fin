@@ -10,31 +10,28 @@ from fin.utils import log
 class TestLogging(unittest.TestCase):
     def setUp(self):
         self._stream = io.StringIO()
-        self._log = log.Logging(self._stream)
+        self._log = log.Logging(self._stream, log_level=4)
 
     def test_error(self):
         MSG = "This is my message!"
-        CODE = "T00001"
-        self._log.error(CODE, MSG)
+        self._log.error(MSG)
         actual = self._stream.getvalue()
         self.assertIn(MSG, actual)
-        self.assertTrue(actual.startswith("E"+CODE))
+        self.assertTrue(actual.startswith("E:"))
 
     def test_warn(self):
         MSG = "This is my message!"
-        CODE = "T00001"
-        self._log.warn(CODE, MSG)
+        self._log.warn(MSG)
         actual = self._stream.getvalue()
         self.assertIn(MSG, actual)
-        self.assertTrue(actual.startswith("W"+CODE))
+        self.assertTrue(actual.startswith("W:"))
 
     def test_info(self):
         MSG = "This is my message!"
-        CODE = "T00001"
-        self._log.info(CODE, MSG)
+        self._log.info(MSG)
         actual = self._stream.getvalue()
         self.assertIn(MSG, actual)
-        self.assertTrue(actual.startswith("I"+CODE))
+        self.assertTrue(actual.startswith("I:"))
 
 class TestConsole(unittest.TestCase):
     def test_console_is_defined(self):
