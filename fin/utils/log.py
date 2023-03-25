@@ -35,4 +35,7 @@ class Logging:
 
         print(self._termcap.green("I"+code), *args, file=self._ostream, flush=True)
 
+    def debug(self, *args):
+        print(self._termcap.green("DEBUG: "), *args, file=self._ostream, flush=True)
+
 console = Logging(sys.stderr)
