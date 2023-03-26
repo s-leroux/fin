@@ -28,7 +28,7 @@ def by_row(fct):
                 pass
             i += 1
 
-        return result
+        return Column(None,result)
 
     return _by_row
 
@@ -92,7 +92,7 @@ def window(fct, n):
             result[i] = fct(i-n+1, i+1, *cols)
             i += 1
 
-        return result
+        return Column(None, result)
 
     return _window
 
@@ -541,7 +541,7 @@ def map(fct):
     Formally, y_i = f(u_i)
     """
     def _map(rowcount, values):
-        return [fct(x) if x is not None else None for x in values]
+        return Column(None, [fct(x) if x is not None else None for x in values])
 
     return _map
 

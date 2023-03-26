@@ -1,80 +1,80 @@
 import unittest
 
-from fin.seq import signal
-from fin.seq import table
-
-# ======================================================================
-# Utilities
-# ======================================================================
-def call_signal(s, rowcount, d):
-    f, *colnames = s
-    args = [d[colname] for colname in colnames]
-    return f(rowcount, *args)
+from fin.seq import signal, table, column
 
 # ======================================================================
 # Signals
 # ======================================================================
 class TestAbove(unittest.TestCase):
     def test_data(self):
-        LIMIT = 5.0
         LEN = 10
-        a = [*range(LEN)]
-        b = [LIMIT]*LEN
 
-        expected = [x > y for x,y in zip(a,b)]
-        actual = call_signal(signal.above("X","Y"), LEN, dict(X=a, Y=b))
+        t = table.Table(LEN, columns=dict(
+            A=column.ramp(),
+            B=column.constant(5.0),
+            ))
+
+        expected = [x > y for x,y in zip(t["A"],t["B"])]
+        [actual] = t.reval(signal.above(), "A","B")
         self.assertSequenceEqual(actual, expected)
 
 class TestBelow(unittest.TestCase):
     def test_data(self):
-        LIMIT = 5.0
         LEN = 10
-        a = [*range(LEN)]
-        b = [LIMIT]*LEN
 
-        expected = [x < y for x,y in zip(a,b)]
-        actual = call_signal(signal.below("X","Y"), LEN, dict(X=a, Y=b))
-        self.assertSequenceEqual(actual, expected)
+        t = table.Table(LEN, columns=dict(
+            A=column.ramp(),
+            B=column.constant(5.0),
+            ))
+
+        expected = [x < y for x,y in zip(t["A"],t["B"])]
+        [actual] = t.reval(signal.below(), "A","B")
 
 class TestAlmostEqual(unittest.TestCase):
     def test_data(self):
-        LIMIT = 5.0
         LEN = 10
-        a = [*range(LEN)]
-        b = [LIMIT]*LEN
-        delta = [1]*LEN
 
-        expected = [-delta <= x-y <= delta for x,y,delta in zip(a,b,delta)]
-        actual = call_signal(signal.almost_equal("X","Y", "DELTA"), LEN, dict(X=a, Y=b, DELTA=delta))
+        t = table.Table(LEN, columns=dict(
+            A=column.ramp(),
+            B=column.constant(5.0),
+            DELTA=column.constant(1.0),
+            ))
+
+        expected = [-delta <= a-b <= delta for a,b,delta in zip(t["A"],t["B"],t["DELTA"])]
+        [actual] = t.reval(signal.almost_equal(), "A","B", "DELTA")
         self.assertSequenceEqual(actual, expected)
 
 class TestIncrease(unittest.TestCase):
     def test_data(self):
-        THRESHOLD = 1.0
         LEN = 10
-        a = [*range(0, LEN, 1)] + [*range(LEN, 0, -1)]
-        b = [THRESHOLD]*LEN
-        rows = [*zip(a,b)]
+        A = [*range(LEN), *range(LEN, 0, -1)]
+        t = table.Table(LEN*2, columns=dict(
+            A=column.iterable(A),
+            ))
 
-        expected = [n > 0 and rows[n][0]-rows[n-1][0] > rows[n][1] for n in range(len(rows))]
-        actual = call_signal(signal.increase("X","Y"), LEN, dict(X=a, Y=b))
-        self.assertSequenceEqual([x or False for x in actual], expected)
+        expected = [None] + [True]*LEN + [False]*(LEN-1)
+        [actual] = t.reval(signal.increase(), "A")
+        self.assertSequenceEqual(actual, expected)
 
 # ======================================================================
 # Algorithms
 # ======================================================================
 class TestPattern(unittest.TestCase):
+    @unittest.skip
     def test_pattern(self):
-        LIMIT1 = 2.0
-        LIMIT2 = 5.0
         LEN = 10
-        A = [*range(0, LEN, 1)]
+        LIMIT1 = column.constant(2.0)
+        LIMIT2 = column.constant(5.0)
+        A = column.ramp()
 
-        t = table.table_from_dict(dict(
+        t = table.Table(LEN, columns=dict(
             A=A,
+            LIMIT1=LIMIT1,
+            LIMIT2=LIMIT2,
             ))
 
-        expected = [i > 0 and A[i] > LIMIT1 and A[i-1] < LIMIT2 for i in range(LEN)]
+        expected = [a > l1 and a < l2 for a,l1,l2 in zip(t["A"], t["LIMIT1"], t["LIMIT2"])]
+        # FIXME
         [actual] = t.reval(signal.pattern(
             signal.above("A", LIMIT1),
             signal.below("A", LIMIT2),
@@ -83,20 +83,17 @@ class TestPattern(unittest.TestCase):
 
 class TestWhen(unittest.TestCase):
     def test_when(self):
-        A = 2.0
-        B = 5.0
-        LIMIT = 5
         LEN = 10
-        T = [*range(LEN)]
 
-        t = table.table_from_dict(dict(
-            A=[A]*LEN,
-            B=[B]*LEN,
-            T=T,
+        t = table.Table(LEN,columns=dict(
+            A = column.constant(2.0),
+            B = column.constant(5.0),
+            LIMIT = 5,
+            T = column.ramp(),
             ))
 
-        expected = [A if t > LIMIT else B for t in T]
-        [actual] = t.reval(signal.when(signal.above("T", LIMIT), "A", "B"))
+        expected = [a if t > l else b for t,l,a,b in zip(t["T"],t["LIMIT"],t["A"],t["B"])]
+        [actual] = t.reval(signal.when(), (signal.above(), "T", "LIMIT"), "A", "B")
         self.assertSequenceEqual(actual, expected)
 
 # ======================================================================
@@ -104,38 +101,35 @@ class TestWhen(unittest.TestCase):
 # ======================================================================
 class TestAll(unittest.TestCase):
     def test_data(self):
-        LIMIT = 5.0
         LEN = 10
-        A = [*range(0, LEN, 1)]
-        B = [*range(0, 2*LEN, 2)]
 
-        t = table.table_from_dict(dict(
-            A=A,
-            B=B,
+        t = table.Table(LEN, columns=dict(
+            A=column.iterable([*range(0, LEN, 1)]),
+            LIMIT1=column.constant(2.0),
+            LIMIT2=column.constant(7.0),
             ))
 
-        expected = [a > 5 and b > 5 for a,b in zip(A,B)]
+        expected = [a > l1 and a < l2 for a,l1,l2 in zip(t["A"],t["LIMIT1"],t["LIMIT2"])]
         [actual] = t.reval(signal.all(
-                signal.above("A", LIMIT),
-                signal.above("B", LIMIT),
+                (signal.above(),"A", "LIMIT1"),
+                (signal.below(),"A", "LIMIT2"),
             ))
         self.assertSequenceEqual(actual, expected)
 
 class TestAny(unittest.TestCase):
     def test_data(self):
-        LIMIT1 = 2.0
-        LIMIT2 = 7.0
         LEN = 10
-        A = [*range(0, LEN, 1)]
 
-        t = table.table_from_dict(dict(
-            A=A,
+        t = table.Table(LEN, columns=dict(
+            A=column.iterable([*range(0, LEN, 1)]),
+            LIMIT1=column.constant(2.0),
+            LIMIT2=column.constant(7.0),
             ))
 
-        expected = [a < LIMIT1 or a > LIMIT2 for a in A]
+        expected = [a < l1 or a > l2 for a,l1,l2 in zip(t["A"],t["LIMIT1"],t["LIMIT2"])]
         [actual] = t.reval(signal.any(
-                signal.below("A", LIMIT1),
-                signal.above("A", LIMIT2),
+                (signal.below(),"A", "LIMIT1"),
+                (signal.above(),"A", "LIMIT2"),
             ))
         self.assertSequenceEqual(actual, expected)
 

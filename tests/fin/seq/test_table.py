@@ -1,5 +1,6 @@
 import unittest
 
+from fin.seq import column
 from fin.seq import table
 from fin.seq import algo
 
@@ -29,7 +30,7 @@ class TestTable(unittest.TestCase):
         VALUE=123
         t = table.Table(LEN)
 
-        t.add_column("X", VALUE)
+        t.add_column("X", column.constant(VALUE))
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1)
@@ -40,7 +41,7 @@ class TestTable(unittest.TestCase):
         VALUE=123
         t = table.Table(LEN)
 
-        t.add_column("X", lambda n: [VALUE]*n)
+        t.add_column("X", column.constant(VALUE))
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1)
@@ -51,8 +52,8 @@ class TestTable(unittest.TestCase):
         VALUE=123
         t = table.Table(LEN)
 
-        t.add_column("X", range)
-        t.add_column("Y", (lambda n, xs: [x+1 for x in xs], "X"))
+        t.add_column("X", column.call(range))
+        t.add_column("Y", (column.call(lambda n, xs: [x+1 for x in xs]), "X"))
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 2)
@@ -61,7 +62,7 @@ class TestTable(unittest.TestCase):
     def test_add_column_from_other_table(self):
         LEN=99
         t1 = table.Table(LEN)
-        t1.add_column("X", range)
+        t1.add_column("X", column.call(range))
 
         t2 = table.Table(LEN)
         t2.add_column(t1["X"])
@@ -71,20 +72,21 @@ class TestTable(unittest.TestCase):
 
     def test_add_column_from_algo(self):
         LEN=10
-        A=list(range(200, 200+LEN))
-        B=list(range(300, 300+LEN))
+        f = lambda a, b: a+b
 
-        t = table.Table(LEN)
-        t.add_column(table.Column("A", A))
-        t.add_column(table.Column("B", B))
-        t.add_column("C", (algo.by_row(lambda a, b: a+b), "A", "B"))
-        self.assertSequenceEqual(t["C"], list(range(500, 500+2*LEN, 2)))
+        t = table.Table(LEN, columns=dict(
+            A=column.ramp(200),
+            B=column.ramp(300),
+            C=(algo.by_row(f), "A", "B"),
+            ))
+        self.assertSequenceEqual(t["C"], [f(a,b) for a,b in zip(t["A"],t["B"])])
 
     def test_add_column_reject_duplicate(self):
         """ add_column() should reject duplicate names.
         """
-        t = table.Table(10)
-        t.add_column("X", 1)
+        t = table.Table(10, columns=dict(
+            X=1,
+            ))
         with self.assertRaises(table.DuplicateName):
             t.add_column("X", 1)
 
@@ -95,7 +97,7 @@ class TestTable(unittest.TestCase):
         LEN=10
         t = table.Table(LEN)
         t.add_columns(
-                ("X", range),
+                ("X", column.call(range)),
                 ("Y", 2),
                 )
 
@@ -110,7 +112,7 @@ class TestTable(unittest.TestCase):
         LEN=10
         t1 = table.Table(LEN)
         t1.add_columns(
-                ("X", range),
+                ("X", column.call(range)),
                 ("Y", 2),
                 )
         t2 = table.Table(LEN)
@@ -166,7 +168,7 @@ class TestTable(unittest.TestCase):
     def test_rename(self):
         t = table.Table(10)
         t.add_columns(
-            ("A", range),
+            ("A", column.call(range)),
             ("B", 2),
             ("C", 3),
         )
@@ -176,7 +178,7 @@ class TestTable(unittest.TestCase):
     def test_delete(self):
         t = table.Table(10)
         t.add_columns(
-            ("A", lambda count : range(count)),
+            ("A", column.call(range)),
             ("B", 2),
             ("C", 3),
         )
@@ -192,7 +194,7 @@ class TestTable(unittest.TestCase):
         """
         t = table.Table(10)
         t.add_columns(
-            ("A", lambda count : range(count)),
+            ("A", column.call(range)),
             ("B", 2),
             ("C", 3),
         )
@@ -228,7 +230,7 @@ class TestTable(unittest.TestCase):
         LEN=10
         t1 = table.Table(LEN)
         t1.add_columns(
-                ("X", range),
+                ("X", column.call(range)),
                 ("Y", 2),
                 )
 
@@ -247,9 +249,9 @@ class TestTable(unittest.TestCase):
         limit=lambda n : [None if x < LIMIT else x for x in range(n)]
         t1 = table.Table(LEN)
         t1.add_columns(
-                ("X", limit),
-                ("Y", limit),
-                ("Z", limit),
+                ("X", column.call(limit)),
+                ("Y", column.call(limit)),
+                ("Z", column.call(limit)),
                 )
         t2 = t1.lstrip()
         self.assertIsNot(t2, t1)
@@ -263,8 +265,8 @@ class TestTable(unittest.TestCase):
         LEN=10000
         t1 = table.Table(LEN)
         t1.add_columns(
-                ("X", range),
-                ("Y", lambda n : [*range(n,0,-1)]),
+                ("X", column.apply(range)),
+                ("Y", column.call(lambda n : [*range(n,0,-1)])),
                 )
         t2 = t1.sort("Y")
         self.assertIsNot(t2, t1)
@@ -276,11 +278,11 @@ class TestTable(unittest.TestCase):
         LEN=40
         t1 = table.Table(LEN)
         t1.add_columns(
-                ("X", lambda n : [x//5 for x in range(n)]),
-                ("Y1", range),
-                ("Y2", range),
-                ("Y3", range),
-                ("Z", lambda n : [x//10 for x in range(n)]),
+                ("X", column.apply(lambda n : [x//5 for x in range(n)])),
+                ("Y1", column.apply(range)),
+                ("Y2", column.apply(range)),
+                ("Y3", column.apply(range)),
+                ("Z", column.apply(lambda n : [x//10 for x in range(n)])),
                 )
         t2 = t1.group("X", dict(
             Y1=min,
@@ -367,10 +369,12 @@ class TestTableExpressionEvaluation(unittest.TestCase):
         """
         Generators
         """
-        expected = [ list(range(self._table.rows())) ]
-        actual = [column.values for column in self._table.reval(range)]
+        LEN=self._table.rows()
+        g = lambda : (i*i for i in range(LEN))
+        expected = [*g()]
+        [actual] = self._table.reval(column.iterable(g()))
 
-        self.assertEqual(actual, expected)
+        self.assertSequenceEqual(actual, expected)
 
     def test_reval_dictionary(self):
         """
@@ -380,7 +384,7 @@ class TestTableExpressionEvaluation(unittest.TestCase):
         expected = table.Column(NAME, [ a+b for a,b in zip(self._A, self._B)])
         fct = lambda rowcount, col_a, col_b : [ a+b for a,b in zip(col_a, col_b) ]
 
-        actual, = self._table.reval({"name": NAME, "expr": (fct, "A", "B")})
+        actual, = self._table.reval({"name": NAME, "expr": (column.call(fct), "A", "B")})
 
         self.assertEqual(actual, expected)
 
@@ -389,7 +393,7 @@ class TestTableExpressionEvaluation(unittest.TestCase):
 # ======================================================================
 class TestTableRowIterator(unittest.TestCase):
     def setUp(self):
-        rng = lambda start : lambda rowcount : range(start, start+rowcount)
+        rng = column.ramp
 
         self._table = table.Table(10)
         self._table.add_columns(
@@ -432,7 +436,7 @@ class TestTableRowIterator(unittest.TestCase):
 # ======================================================================
 class TestTableJoin(unittest.TestCase):
     def setUp(self):
-        rng = lambda start : lambda rowcount : range(start, start+rowcount)
+        rng = column.ramp
 
         tableA = self._tableA = table.Table(10)
         self._tableA.add_columns(

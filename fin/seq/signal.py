@@ -2,10 +2,13 @@
 Signals.
 """
 
+from fin.seq.column import Column
+from fin.seq import column
+
 # ======================================================================
 # Signals
 # ======================================================================
-def above(a, b):
+def above():
     """
     Test if a_i > b_i.
     """
@@ -18,16 +21,21 @@ def above(a, b):
             except TypeError:
                 pass
 
-        return result
+        return Column(None, result)
 
-    return (_above, a, b)
+    return _above
 
-def below(a, b):
-    return above(b, a)
+def below():
+    r = above()
 
-def almost_equal(x, y, delta):
+    def _below(rowcount, a, b):
+        return r(rowcount, b, a)
+
+    return _below
+
+def almost_equal():
     """
-    Test if |x_i - y_i| < delta_i.
+    Test if |x_i - y_i| <= delta_i.
     """
     def _almost_equal(rowcount, x, y, delta):
         result = [None]*rowcount
@@ -38,30 +46,30 @@ def almost_equal(x, y, delta):
             except TypeError:
                 pass
 
-        return result
+        return Column(None, result)
 
-    return (_almost_equal, x, y, delta)
+    return _almost_equal
 
-def increase(x, threshold=0.0, p=1):
+def increase(p=1):
     """
     Test if x_i - x_(i-p) > threshold_i.
     """
     assert p > 0
 
-    def _increase(rowcount, x, threshold):
+    def _increase(rowcount, x, threshold=None):
         result = [None]*rowcount
 
         history = []
-        for i, row in enumerate(zip(x, threshold)):
+        for i, row in enumerate(zip(x, threshold or [0.0]*rowcount)):
             history.append(row)
             try:
                 result[i] = history[-1][0] - history[-p-1][0] > history[-1][1]
             except (IndexError, TypeError) as e:
                 pass
 
-        return result
+        return Column(None, result)
 
-    return (_increase, x, threshold)
+    return _increase
 
 # ======================================================================
 # Algorithms
@@ -90,11 +98,11 @@ def pattern(*events):
 
             result[i] = sig
 
-        return result
+        return Column(None, result)
 
     return (_pattern, *events)
 
-def when(test, a, b):
+def when():
     """
     Evaluates to a_i if t_i is true, else b_i.
     """
@@ -104,9 +112,9 @@ def when(test, a, b):
         for i, (vt, va, vb) in enumerate(zip(test, a, b)):
             result[i] = va if vt else vb
 
-        return result
+        return Column(None, result)
 
-    return (_when, test, a, b)
+    return _when
 
 # ======================================================================
 # Quantifiers
@@ -126,7 +134,7 @@ def all(*signals):
                     break
             result[i] = r
 
-        return result
+        return Column(None, result)
 
     return (_all, *signals)
 
@@ -145,6 +153,6 @@ def any(*signals):
                     break
             result[i] = r
 
-        return result
+        return Column(None, result)
 
     return (_any, *signals)

@@ -39,10 +39,13 @@ class Table:
         (i.e.: tables are rectangular)
     """
 
-    def __init__(self, rows, *, name=""):
+    def __init__(self, rows, *, name="", columns={}):
         self._rows = rows
         self._name = str(name)
         self._meta = [ ]
+
+        for k, v in columns.items():
+            self.add_column(k, v)
 
     # ------------------------------------------------------------------
     # Accessors
@@ -272,23 +275,21 @@ class Table:
     def reval(self, head, *tail):
         """
         Recursive evaluation of a table expression.
-
-        All user-provided functions are assumed to return a column
-        as a list of values.
         """
-        if callable(head):
-            # It's an f-expression
-            if tail:
-                return [ C(head(self._rows, *self.reval(*tail))) ]
+        while True:
+            if callable(head):
+                # It's an f-expression
+                if tail:
+                    head = head(self._rows, *self.reval(*tail))
+                    tail = ()
+                else:
+                    head = head(self._rows)
             else:
-                return [ C(head(self._rows)) ]
-        else:
-            # It's a list
-            result = self.reval_item(head)
-
-            for param in tail:
-                result += self.reval_item(param)
-            return result
+                # It's a list
+                result = self.reval_item(head)
+                if tail:
+                    result += self.reval(tail)
+                return result
 
     def reval_item(self, item):
         if type(item) == str:
@@ -307,7 +308,7 @@ class Table:
         else:
             return self.reval(*it)
 
-        return [ C([item] * self._rows) ]
+        return [ Column(None, [item]*self._rows) ]
 
     def __getitem__(self,c):
         c = self._get_column_index(c)

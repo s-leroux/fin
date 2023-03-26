@@ -1,7 +1,7 @@
 import unittest
 
 from fin.seq import plot
-from fin.seq import table
+from fin.seq import table, column
 
 # ======================================================================
 # Utilities
@@ -91,7 +91,7 @@ from textwrap import dedent
 class TestGNUPlot(unittest.TestCase):
     def setUp(self):
         self.t = t = table.Table(5)
-        t.add_column("T", range)
+        t.add_column("T", column.call(range))
         t.add_column("D", 2)
         t.add_column("V", 1)
 

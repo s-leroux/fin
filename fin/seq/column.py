@@ -1,11 +1,31 @@
 # ======================================================================
 # Utilities
 # ======================================================================
+DEFAULT_COLUMN_NAME="?"
+
 def get_column_name(col):
     try:
         return col.name
     except AttributeError:
-        return "?"
+        return DEFAULT_COLUMN_NAME
+
+def constant(value, *, name=DEFAULT_COLUMN_NAME):
+    return ( lambda rowcount : Column(name, [value]*rowcount) ,)
+
+def call(f, *, name=DEFAULT_COLUMN_NAME):
+    return lambda rowcount, *args : Column(name, f(rowcount, *args))
+
+def apply(f, *args, name=DEFAULT_COLUMN_NAME):
+    return ( lambda rowcount : Column(name, f(rowcount, *args)) ,)
+
+def iterator(it, *, name=DEFAULT_COLUMN_NAME):
+    return ( lambda rowcount : Column(name, [next(it, None) for _ in range(rowcount)]) ,)
+
+def iterable(it, *, name=DEFAULT_COLUMN_NAME):
+    return iterator(iter(it), name=name)
+
+def ramp(start=0, end=None, *, name=DEFAULT_COLUMN_NAME):
+    return ( lambda rowcount : Column(name, range(start, end if end is not None else start+rowcount)) ,)
 
 # ======================================================================
 # Column class
@@ -17,7 +37,7 @@ class Column:
             )
 
     def __init__(self, name, sequence):
-        self.name = name
+        self.name = name if name is not None else DEFAULT_COLUMN_NAME
         self.values = list(sequence)
 
     def __len__(self):
