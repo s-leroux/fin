@@ -69,6 +69,18 @@ class CalendarDate:
     def day(self):
         return self._pydate.day
 
+    def iter_by(self, interval, n = None):
+        assert n is None or n >= 0
+        if n is None:
+            n = float("inf")
+
+        curr = self
+
+        while n > 0:
+            n -= 1
+            curr = curr+interval
+            yield curr
+
     def __lt__(self, other):
         return self._pydate < other._pydate
 

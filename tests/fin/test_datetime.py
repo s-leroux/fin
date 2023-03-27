@@ -90,3 +90,19 @@ class TestCalendarDateMath(unittest.TestCase):
 
             msg = "{}+{} = {}".format(date, delta, expected)
             self.assertEqual(str(actual), expected, msg)
+
+class TestCalendarDateIterator(unittest.TestCase):
+    def test_iterate_by(self):
+        date = fin.datetime.parseisodate("2023-03-27")
+        interval = fin.datetime.CalendarDateDelta(days=1)
+
+        expected = (
+                "2023-03-28",
+                "2023-03-29",
+                "2023-03-30",
+                "2023-03-31",
+                "2023-04-01",
+                "2023-04-02",
+                )
+        actual = tuple(date.iter_by(interval, len(expected)))
+        self.assertEqual(tuple(map(str,actual)), expected)
