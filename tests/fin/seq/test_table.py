@@ -457,27 +457,87 @@ class TestTableJoin(unittest.TestCase):
                 )
 
     def test_join_0(self):
-        t = table.join(self._tableA, self._tableB, "A", "U")
+        """
+        Both the inner- and outer-join should produce the same result when key columns match.
+        """
         expected = list(self._cols[k].values for k in "ABCUVW")
-        self.assertSequenceEqual(t.data(), expected)
+        with self.subTest(join="inner join"):
+            t = table.join(self._tableA, self._tableB, "A", "U")
+            self.assertSequenceEqual(t.data(), expected)
+        with self.subTest(join="outer join"):
+            t = table.outer_join(self._tableA, self._tableB, "A", "U")
+            self.assertSequenceEqual(t.data(), expected)
 
     def test_join_1(self):
+        """
+        When a key is missing in only one table, the inner join should discard the row
+        but the outer join should keep it.
+        """
         self._tableA["A"].values[2] = None
         self._tableB["U"].values[5] = None
-        t = table.join(self._tableA, self._tableB, "A", "U")
 
-        expected = list(zip(*[self._cols[k] for k in "ABCUVW"]))
-        expected = [r for r in expected if None not in r]
-        self.assertSequenceEqual(list(zip(*t.data())), expected)
+        with self.subTest(join="inner join"):
+            expected = [
+                (100,  200,  300,  100,  600,  700),
+                (101,  201,  301,  101,  601,  701),
+                (103,  203,  303,  103,  603,  703),
+                (104,  204,  304,  104,  604,  704),
+                (106,  206,  306,  106,  606,  706),
+                (107,  207,  307,  107,  607,  707),
+                (108,  208,  308,  108,  608,  708),
+                (109,  209,  309,  109,  609,  709)
+             ]
+            t = table.join(self._tableA, self._tableB, "A", "U")
+            self.assertSequenceEqual(list(zip(*t.data())), expected)
+        with self.subTest(join="outer join"):
+            expected = [
+                (100,  200,  300,  100,  600,  700),
+                (101,  201,  301,  101,  601,  701),
+                (None, None, None, 102,  602,  702),
+                (103,  203,  303,  103,  603,  703),
+                (104,  204,  304,  104,  604,  704),
+                (105,  205,  305,  None, None, None),
+                (106,  206,  306,  106,  606,  706),
+                (107,  207,  307,  107,  607,  707),
+                (108,  208,  308,  108,  608,  708),
+                (109,  209,  309,  109,  609,  709)
+             ]
+            t = table.outer_join(self._tableA, self._tableB, "A", "U")
+            self.assertSequenceEqual(list(zip(*t.data())), expected)
 
     def test_join_2(self):
+        """
+        When a key is None in both tables, it should be discarded.
+        """
         self._tableA["A"].values[4] = None
         self._tableB["U"].values[3:6] = [None]*3
-        t = table.join(self._tableA, self._tableB, "A", "U")
 
-        expected = list(zip(*[self._cols[k] for k in "ABCUVW"]))
-        expected = [r for r in expected if None not in r]
-        self.assertSequenceEqual(list(zip(*t.data())), expected)
+        with self.subTest(join="inner join"):
+            expected = [
+                (100,  200,  300,  100,  600,  700),
+                (101,  201,  301,  101,  601,  701),
+                (102,  202,  302,  102,  602,  702),
+                (106,  206,  306,  106,  606,  706),
+                (107,  207,  307,  107,  607,  707),
+                (108,  208,  308,  108,  608,  708),
+                (109,  209,  309,  109,  609,  709)
+             ]
+            t = table.join(self._tableA, self._tableB, "A", "U")
+            self.assertSequenceEqual(list(zip(*t.data())), expected)
+        with self.subTest(join="outer join"):
+            expected = [
+                (100,  200,  300,  100,  600,  700),
+                (101,  201,  301,  101,  601,  701),
+                (102,  202,  302,  102,  602,  702),
+                (103,  203,  303,  None, None, None),
+                (105,  205,  305,  None, None, None),
+                (106,  206,  306,  106,  606,  706),
+                (107,  207,  307,  107,  607,  707),
+                (108,  208,  308,  108,  608,  708),
+                (109,  209,  309,  109,  609,  709)
+             ]
+            t = table.outer_join(self._tableA, self._tableB, "A", "U")
+            self.assertSequenceEqual(list(zip(*t.data())), expected)
 
 # ======================================================================
 # 

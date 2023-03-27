@@ -371,12 +371,14 @@ def join(tableA, tableB, keyA, keyB=None, *, name=None):
 
     If keyB is unspecified or None, keyB is set to keyA.
     The key columns are assumed to be sorted in ascending order.
-    Rows contening the None value in their key column are ignored.
+    Rows containing the None value in their key column are ignored.
+    Discard the rows whose key is None and rows without a matching key in the
+    other table.
     """
     colsA = tableA.names()
     colsB = tableB.names()
     if name is None:
-        name = f"{tableA.name()}, {tableB.name()}"
+        name = f"{tableA.name()} ∩ {tableB.name()}"
 
     if keyB is not None and keyB != keyA:
         itA = tableA.row_iterator([keyA] + colsA)
@@ -399,6 +401,58 @@ def join(tableA, tableB, keyA, keyB=None, *, name=None):
             if kA < kB:
                 kA, *rA = next(itA)
             elif kB < kA:
+                kB, *rB = next(itB)
+            else:
+                #print(rA + rB)
+                result.append(rA + rB)
+                kA, *rA = next(itA)
+                kB, *rB = next(itB)
+    except StopIteration:
+        pass
+
+    return table_from_data(list(zip(*result)), colsA + colsB, name=name)
+
+def outer_join(tableA, tableB, keyA, keyB=None, *, name=None):
+    """
+    Join tableA and tableB using their respective columns keyA and keyB.
+
+    If keyB is unspecified or None, keyB is set to keyA.
+    The key columns are assumed to be sorted in ascending order.
+    Rows containing the None value in their key column are ignored.
+    Discard the rows whose key is None.
+    Keep the rows without a matching entry in the other table.
+    """
+    colsA = tableA.names()
+    colsB = tableB.names()
+    if name is None:
+        name = f"{tableA.name()} ∪ {tableB.name()}"
+
+    if keyB is not None and keyB != keyA:
+        itA = tableA.row_iterator([keyA] + colsA)
+        itB = tableB.row_iterator([keyB] + colsB)
+    else:
+        itA = tableA.row_iterator([keyA] + colsA)
+        colsB.remove(keyA)
+        itB = tableB.row_iterator([keyA] + colsB)
+
+    emptyRowA = [None]*len(colsA)
+    emptyRowB = [None]*len(colsB)
+
+    try:
+        kA = None
+        kB = None
+        result = []
+
+        while True:
+            while kA is None:
+                kA, *rA = next(itA)
+            while kB is None:
+                kB, *rB = next(itB)
+            if kA < kB:
+                result.append(rA + emptyRowB)
+                kA, *rA = next(itA)
+            elif kB < kA:
+                result.append(emptyRowA + rB)
                 kB, *rB = next(itB)
             else:
                 #print(rA + rB)
