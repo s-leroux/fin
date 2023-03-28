@@ -69,10 +69,13 @@ class CalendarDate:
     def day(self):
         return self._pydate.day
 
-    def iter_by(self, interval, n = None):
+    def iter_by(self, interval = None, *, n = None, **kwargs):
         assert n is None or n >= 0
+        assert not(interval and kwargs)
         if n is None:
             n = float("inf")
+        if interval is None:
+            interval = CalendarDateDelta(**kwargs)
 
         curr = self
 

@@ -92,6 +92,15 @@ class TestCalendarDateMath(unittest.TestCase):
             self.assertEqual(str(actual), expected, msg)
 
 class TestCalendarDateIterator(unittest.TestCase):
+    def test_iterate_by_inline_arg(self):
+        date = fin.datetime.parseisodate("2023-03-27")
+        interval = fin.datetime.CalendarDateDelta(days=1)
+
+        a = [*date.iter_by(interval, n=3)]
+        b = [*date.iter_by(days=1, n=3)]
+
+        self.assertEqual(a,b)
+
     def test_iterate_by(self):
         date = fin.datetime.parseisodate("2023-03-27")
         interval = fin.datetime.CalendarDateDelta(days=1)
@@ -104,5 +113,5 @@ class TestCalendarDateIterator(unittest.TestCase):
                 "2023-04-01",
                 "2023-04-02",
                 )
-        actual = tuple(date.iter_by(interval, len(expected)))
+        actual = tuple(date.iter_by(interval, n=len(expected)))
         self.assertEqual(tuple(map(str,actual)), expected)

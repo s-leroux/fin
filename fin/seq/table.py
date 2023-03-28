@@ -3,6 +3,7 @@ from copy import copy
 
 from fin.seq import formatter
 from fin.seq.column import Column
+from fin.utils.log import console
 
 # ======================================================================
 # Exceptions
@@ -17,6 +18,10 @@ class RowCountMismatch(InvalidError):
 
 class DuplicateName(ValueError):
     pass
+
+def raise_table_cast_error(something):
+    console.debug(something)
+    raise TypeError(f"Can't convert {type(something)} to Table")
 
 # ======================================================================
 # Utilities
@@ -228,6 +233,8 @@ class Table:
             raise DuplicateName(name)
 
         if len(remainer):
+            console.debug(f"column={column}")
+            console.debug(f"remainer={remainer}")
             raise ValueError("Too many columns")
         if len(column) != self._rows:
             raise RowCountMismatch("column " + name, self._rows, len(column))
@@ -352,7 +359,11 @@ def table_from_data(data, headings, *, name=""):
 
     return t
 
-def table_from_dict(d):
+def table_from_dict(d, *, name=""):
+    """
+    Create a new table from existing data (*not* columns) presented
+    as a dictionary of columns.
+    """
     data = []
     headings = []
 
@@ -360,7 +371,18 @@ def table_from_dict(d):
         headings.append(name)
         data.append(column)
 
-    return table_from_data(data, headings)
+    return table_from_data(data, headings, name=name)
+
+def as_table(something):
+    """
+    Convert common data types to tables.
+    """
+    if isinstance(something, Table):
+        return something
+    if isinstance(something, dict):
+        return table_from_dict(something)
+
+    raise_table_cast_error(something);
 
 # ======================================================================
 # Join
@@ -375,17 +397,24 @@ def join(tableA, tableB, keyA, keyB=None, *, name=None):
     Discard the rows whose key is None and rows without a matching key in the
     other table.
     """
+    tableA = as_table(tableA)
+    tableB = as_table(tableB)
+
     colsA = tableA.names()
     colsB = tableB.names()
     if name is None:
         name = f"{tableA.name()} ∩ {tableB.name()}"
 
     if keyB is not None and keyB != keyA:
+        colsA.remove(keyA)
+        colsB.remove(keyB)
         itA = tableA.row_iterator([keyA] + colsA)
         itB = tableB.row_iterator([keyB] + colsB)
     else:
-        itA = tableA.row_iterator([keyA] + colsA)
+        keyB = keyA
+        colsA.remove(keyA)
         colsB.remove(keyA)
+        itA = tableA.row_iterator([keyA] + colsA)
         itB = tableB.row_iterator([keyA] + colsB)
 
     try:
@@ -403,14 +432,20 @@ def join(tableA, tableB, keyA, keyB=None, *, name=None):
             elif kB < kA:
                 kB, *rB = next(itB)
             else:
-                #print(rA + rB)
-                result.append(rA + rB)
+                result.append([kA, kB, *rA, *rB])
                 kA, *rA = next(itA)
                 kB, *rB = next(itB)
     except StopIteration:
         pass
 
-    return table_from_data(list(zip(*result)), colsA + colsB, name=name)
+    # Remove redundant column if needed
+    by_cols = [*zip(*result)]
+    cols = [keyA, keyB, *colsA, *colsB]
+    if keyA == keyB:
+        del by_cols[0]
+        del cols[0]
+
+    return table_from_data(by_cols, cols, name=name)
 
 def outer_join(tableA, tableB, keyA, keyB=None, *, name=None):
     """
@@ -422,17 +457,25 @@ def outer_join(tableA, tableB, keyA, keyB=None, *, name=None):
     Discard the rows whose key is None.
     Keep the rows without a matching entry in the other table.
     """
+    tableA = as_table(tableA)
+    tableB = as_table(tableB)
+
     colsA = tableA.names()
     colsB = tableB.names()
     if name is None:
         name = f"{tableA.name()} ∪ {tableB.name()}"
 
     if keyB is not None and keyB != keyA:
+        merge_keys = False
+        colsA.remove(keyA)
+        colsB.remove(keyB)
         itA = tableA.row_iterator([keyA] + colsA)
         itB = tableB.row_iterator([keyB] + colsB)
     else:
-        itA = tableA.row_iterator([keyA] + colsA)
+        merge_keys = True
+        colsA.remove(keyA)
         colsB.remove(keyA)
+        itA = tableA.row_iterator([keyA] + colsA)
         itB = tableB.row_iterator([keyA] + colsB)
 
     emptyRowA = [None]*len(colsA)
@@ -449,20 +492,46 @@ def outer_join(tableA, tableB, keyA, keyB=None, *, name=None):
             while kB is None:
                 kB, *rB = next(itB)
             if kA < kB:
-                result.append(rA + emptyRowB)
+                result.append([kA, None, *rA, *emptyRowB])
+                kA = None
                 kA, *rA = next(itA)
             elif kB < kA:
-                result.append(emptyRowA + rB)
+                result.append([None, kB, *emptyRowA, *rB])
+                kB = None
                 kB, *rB = next(itB)
             else:
-                #print(rA + rB)
-                result.append(rA + rB)
+                result.append([kA, kB, *rA, *rB])
+                kA = None
+                kB = None
                 kA, *rA = next(itA)
                 kB, *rB = next(itB)
     except StopIteration:
         pass
 
-    return table_from_data(list(zip(*result)), colsA + colsB, name=name)
+    try:
+        while True:
+            if kA is not None:
+                result.append([kA, kB, *rA, *emptyRowB])
+            kA, *rA = next(itA)
+    except StopIteration:
+        pass
+
+    try:
+        while True:
+            if kB is not None:
+                result.append([kA, kB, *emptyRowA, *rB])
+            kB, *rB = next(itB)
+    except StopIteration:
+        pass
+
+    # Remove redundant column if needed
+    by_cols = [*zip(*result)]
+    cols = [keyA, keyB, *colsA, *colsB]
+    if merge_keys:
+        by_cols[0] = [a or b for a,b in zip(*by_cols[0:2])]
+        del by_cols[1]
+        del cols[1]
+    return table_from_data(by_cols, cols, name=name)
 
 # ======================================================================
 # Create tables from CSV

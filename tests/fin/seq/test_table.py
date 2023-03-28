@@ -460,7 +460,7 @@ class TestTableJoin(unittest.TestCase):
         """
         Both the inner- and outer-join should produce the same result when key columns match.
         """
-        expected = list(self._cols[k].values for k in "ABCUVW")
+        expected = list(self._cols[k].values for k in "AUBCVW")
         with self.subTest(join="inner join"):
             t = table.join(self._tableA, self._tableB, "A", "U")
             self.assertSequenceEqual(t.data(), expected)
@@ -478,69 +478,195 @@ class TestTableJoin(unittest.TestCase):
 
         with self.subTest(join="inner join"):
             expected = [
-                (100,  200,  300,  100,  600,  700),
-                (101,  201,  301,  101,  601,  701),
-                (103,  203,  303,  103,  603,  703),
-                (104,  204,  304,  104,  604,  704),
-                (106,  206,  306,  106,  606,  706),
-                (107,  207,  307,  107,  607,  707),
-                (108,  208,  308,  108,  608,  708),
-                (109,  209,  309,  109,  609,  709)
+                (100,  100,  200,  300,  600,  700),
+                (101,  101,  201,  301,  601,  701),
+                (103,  103,  203,  303,  603,  703),
+                (104,  104,  204,  304,  604,  704),
+                (106,  106,  206,  306,  606,  706),
+                (107,  107,  207,  307,  607,  707),
+                (108,  108,  208,  308,  608,  708),
+                (109,  109,  209,  309,  609,  709)
              ]
             t = table.join(self._tableA, self._tableB, "A", "U")
-            self.assertSequenceEqual(list(zip(*t.data())), expected)
+            self.assertSequenceEqual([*t.row_iterator()], expected)
         with self.subTest(join="outer join"):
             expected = [
-                (100,  200,  300,  100,  600,  700),
-                (101,  201,  301,  101,  601,  701),
-                (None, None, None, 102,  602,  702),
-                (103,  203,  303,  103,  603,  703),
-                (104,  204,  304,  104,  604,  704),
-                (105,  205,  305,  None, None, None),
-                (106,  206,  306,  106,  606,  706),
-                (107,  207,  307,  107,  607,  707),
-                (108,  208,  308,  108,  608,  708),
-                (109,  209,  309,  109,  609,  709)
+                (100,  100,  200,  300,  600,  700),
+                (101,  101,  201,  301,  601,  701),
+                (None, 102,  None, None, 602,  702),
+                (103,  103,  203,  303,  603,  703),
+                (104,  104,  204,  304,  604,  704),
+                (105,  None, 205,  305,  None, None),
+                (106,  106,  206,  306,  606,  706),
+                (107,  107,  207,  307,  607,  707),
+                (108,  108,  208,  308,  608,  708),
+                (109,  109,  209,  309,  609,  709)
              ]
             t = table.outer_join(self._tableA, self._tableB, "A", "U")
-            self.assertSequenceEqual(list(zip(*t.data())), expected)
+            self.assertSequenceEqual([*t.row_iterator()], expected)
 
     def test_join_2(self):
         """
         When a key is None in both tables, it should be discarded.
         """
+        self.maxDiff = None
         self._tableA["A"].values[4] = None
         self._tableB["U"].values[3:6] = [None]*3
 
         with self.subTest(join="inner join"):
             expected = [
-                (100,  200,  300,  100,  600,  700),
-                (101,  201,  301,  101,  601,  701),
-                (102,  202,  302,  102,  602,  702),
-                (106,  206,  306,  106,  606,  706),
-                (107,  207,  307,  107,  607,  707),
-                (108,  208,  308,  108,  608,  708),
-                (109,  209,  309,  109,  609,  709)
+                (100,  100,  200,  300,  600,  700),
+                (101,  101,  201,  301,  601,  701),
+                (102,  102,  202,  302,  602,  702),
+                (106,  106,  206,  306,  606,  706),
+                (107,  107,  207,  307,  607,  707),
+                (108,  108,  208,  308,  608,  708),
+                (109,  109,  209,  309,  609,  709)
              ]
             t = table.join(self._tableA, self._tableB, "A", "U")
-            self.assertSequenceEqual(list(zip(*t.data())), expected)
+            self.assertSequenceEqual([*t.row_iterator()], expected)
         with self.subTest(join="outer join"):
             expected = [
-                (100,  200,  300,  100,  600,  700),
-                (101,  201,  301,  101,  601,  701),
-                (102,  202,  302,  102,  602,  702),
-                (103,  203,  303,  None, None, None),
-                (105,  205,  305,  None, None, None),
-                (106,  206,  306,  106,  606,  706),
-                (107,  207,  307,  107,  607,  707),
-                (108,  208,  308,  108,  608,  708),
-                (109,  209,  309,  109,  609,  709)
+                (100,  100,  200,  300,  600,  700),
+                (101,  101,  201,  301,  601,  701),
+                (102,  102,  202,  302,  602,  702),
+                (103,  None, 203,  303,  None, None),
+                (105,  None, 205,  305,  None, None),
+                (106,  106,  206,  306,  606,  706),
+                (107,  107,  207,  307,  607,  707),
+                (108,  108,  208,  308,  608,  708),
+                (109,  109,  209,  309,  609,  709)
              ]
             t = table.outer_join(self._tableA, self._tableB, "A", "U")
-            self.assertSequenceEqual(list(zip(*t.data())), expected)
+            self.assertSequenceEqual([*t.row_iterator()], expected)
+
+    def test_join_at_end(self):
+        """
+        Check that joining disjoint tables produces the expected result.
+        """
+        self.maxDiff = None
+
+        ta = self._tableA.select("B")
+        tb = self._tableB.select("V")
+
+        with self.subTest(join="inner join"):
+            expected = [
+             ]
+            t = table.join(ta, tb, "B", "V")
+            self.assertSequenceEqual([*t.row_iterator()], expected)
+        with self.subTest(join="outer join"):
+            expected = [
+                (200,  None,),
+                (201,  None,),
+                (202,  None,),
+                (203,  None,),
+                (204,  None,),
+                (205,  None,),
+                (206,  None,),
+                (207,  None,),
+                (208,  None,),
+                (209,  None,),
+                (None, 600, ),
+                (None, 601, ),
+                (None, 602, ),
+                (None, 603, ),
+                (None, 604, ),
+                (None, 605, ),
+                (None, 606, ),
+                (None, 607, ),
+                (None, 608, ),
+                (None, 609, ),
+             ]
+            t = table.outer_join(ta, tb, "B", "V")
+            self.assertSequenceEqual([*t.row_iterator()], expected)
+        # Check if order is maintained
+        with self.subTest(join="outer join"):
+            expected = [
+                (None, 200, ),
+                (None, 201, ),
+                (None, 202, ),
+                (None, 203, ),
+                (None, 204, ),
+                (None, 205, ),
+                (None, 206, ),
+                (None, 207, ),
+                (None, 208, ),
+                (None, 209, ),
+                (600,  None,),
+                (601,  None,),
+                (602,  None,),
+                (603,  None,),
+                (604,  None,),
+                (605,  None,),
+                (606,  None,),
+                (607,  None,),
+                (608,  None,),
+                (609,  None,),
+             ]
+            t = table.outer_join(tb, ta, "V", "B")
+            self.assertSequenceEqual([*t.row_iterator()], expected)
+
+    def test_outer_join_extend(self):
+        """
+        A common use case for outer_join() is to extend a table by adding
+        more rows. We check that here.
+        """
+        self.maxDiff = None
+
+        ta = table.table_from_dict({
+            "T": [*range(300,305), *range(500, 505), *range(600,605)]
+            })
+        tb = table.table_from_dict({
+            "T": [*range(100,105), *range(500, 505), *range(700,705)]
+            })
+
+        with self.subTest(join="inner join"):
+            expected = [
+                (500,),
+                (501,),
+                (502,),
+                (503,),
+                (504,),
+             ]
+            t = table.join(ta, tb, "T", "T")
+            self.assertSequenceEqual([*t.row_iterator()], expected)
+        with self.subTest(join="outer join"):
+            expected = [
+                (100,),
+                (101,),
+                (102,),
+                (103,),
+                (104,),
+                (300,),
+                (301,),
+                (302,),
+                (303,),
+                (304,),
+                (500,),
+                (501,),
+                (502,),
+                (503,),
+                (504,),
+                (600,),
+                (601,),
+                (602,),
+                (603,),
+                (604,),
+                (700,),
+                (701,),
+                (702,),
+                (703,),
+                (704,),
+             ]
+            t = table.outer_join(ta, tb, "T", "T")
+            self.assertSequenceEqual([*t.row_iterator()], expected)
+            self.assertSequenceEqual(t.names(), ("T",))
+            t = table.outer_join(tb, ta, "T", "T")
+            self.assertSequenceEqual([*t.row_iterator()], expected)
+            self.assertSequenceEqual(t.names(), ("T",))
 
 # ======================================================================
-# 
+# Table factories
 # ======================================================================
 class TestFromDict(unittest.TestCase):
     def test_load(self):
@@ -556,6 +682,17 @@ class TestFromDict(unittest.TestCase):
         self.assertEqual(t.columns(), 2)
         [S] = t.reval(algo.by_row(lambda a, b: a+b), "A", "B")
         self.assertSequenceEqual(S, [a+1.0 for a in A])
+
+class TestAsTable(unittest.TestCase):
+    def test_from_something(self):
+        use_cases = (
+                table.Table(5),
+                dict(a=[1,2,3,4,5]),
+                )
+        for something in use_cases:
+            with self.subTest(type=type(something)):
+                t = table.as_table(something)
+                self.assertEqual(type(t), table.Table)
 
 # ======================================================================
 # CSV
