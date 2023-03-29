@@ -1,4 +1,6 @@
 import unittest
+import time
+import datetime
 
 import fin.datetime
 import builtins
@@ -56,6 +58,39 @@ class TestCalendarDate(unittest.TestCase):
         self.assertEqual(date.month, 1)
         self.assertEqual(date.day, 21)
 
+    def test_init_from_timestamp(self):
+        """
+        The factory method should create a CalendarDate object from a timestamp.
+        """
+        ts = 1680121175
+        st = time.localtime(ts)
+        cd = fin.datetime.CalendarDate.fromtimestamp(ts)
+
+        self.assertEqual(cd.year, 2023)
+        self.assertEqual(cd.month, 3)
+        self.assertEqual(cd.day, 29)
+
+    def test_today(self):
+        """
+        The factory method should create a CalendarDate for today.
+        """
+        DAYS=24*60*60
+        now = time.time()
+        cd = fin.datetime.CalendarDate.today()
+
+        self.assertGreaterEqual(cd.timestamp//DAYS, now//DAYS)
+        self.assertLessEqual(cd.timestamp, now+1)
+
+    def test_timestamp(self):
+        """
+        The timestamp property should return the number of seconds since 1970-01-01.
+        """
+        ts = 1680048000
+        cd = fin.datetime.CalendarDate.fromisoformat("2023-03-29")
+
+        self.assertEqual(cd.timestamp, ts)
+
+
     def test_str(self):
         """
         __str__ should produce string following the  YYYY-MM-DD format.
@@ -82,7 +117,7 @@ class TestCalendarDateMath(unittest.TestCase):
                     "2008-12-01", "2010-12-01", dict(months=24),  # Known bug in some versions
                     "2008-12-01", "2006-12-01", dict(months=-24),  # Known bug in some versions
                 )
-       
+
         for date, expected, delta in zip(*[iter(test_cases)]*3):
             date = fin.datetime.parseisodate(date)
             delta = fin.datetime.CalendarDateDelta(**delta)

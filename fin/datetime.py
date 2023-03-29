@@ -2,6 +2,7 @@
 Date and time utilities
 """
 
+import time
 from datetime import date, datetime, timedelta
 
 # ======================================================================
@@ -45,6 +46,25 @@ class CalendarDate:
     def __init__(self, year, month, day):
         self._pydate = date(year, month, day)
 
+    @staticmethod
+    def today():
+        return CalendarDate.fromtimestamp(time.time())
+
+    @staticmethod
+    def fromtimestamp(timestamp):
+        st = time.localtime(timestamp)
+        return CalendarDate(st.tm_year, st.tm_mon, st.tm_mday)
+
+    @staticmethod
+    def fromisoformat(format_string):
+        """
+        Parse a string according to YYYY-MM-DD format and return the
+        corresponding date object.
+        """
+        dt = datetime.strptime(format_string, "%Y-%m-%d")
+        return CalendarDate(dt.year, dt.month, dt.day)
+
+
     def __repr__(self):
         return "{}.{}({}, {}, {})".format(
                 type(self).__module__,
@@ -68,6 +88,10 @@ class CalendarDate:
     @property
     def day(self):
         return self._pydate.day
+
+    @property
+    def timestamp(self):
+        return (self._pydate - date(1970, 1, 1)).total_seconds()
 
     def iter_by(self, interval = None, *, n = None, **kwargs):
         assert n is None or n >= 0
@@ -114,7 +138,7 @@ class CalendarDate:
             if new_month > 12:
                 new_year += 1
                 new_month -= 12
-        
+
             # for days, we can delegate to the python datetime module
             new_date = date(new_year, new_month, self.day) + timedelta(days=delta._days or 0)
 
@@ -127,10 +151,4 @@ class CalendarDate:
         return NotImplemented
 
 def parseisodate(datestring):
-    """
-    Parse a string according to YYYY-MM-DD format and return the
-    corresponding date object.
-    """
-    dt = datetime.strptime(datestring, "%Y-%m-%d")
-    return CalendarDate(dt.year, dt.month, dt.day)
-    
+    return CalendarDate.fromisoformat(datestring)
