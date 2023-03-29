@@ -1,14 +1,16 @@
 from fin.api import yf
 from fin.seq import algo
 from fin.seq import plot
-
+from fin.datetime import CalendarDateDelta
 """
 Plot recent the quotes for a stock alongside with a couple of indicators.
 
 Usage:
     PYTHONPATH="$PWD" python3 examples/fin/seq/plot.py
 """
-t = yf.historical_data("BAC", yf.timedelta(days=500),select=["Date", dict(name="Close", expr="Adj Close")])
+client = yf.Client()
+
+t = client.historical_data("BAC", CalendarDateDelta(days=500),select=["Date", dict(name="Close", expr="Adj Close")])
 t.add_column("SMA200", (algo.sma(200), "Close"))
 t.add_column("SMA50", (algo.sma(50), "Close"))
 t.add_column("SMA10", (algo.sma(10), "Close"))

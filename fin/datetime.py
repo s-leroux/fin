@@ -15,7 +15,7 @@ class CalendarDateDelta:
             "_days",
             )
 
-    def __init__(self, years=None, months=None, days=None):
+    def __init__(self, years=0, months=0, days=0):
         self._years = years
         self._months = months
         self._days = days
@@ -147,6 +147,16 @@ class CalendarDate:
                     new_date.month,
                     new_date.day,
                     )
+
+        return NotImplemented
+
+    def __sub__(self, other):
+        """
+        Substract a CalendarDateDelta from the current date and retrun the newly created
+        CalendarDate instance.
+        """
+        if isinstance(other, CalendarDateDelta):
+            return self + -other
 
         return NotImplemented
 

@@ -5,6 +5,8 @@ import random
 from time import sleep
 import requests
 
+from fin.utils.log import console
+
 # ======================================================================
 # user agents
 # ======================================================================
@@ -49,7 +51,7 @@ def cooldown(delay, _sleep=sleep):
 # ======================================================================
 # HTTP requests
 # ======================================================================
-def get(url, *, retry=5, headers=None, _get=requests.get):
+def get(url, *, retry=5, headers=None, params={}, _get=requests.get):
     assert retry > 0 # Actually, it is not really a *re*try since the first try counts
 
     headers = {} if headers is None else headers.copy()
@@ -60,7 +62,7 @@ def get(url, *, retry=5, headers=None, _get=requests.get):
         retry -= 1
         headers["User-Agent"] = rotate_user_agent()
         try:
-            r = _get(url, headers=headers)
+            r = _get(url, headers=headers, params=params)
             # During tests, the mock function may return None - handle that in the line bellow
             status_code = r.status_code if r is not None else 418
 
@@ -74,7 +76,7 @@ def get(url, *, retry=5, headers=None, _get=requests.get):
         if not retry:
             break
 
-        print("Will retry", url)
+        console.info("Will retry", url)
         wait()
 
     return r

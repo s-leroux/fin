@@ -1,5 +1,6 @@
-from fin.api import yf
+from fin.api.yf import Client
 from fin.seq import algo
+from fin.datetime import CalendarDateDelta
 
 """
 Example of column selection.
@@ -7,7 +8,8 @@ Example of column selection.
 Usage:
     PYTHONPATH="$PWD" python3 examples/fin/seq/select.py
 """
-t = yf.historical_data("^FCHI", yf.timedelta(days=20))
+client = Client()
+t = client.historical_data("^FCHI", CalendarDateDelta(days=20))
 t = t.select(
         "High",
         "Low",
@@ -17,5 +19,5 @@ t = t.select(
 
 print(t)
 
-t = yf.historical_data("^FCHI", yf.timedelta(days=20), select=("Date", "Close"))
+t = client.historical_data("^FCHI", CalendarDateDelta(days=20), select=("Date", "Close"))
 print(t)
