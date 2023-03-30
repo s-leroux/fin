@@ -1,11 +1,9 @@
 import unittest
-import os
 
-from fin.api import yf
+from fin.api.yf import Client
+from tests.fin.api import HistoricalDataTest
 
-class TestYF(unittest.TestCase):
-    if os.environ.get('SLOW_TESTS'):
-        def test_historical_data(self):
-            client = yf.Client()
-            t = client.historical_data("^FCHI")
-            self.assertSequenceEqual(t.names(), ('Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume'))
+class TestYF(HistoricalDataTest, unittest.TestCase):
+    def setUp(self):
+        self.client = Client()
+        self.ticker = "MCD"

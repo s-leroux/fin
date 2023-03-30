@@ -1,0 +1,33 @@
+"""
+Core set of test usable on all API
+"""
+import os
+
+from fin.datetime import CalendarDate, CalendarDateDelta
+
+class HistoricalDataTest:
+    if os.environ.get('SLOW_TESTS'):
+        def test_historical_data_columns(self):
+            """
+            The historical_data() method should return the 7 standard columns for
+            end-of-day data.
+            """
+            t = self.client.historical_data(self.ticker)
+            self.assertSequenceEqual(t.names(), ('Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume'))
+
+        def test_historical_data_start_end(self):
+            """
+            The historical_data() method should honnor the `end` and `duration` parameters.
+            """
+            params=dict(
+                end = CalendarDate.fromisoformat("2023-01-03"),
+                duration = CalendarDateDelta(weeks=1),
+                )
+
+            t = self.client.historical_data(self.ticker, **params)
+            dc = t["Date"]
+            self.assertEqual(str(dc[0]), "2022-12-27")
+            self.assertEqual(str(dc[-1]), "2023-01-03")
+            self.assertEqual(len(dc), 5)
+
+
