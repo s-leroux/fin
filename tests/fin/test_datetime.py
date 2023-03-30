@@ -13,28 +13,44 @@ class TestCalendarDateDelta(unittest.TestCase):
         """
         It should store the delta years, delta months and delta days properties.
         """
-        date = fin.datetime.CalendarDateDelta(5, 1, 2)
+        date = fin.datetime.CalendarDateDelta(years=5, months=1, weeks=3, days=2)
         self.assertEqual(date._years, 5)
         self.assertEqual(date._months, 1)
+        self.assertEqual(date._weeks, 3)
         self.assertEqual(date._days, 2)
 
     def test_neg(self):
         """
         It should support the unary minus operator
         """
-        date = -fin.datetime.CalendarDateDelta(5, 1, 2)
+        date = -fin.datetime.CalendarDateDelta(years=5, months=1, weeks=3, days=2)
         self.assertEqual(date._years, -5)
         self.assertEqual(date._months, -1)
+        self.assertEqual(date._weeks, -3)
         self.assertEqual(date._days, -2)
 
     def test_pos(self):
         """
         It should support the unary plus operator
         """
-        date = +fin.datetime.CalendarDateDelta(5, 1, 2)
+        date = +fin.datetime.CalendarDateDelta(years=5, months=1, weeks=3, days=2)
         self.assertEqual(date._years, 5)
         self.assertEqual(date._months, 1)
+        self.assertEqual(date._weeks, 3)
         self.assertEqual(date._days, 2)
+
+    def test_ac_calendar_date_delta(self):
+        use_cases = (
+                fin.datetime.CalendarDateDelta(years=5, months=1, weeks=3, days=2),
+                dict(years=5, months=1, weeks=3, days=2),
+                )
+        for use_case in use_cases:
+            with self.subTest(use_case=use_case):
+                date = fin.datetime.asCalendarDateDelta(use_case)
+                self.assertEqual(date._years, 5)
+                self.assertEqual(date._months, 1)
+                self.assertEqual(date._weeks, 3)
+                self.assertEqual(date._days, 2)
 
 # ======================================================================
 # Calendar dates
@@ -110,6 +126,7 @@ class TestCalendarDateMath(unittest.TestCase):
         test_cases = (
                     "2012-11-17", "2011-11-17", dict(years=-1), # Basic use case
                     "2020-03-01", "2020-02-29", dict(days=-1),  # Month changing
+                    "2020-12-12", "2021-01-02", dict(weeks=3),  # Year changing
                     "2020-11-01", "2021-02-01", dict(months=3), # Year changing
                     "2020-03-01", "2020-01-31", dict(months=-1, days=-1), # Check that months are subtracted first
                     "2008-12-01", "2009-12-01", dict(years=1),  # Known bug in some versions
@@ -119,12 +136,13 @@ class TestCalendarDateMath(unittest.TestCase):
                 )
 
         for date, expected, delta in zip(*[iter(test_cases)]*3):
-            date = fin.datetime.parseisodate(date)
-            delta = fin.datetime.CalendarDateDelta(**delta)
-            actual = date + delta
+            with self.subTest(date=date, delta=delta):
+                date = fin.datetime.parseisodate(date)
+                delta = fin.datetime.CalendarDateDelta(**delta)
+                actual = date + delta
 
-            msg = "{}+{} = {}".format(date, delta, expected)
-            self.assertEqual(str(actual), expected, msg)
+                msg = "{}+{} = {}".format(date, delta, expected)
+                self.assertEqual(str(actual), expected, msg)
 
 class TestCalendarDateIterator(unittest.TestCase):
     def test_iterate_by_inline_arg(self):

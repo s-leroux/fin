@@ -5,6 +5,21 @@ Date and time utilities
 import time
 from datetime import date, datetime, timedelta
 
+from fin.utils.log import console
+
+def asCalendarDateDelta(something):
+    """
+    Smart convertion to a CalendarDateDelta instance.
+    """
+    if isinstance(something, CalendarDateDelta):
+        return something
+
+    if isinstance(something, dict):
+        return CalendarDateDelta(**something)
+
+    console.debug(something)
+    raise NotImplementedError(f"Can't convert from {type(something)} to CalendarDateDelta")
+
 # ======================================================================
 # Calendar date delta
 # ======================================================================
@@ -12,16 +27,22 @@ class CalendarDateDelta:
     slots = (
             "_years",
             "_months",
+            "_weeks",
             "_days",
             )
 
-    def __init__(self, years=0, months=0, days=0):
+    def __init__(self, *, years=0, months=0, weeks=0, days=0):
         self._years = years
         self._months = months
+        self._weeks = weeks
         self._days = days
 
     def __neg__(self):
-        return type(self)(-self._years, -self._months, -self._days)
+        return type(self)(
+                years=-self._years,
+                months=-self._months,
+                weeks=-self._weeks,
+                days=-self._days)
 
     def __pos__(self):
         return self
@@ -32,6 +53,7 @@ class CalendarDateDelta:
                 type(self).__name__,
                 self._years,
                 self._months,
+                self._weeks,
                 self._days,
                 )
 
@@ -140,7 +162,8 @@ class CalendarDate:
                 new_month -= 12
 
             # for days, we can delegate to the python datetime module
-            new_date = date(new_year, new_month, self.day) + timedelta(days=delta._days or 0)
+            days = delta._weeks*7 + delta._days
+            new_date = date(new_year, new_month, self.day) + timedelta(days=days)
 
             return CalendarDate(
                     new_date.year,

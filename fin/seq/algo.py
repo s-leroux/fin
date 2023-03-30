@@ -625,11 +625,11 @@ def line(x1, x2):
 import fin.seq.table
 from fin import datetime
 
-def shift_date(years=0, months=0, days=0):
+def shift_date(delta):
     """
     Offset a calendar date.
     """
-    offset = datetime.CalendarDateDelta(years, months, days)
+    offset = datetime.asCalendarDateDelta(delta)
 
     def _shift_date(rowcount, dates):
         name = getattr(dates, "name", None)
