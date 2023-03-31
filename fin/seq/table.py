@@ -359,6 +359,9 @@ def table_from_data(data, headings, *, name=""):
 
     return t
 
+def table_from_rows(rows, headings, *, name=""):
+    return table_from_data([*zip(*rows)], headings, name=name)
+
 def table_from_dict(d, *, name=""):
     """
     Create a new table from existing data (*not* columns) presented

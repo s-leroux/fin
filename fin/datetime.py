@@ -83,6 +83,11 @@ class CalendarDate:
         Parse a string according to YYYY-MM-DD format and return the
         corresponding date object.
         """
+        try:
+            format_string = str(format_string, "utf8")
+        except TypeError:
+            pass
+
         dt = datetime.strptime(format_string, "%Y-%m-%d")
         return CalendarDate(dt.year, dt.month, dt.day)
 

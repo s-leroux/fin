@@ -29,5 +29,9 @@ class HistoricalDataTest:
             self.assertEqual(str(dc[0]), "2022-12-27")
             self.assertEqual(str(dc[-1]), "2023-01-03")
             self.assertEqual(len(dc), 5)
+            for cell in dc:
+                self.assertIsInstance(cell, CalendarDate)
+                self.assertGreaterEqual(str(cell), "2022-12-27")
+                self.assertLessEqual(str(cell), "2023-01-03")
 
 
