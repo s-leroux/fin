@@ -135,9 +135,9 @@ class TestTable(unittest.TestCase):
 
     def test_get_column(self):
         LEN=5
-        A=[1]*LEN
-        B=[2]*LEN
-        C=[3]*LEN
+        A=(1,)*LEN
+        B=(2,)*LEN
+        C=(3,)*LEN
         t = table.Table(LEN)
 
         t.add_column(table.Column("A", A))
@@ -451,6 +451,10 @@ class TestTableJoin(unittest.TestCase):
             ("W", rng(700)),
         )
 
+        for col in (*tableA, *tableB):
+            # Replace tuple by list so we can hack the values for testing purposes
+            col.values = list(col.values)
+
         self._cols = dict(
                 [(name, tableA[name]) for name in tableA.names()] +
                 [(name, tableB[name]) for name in tableB.names()]
@@ -460,7 +464,7 @@ class TestTableJoin(unittest.TestCase):
         """
         Both the inner- and outer-join should produce the same result when key columns match.
         """
-        expected = list(self._cols[k].values for k in "AUBCVW")
+        expected = list(tuple(self._cols[k].values) for k in "AUBCVW")
         with self.subTest(join="inner join"):
             t = table.join(self._tableA, self._tableB, "A", "U")
             self.assertSequenceEqual(t.data(), expected)

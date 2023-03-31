@@ -38,7 +38,9 @@ class Column:
 
     def __init__(self, name, sequence):
         self.name = name if name is not None else DEFAULT_COLUMN_NAME
-        self.values = list(sequence)
+        if type(sequence) is not tuple:
+            sequence = tuple(sequence)
+        self.values = sequence
 
     def __len__(self):
         return len(self.values)
