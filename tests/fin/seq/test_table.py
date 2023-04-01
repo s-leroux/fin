@@ -1,6 +1,7 @@
 import unittest
 
 from fin.seq import column
+from fin.seq import expr
 from fin.seq import table
 from fin.seq import algo
 
@@ -30,7 +31,7 @@ class TestTable(unittest.TestCase):
         VALUE=123
         t = table.Table(LEN)
 
-        t.add_column("X", column.constant(VALUE))
+        t.add_column("X", expr.constant(VALUE))
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1)
@@ -41,7 +42,7 @@ class TestTable(unittest.TestCase):
         VALUE=123
         t = table.Table(LEN)
 
-        t.add_column("X", column.constant(VALUE))
+        t.add_column("X", expr.constant(VALUE))
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1)
@@ -52,8 +53,8 @@ class TestTable(unittest.TestCase):
         VALUE=123
         t = table.Table(LEN)
 
-        t.add_column("X", column.call(range))
-        t.add_column("Y", (column.call(lambda n, xs: [x+1 for x in xs]), "X"))
+        t.add_column("X", expr.apply(range))
+        t.add_column("Y", (expr.apply(lambda n, xs: [x+1 for x in xs]), "X"))
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 2)
@@ -62,7 +63,7 @@ class TestTable(unittest.TestCase):
     def test_add_column_from_other_table(self):
         LEN=99
         t1 = table.Table(LEN)
-        t1.add_column("X", column.call(range))
+        t1.add_column("X", expr.apply(range))
 
         t2 = table.Table(LEN)
         t2.add_column(t1["X"])
@@ -75,8 +76,8 @@ class TestTable(unittest.TestCase):
         f = lambda a, b: a+b
 
         t = table.Table(LEN, columns=dict(
-            A=column.ramp(200),
-            B=column.ramp(300),
+            A=expr.ramp(200),
+            B=expr.ramp(300),
             C=(algo.by_row(f), "A", "B"),
             ))
         self.assertSequenceEqual(t["C"], [f(a,b) for a,b in zip(t["A"],t["B"])])
@@ -97,7 +98,7 @@ class TestTable(unittest.TestCase):
         LEN=10
         t = table.Table(LEN)
         t.add_columns(
-                ("X", column.call(range)),
+                ("X", expr.apply(range)),
                 ("Y", 2),
                 )
 
@@ -112,7 +113,7 @@ class TestTable(unittest.TestCase):
         LEN=10
         t1 = table.Table(LEN)
         t1.add_columns(
-                ("X", column.call(range)),
+                ("X", expr.apply(range)),
                 ("Y", 2),
                 )
         t2 = table.Table(LEN)
@@ -168,7 +169,7 @@ class TestTable(unittest.TestCase):
     def test_rename(self):
         t = table.Table(10)
         t.add_columns(
-            ("A", column.call(range)),
+            ("A", expr.apply(range)),
             ("B", 2),
             ("C", 3),
         )
@@ -178,7 +179,7 @@ class TestTable(unittest.TestCase):
     def test_delete(self):
         t = table.Table(10)
         t.add_columns(
-            ("A", column.call(range)),
+            ("A", expr.apply(range)),
             ("B", 2),
             ("C", 3),
         )
@@ -194,7 +195,7 @@ class TestTable(unittest.TestCase):
         """
         t = table.Table(10)
         t.add_columns(
-            ("A", column.call(range)),
+            ("A", expr.apply(range)),
             ("B", 2),
             ("C", 3),
         )
@@ -230,7 +231,7 @@ class TestTable(unittest.TestCase):
         LEN=10
         t1 = table.Table(LEN)
         t1.add_columns(
-                ("X", column.call(range)),
+                ("X", expr.apply(range)),
                 ("Y", 2),
                 )
 
@@ -249,9 +250,9 @@ class TestTable(unittest.TestCase):
         limit=lambda n : [None if x < LIMIT else x for x in range(n)]
         t1 = table.Table(LEN)
         t1.add_columns(
-                ("X", column.call(limit)),
-                ("Y", column.call(limit)),
-                ("Z", column.call(limit)),
+                ("X", expr.apply(limit)),
+                ("Y", expr.apply(limit)),
+                ("Z", expr.apply(limit)),
                 )
         t2 = t1.lstrip()
         self.assertIsNot(t2, t1)
@@ -265,8 +266,8 @@ class TestTable(unittest.TestCase):
         LEN=10000
         t1 = table.Table(LEN)
         t1.add_columns(
-                ("X", column.apply(range)),
-                ("Y", column.call(lambda n : [*range(n,0,-1)])),
+                ("X", expr.call(range)),
+                ("Y", expr.apply(lambda n : [*range(n,0,-1)])),
                 )
         t2 = t1.sort("Y")
         self.assertIsNot(t2, t1)
@@ -278,11 +279,11 @@ class TestTable(unittest.TestCase):
         LEN=40
         t1 = table.Table(LEN)
         t1.add_columns(
-                ("X", column.apply(lambda n : [x//5 for x in range(n)])),
-                ("Y1", column.apply(range)),
-                ("Y2", column.apply(range)),
-                ("Y3", column.apply(range)),
-                ("Z", column.apply(lambda n : [x//10 for x in range(n)])),
+                ("X", expr.call(lambda n : [x//5 for x in range(n)])),
+                ("Y1", expr.call(range)),
+                ("Y2", expr.call(range)),
+                ("Y3", expr.call(range)),
+                ("Z", expr.call(lambda n : [x//10 for x in range(n)])),
                 )
         t2 = t1.group("X", dict(
             Y1=min,
@@ -372,7 +373,7 @@ class TestTableExpressionEvaluation(unittest.TestCase):
         LEN=self._table.rows()
         g = lambda : (i*i for i in range(LEN))
         expected = [*g()]
-        [actual] = self._table.reval(column.iterable(g()))
+        [actual] = self._table.reval(expr.iterable(g()))
 
         self.assertSequenceEqual(actual, expected)
 
@@ -384,7 +385,7 @@ class TestTableExpressionEvaluation(unittest.TestCase):
         expected = table.Column(NAME, [ a+b for a,b in zip(self._A, self._B)])
         fct = lambda rowcount, col_a, col_b : [ a+b for a,b in zip(col_a, col_b) ]
 
-        actual, = self._table.reval({"name": NAME, "expr": (column.call(fct), "A", "B")})
+        actual, = self._table.reval({"name": NAME, "expr": (expr.apply(fct), "A", "B")})
 
         self.assertEqual(actual, expected)
 
@@ -393,7 +394,7 @@ class TestTableExpressionEvaluation(unittest.TestCase):
 # ======================================================================
 class TestTableRowIterator(unittest.TestCase):
     def setUp(self):
-        rng = column.ramp
+        rng = expr.ramp
 
         self._table = table.Table(10)
         self._table.add_columns(
@@ -436,7 +437,7 @@ class TestTableRowIterator(unittest.TestCase):
 # ======================================================================
 class TestTableJoin(unittest.TestCase):
     def setUp(self):
-        rng = column.ramp
+        rng = expr.ramp
 
         tableA = self._tableA = table.Table(10)
         self._tableA.add_columns(

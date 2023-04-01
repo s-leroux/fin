@@ -1,5 +1,6 @@
 from fin import datetime
-from fin.seq import table,column
+from fin.seq import table
+from fin.seq import expr
 
 """
 Demonstrate how one could add more rows to a table
@@ -16,7 +17,7 @@ b = one_week[3:]
 
 
 t = table.Table(len(a))
-t.add_column("Date", column.iterable(a))
+t.add_column("Date", expr.iterable(a))
 t.add_column("X", 1)
 print(t)
 

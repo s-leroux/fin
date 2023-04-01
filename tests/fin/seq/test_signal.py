@@ -1,6 +1,9 @@
 import unittest
 
-from fin.seq import signal, table, column
+from fin.seq import signal
+from fin.seq import table
+from fin.seq import column
+from fin.seq import expr
 
 # ======================================================================
 # Signals
@@ -10,8 +13,8 @@ class TestAbove(unittest.TestCase):
         LEN = 10
 
         t = table.Table(LEN, columns=dict(
-            A=column.ramp(),
-            B=column.constant(5.0),
+            A=expr.ramp(),
+            B=expr.constant(5.0),
             ))
 
         expected = [x > y for x,y in zip(t["A"],t["B"])]
@@ -23,8 +26,8 @@ class TestBelow(unittest.TestCase):
         LEN = 10
 
         t = table.Table(LEN, columns=dict(
-            A=column.ramp(),
-            B=column.constant(5.0),
+            A=expr.ramp(),
+            B=expr.constant(5.0),
             ))
 
         expected = [x < y for x,y in zip(t["A"],t["B"])]
@@ -35,9 +38,9 @@ class TestAlmostEqual(unittest.TestCase):
         LEN = 10
 
         t = table.Table(LEN, columns=dict(
-            A=column.ramp(),
-            B=column.constant(5.0),
-            DELTA=column.constant(1.0),
+            A=expr.ramp(),
+            B=expr.constant(5.0),
+            DELTA=expr.constant(1.0),
             ))
 
         expected = [-delta <= a-b <= delta for a,b,delta in zip(t["A"],t["B"],t["DELTA"])]
@@ -49,7 +52,7 @@ class TestIncrease(unittest.TestCase):
         LEN = 10
         A = [*range(LEN), *range(LEN, 0, -1)]
         t = table.Table(LEN*2, columns=dict(
-            A=column.iterable(A),
+            A=expr.iterable(A),
             ))
 
         expected = [None] + [True]*LEN + [False]*(LEN-1)
@@ -63,9 +66,9 @@ class TestPattern(unittest.TestCase):
     @unittest.skip
     def test_pattern(self):
         LEN = 10
-        LIMIT1 = column.constant(2.0)
-        LIMIT2 = column.constant(5.0)
-        A = column.ramp()
+        LIMIT1 = expr.constant(2.0)
+        LIMIT2 = expr.constant(5.0)
+        A = expr.ramp()
 
         t = table.Table(LEN, columns=dict(
             A=A,
@@ -86,10 +89,10 @@ class TestWhen(unittest.TestCase):
         LEN = 10
 
         t = table.Table(LEN,columns=dict(
-            A = column.constant(2.0),
-            B = column.constant(5.0),
+            A = expr.constant(2.0),
+            B = expr.constant(5.0),
             LIMIT = 5,
-            T = column.ramp(),
+            T = expr.ramp(),
             ))
 
         expected = [a if t > l else b for t,l,a,b in zip(t["T"],t["LIMIT"],t["A"],t["B"])]
@@ -104,9 +107,9 @@ class TestAll(unittest.TestCase):
         LEN = 10
 
         t = table.Table(LEN, columns=dict(
-            A=column.iterable([*range(0, LEN, 1)]),
-            LIMIT1=column.constant(2.0),
-            LIMIT2=column.constant(7.0),
+            A=expr.iterable([*range(0, LEN, 1)]),
+            LIMIT1=expr.constant(2.0),
+            LIMIT2=expr.constant(7.0),
             ))
 
         expected = [a > l1 and a < l2 for a,l1,l2 in zip(t["A"],t["LIMIT1"],t["LIMIT2"])]
@@ -121,9 +124,9 @@ class TestAny(unittest.TestCase):
         LEN = 10
 
         t = table.Table(LEN, columns=dict(
-            A=column.iterable([*range(0, LEN, 1)]),
-            LIMIT1=column.constant(2.0),
-            LIMIT2=column.constant(7.0),
+            A=expr.iterable([*range(0, LEN, 1)]),
+            LIMIT1=expr.constant(2.0),
+            LIMIT2=expr.constant(7.0),
             ))
 
         expected = [a < l1 or a > l2 for a,l1,l2 in zip(t["A"],t["LIMIT1"],t["LIMIT2"])]

@@ -8,7 +8,9 @@ sqlite3.register_adapter(CalendarDate, str)
 sqlite3.register_converter("CalendarDate", CalendarDate.fromisoformat)
 
 from fin.api.core import HistoricalData
-from fin.seq import column, table
+from fin.seq import column
+from fin.seq import table
+from fin.seq import expr
 from fin.utils.log import console
 
 # Historical data
@@ -115,7 +117,7 @@ def Client(base, *, db_name=CACHE_DEFAULT_DB_NAME):
                 console.info(f"Cache miss for {ticker} ({duration}, {end})")
                 t = base._historical_data(ticker, duration, end)
                 db.store_historical_data(ticker, start, end, t.select(
-                    column.constant(ticker, name="ticker"),
+                    expr.constant(ticker, name="ticker"),
                     dict(name="date", expr="Date"),
                     dict(name="open", expr="Open"),
                     dict(name="high", expr="High"),
