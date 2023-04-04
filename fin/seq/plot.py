@@ -45,6 +45,7 @@ class Tics:
             self.extend(items)
 
     def extend(self, items):
+        items = [item for item in items if item is not None]
         items = set((item, format(item, "-10.04f")) if isinstance(item, Number) else item for item in items)
         items = items.union(self._tics)
 
@@ -108,107 +109,94 @@ def make_tics_from_range(n, a, b):
 # ======================================================================
 # Plot elements
 # ======================================================================
-class Line:
-    def __init__(self, data_column, flag_column=None):
-        self._data_column = data_column
-        self._flag_column = flag_column
+class _Element:
+    def __init__(self, element):
+        self._element = element
 
-    def data_columns(self):
-        return ( self._data_column, )
+class _1DElement(_Element):
+    pass
 
-    def accept(self, visitor):
-        visitor.visit_line_chart(self)
-
-class Bar:
-    def __init__(self, data_column, flag_column=None):
-        self._data_column = data_column
-        self._flag_column = flag_column
-
-    def data_columns(self):
-        return ( self._data_column, )
-
-    def accept(self, visitor):
-        visitor.visit_bar_chart(self)
-
-class Impulse:
-    def __init__(self, data_column, flag_column=None):
-        self._data_column = data_column
-        self._flag_column = flag_column
-
-    def data_columns(self):
-        return ( self._data_column, )
-
-    def accept(self, visitor):
-        visitor.visit_impulse_chart(self)
-
-class Candlestick:
-    def __init__(self, open_price_column, low_price_column, high_price_column, close_price_column):
-        self._open_price_column = open_price_column
-        self._low_price_column = low_price_column
-        self._high_price_column = high_price_column
-        self._close_price_column = close_price_column
-
-    def data_columns(self):
-        return (
-                self._open_price_column,
-                self._low_price_column,
-                self._high_price_column,
-                self._close_price_column,
-                )
-
-    def accept(self, visitor):
-        visitor.visit_candlestick_chart(self)
+class _OHLCElement(_Element):
+    pass
 
 # ======================================================================
 # A plot
 # ======================================================================
 class _Plot:
-    def __init__(self, relative_height, table):
-        self.relative_height = relative_height
+    def __init__(self, plot, table):
+        self._plot = plot
         self._table = table
-        self._elements = []
-        self.poi = Tics()
+
+        plot["elements"] = []
+        plot["poi"] = Tics()
 
     def accept(self, visitor):
         visitor.visit_plot(self)
 
     def add_poi(self, *items):
-        self.poi.extend(items)
+        self._plot["poi"].extend(items)
 
-    def draw_line(self, data_column):
+    def draw_1d_element(self, kind, data_column, color_column):
         """
         Add a new line drawing on a plot.
         """
-        self._elements.append(
-                Line(data_column)
-                )
-
         column = self._table[data_column]
-        self.add_poi(*column.min_max(), column[-1])
+        element = {
+                "kind": kind,
+                "data": [ data_column ],
+                "color": color_column,
+                }
+        self._plot["elements"].append(element)
+        # self.add_poi(*column.min_max(), column[-1])
 
-    def draw_bar(self, data_column):
+        return _1DElement(element)
+
+    def draw_ohlc_element(self, kind, open_price_column, high_price_column, low_price_column, close_price_column, color_column=None):
+        """
+        Add an open/high/low/close 4D element to the plot.
+        """
+        # open = self._table[open_price_column]
+        # high = self._table[high_price_column]
+        # low = self._table[low_price_column]
+        # close = self._table[close_price_column]
+        element = {
+                "kind": kind,
+                "data": [
+                    open_price_column,
+                    high_price_column,
+                    low_price_column,
+                    close_price_column
+                    ],
+                "color": color_column,
+                }
+        self._plot["elements"].append(element)
+        # self.add_poi(*close.min_max(), column[-1])
+
+        return _OHLCElement(element)
+
+    def draw_line(self, data_column, color_column=None):
+        """
+        Add a new line drawing on a plot.
+        """
+        return self.draw_1d_element("lines", data_column, color_column)
+
+    def draw_bar(self, data_column, color_column=None):
         """
         Add a new bargraph on the plot.
         """
-        self._elements.append(
-                Bar(data_column)
-                )
+        return self.draw_1d_element("boxes", data_column, color_column)
 
-    def draw_impulse(self, data_column, flag_color=None):
+    def draw_impulse(self, data_column, color_column=None):
         """
         Add a new impulse graph on the plot.
         """
-        self._elements.append(
-                Impulse(data_column, flag_color)
-                )
+        return self.draw_1d_element("impulse", data_column, color_column)
 
     def draw_candlestick(self, open_price_column, low_price_column, high_price_column, close_price_column):
         """
         Add a new bargraph on the plot.
         """
-        self._elements.append(
-                Candlestick(open_price_column, low_price_column, high_price_column, close_price_column)
-                )
+        return self.draw_ohlc_element("candlestick", open_price_column, low_price_column, high_price_column, close_price_column)
 
 # ======================================================================
 # A Multiplot instance
@@ -221,30 +209,38 @@ class Multiplot:
     and uses the same x-axis.
     """
     LABEL = "LABEL"
+    XY = "XY"
 
     def __init__(self, table, x_axis_column, *, mode=None):
         if mode is None:
             mode = Multiplot.LABEL
 
         self._table = table
-        self._x_axis_column = x_axis_column
-        self.mode = mode
 
-        self._plots = []
+        self._plot = {
+                "mode": mode,
+                "title": table.name(),
+                "x": x_axis_column,
+                "plots": [],
+                }
 
-        self._title = table.name()
+    @property
+    def plot(self):
+        return self._plot
 
     def accept(self, visitor):
         visitor.visit_multiplot(self)
 
     def set_title(self, title):
-        self._title = title
+        self._plot["title"] = title
 
     def new_plot(self, relative_height=1):
-        plot = _Plot(relative_height, self._table)
-        self._plots.append(plot)
+        plot = {
+                "height": relative_height,
+                }
 
-        return plot
+        self._plot["plots"].append(plot)
+        return _Plot(plot, self._table)
 
 # ======================================================================
 # GNUPlot
@@ -292,14 +288,15 @@ class _GNUPlotDataElement:
         """
         self._kind = kind
         self._entries = list(entries)
+        self._color = None
         self._attr = {}
         self.title = None
         self.lc = None # linecolor
         self.fs = None # fillstyle
 
-    def lc_rgbcolor_variable(self, entry):
+    def lc_rgbcolor_variable(self, expr):
         self.lc = "rgbcolor variable"
-        self._entries.append(entry)
+        self._color = expr
 
     def __str__(self):
         """
@@ -307,6 +304,8 @@ class _GNUPlotDataElement:
         """
         kind = self._kind
         entries = ":".join(map(str, self._entries))
+        if self._color is not None:
+            entries += f":{self._color}"
         parts = []
         parts.append(f"using {entries} with {kind}")
 
@@ -331,11 +330,11 @@ class _GNUPlotVisitor:
         self._font = font
         self._width, self._height = size
 
-    def visit_multiplot(self, mp):
+    def plot(self, mp):
         write = self._write
-        table = mp._table
+        self._table = table = mp._table
 
-        self._multiplot = mp
+        multiplot = self._multiplot = mp.plot
         self._table = table
 
         # write the preamble
@@ -343,6 +342,7 @@ class _GNUPlotVisitor:
         write("reset\n")
         write(f"set term {self._term} size {self._width},{self._height} font \"{self._font}\"\n")
         write("set style textbox opaque\n")
+        write("set boxwidth 0.5\n")
         write("set multiplot\n")
         write("set key left top\n")
 
@@ -350,10 +350,13 @@ class _GNUPlotVisitor:
         write("GREEN=0x008000\n")
 
         # xtics
-        if mp.mode == Multiplot.LABEL:
+        mode = multiplot["mode"]
+        if mode == Multiplot.LABEL:
             write(f"set xrange [0:{table.rows()+1}]\n")
-            x_column = table[mp._x_axis_column]
+            x_column = table[multiplot["x"]]
             x_tics = make_tics_from_sequence(5, x_column)
+        elif mode == Multiplot.XY:
+            x_tics = None
         else:
             raise NotImplementedError()
 
@@ -368,30 +371,39 @@ class _GNUPlotVisitor:
 
         # write the plots
         total_height = 0
-        for plot in mp._plots:
-            total_height += plot.relative_height
+        for plot in multiplot["plots"]:
+            total_height += plot["height"]
         current_height = total_height
-        n = len(mp._plots)
+        n = len(multiplot["plots"])
         i = 0
-        for plot in mp._plots:
+        for plot in multiplot["plots"]:
             i += 1
 
             # Plot boundaries
             prev_height = current_height
-            current_height -= plot.relative_height
+            current_height -= plot["height"]
 
             top = 0.80*prev_height/total_height + 0.10
             bottom = 0.80*current_height/total_height + 0.10
+
             # POI
-            if len(plot.poi):
+            poi = plot["poi"]
+
+            # Auto-append the min, max and last value of the last column of each element
+            for element in plot["elements"]:
+                column = table[element["data"][-1]]
+                poi.extend([*column.min_max(), column[-1]])
+
+            if len(poi):
                 write(f"set tmargin at screen {top:1.4f}\n")
                 write(f"set bmargin at screen {bottom:1.4f}\n")
                 write(f"set lmargin at screen 0.9000\n")
                 write(f"set rmargin at screen 0.9900\n")
                 write(f"unset label\n")
-                for poi in plot.poi:
-                    write(f"set label \"{poi[1]}\" at graph 1.00, first {poi[0]} offset graph 0.1, 0 point ps 1 pt 1 right boxed\n")
-                # write(f"replot\n")
+                for p in poi:
+                    write(f"set label \"{p[1]}\" at graph 1.00, first {p[0]} offset graph 0.1, 0 point ps 1 pt 1 right boxed\n")
+
+            # Set plot area
             write(f"set lmargin at screen 0.1000\n")
             write(f"set rmargin at screen 0.9000\n")
             write(f"set tmargin at screen {top:1.4f}\n")
@@ -399,46 +411,44 @@ class _GNUPlotVisitor:
 
             # Plot title
             if i == 1:
-                title = mp._title
+                title = multiplot["title"]
                 if title:
                     write(f"set title \"{title}\" noenhanced\n")
             else:
                 write("set title\n")
 
             # xtics
-            if i < n:
-                x_tics_labels = [f"\"\" {i}" for i, v in x_tics]
-            else:
-                x_tics_labels = [f"\"{v}\" {i}" for i, v in x_tics]
+            if x_tics:
+                if i < n:
+                    x_tics_labels = [f"\"\" {i}" for i, v in x_tics]
+                else:
+                    x_tics_labels = [f"\"{v}\" {i}" for i, v in x_tics]
 
-            write(f'set xtics axis ({",".join(x_tics_labels)})\n')
+                write(f'set xtics axis ({",".join(x_tics_labels)})\n')
 
             # Draw the plot
-            plot.accept(self)
+            self._plot_plot(write, table, plot)
 
-
-
-    def visit_plot(self, plot):
-        write = self._write
-
+    def _plot_plot(self, write, table, plot):
         self._plot = plot
+        elements = plot["elements"]
 
         # early abort if the plot is empty
-        if not plot._elements:
+        if not elements:
             return
 
-        # Veertical autoscaling
+        # Vertical autoscaling
         the_min = float("inf")
         the_max = float("-inf")
-        for element in plot._elements:
-            for column_name in element.data_columns():
-                mi, ma = self._table[column_name].min_max()
+        for element in elements:
+            for column_name in element["data"]:
+                mi, ma = table[column_name].min_max()
                 if mi < the_min:
                     the_min = mi
                 if ma > the_max:
                     the_max = ma
 
-        # case of colmn containing only None values
+        # case of columns containing only None values
         if the_max < the_min:
             the_min = the_max = 0.00
 
@@ -457,66 +467,54 @@ class _GNUPlotVisitor:
 
         write("plot ")
         sep = ""
-        for element in plot._elements:
+        for element in elements:
             write(sep)
-            element.accept(self)
+            self._plot_element(write, table, element)
             sep = ",\\\n"
         write("\n")
 
-    def visit_line_chart(self, chart):
-        return self._visit_xy_chart("lines", chart)
-
-    def visit_bar_chart(self, chart):
-        return self._visit_xy_chart("boxes", chart, fs="solid 0.9")
-
-    def visit_impulse_chart(self, chart):
-        return self._visit_xy_chart("impulses", chart)
-
-    def _visit_xy_chart(self, kind, chart, **kwargs):
-        flag, x, y = self._get_field_numbers(
-                chart._flag_column,
-                self._multiplot._x_axis_column,
-                chart._data_column,
+    def _plot_element(self, write, table, element):
+        kind = element["kind"]
+        color, x, *data = self._get_field_numbers(
+                element["color"],
+                self._multiplot["x"],
+                *element["data"]
                 )
 
-        if self._multiplot.mode == Multiplot.LABEL:
-            element = _GNUPlotDataElement(kind, ["(column(0))", y])
+        mode = self._multiplot["mode"]
+        if mode == Multiplot.LABEL:
+            command = _GNUPlotDataElement(kind, ["(column(0))", *data])
+        elif mode == Multiplot.XY:
+            command = _GNUPlotDataElement(kind, [x, *data])
         else:
             raise NotImplementedError()
 
-        element.title = chart._data_column
-        if flag:
-            element.lc_rgbcolor_variable(f"(${flag}>0?GREEN:RED)")
-
-        for k,v in kwargs.items():
-            setattr(element, k, v)
-
-        write = self._write
-        write("$MyData ")
-        write(str(element))
-
-    def visit_candlestick_chart(self, chart):
-        x, *entries = self._get_field_numbers(
-                self._multiplot._x_axis_column,
-                chart._open_price_column,
-                chart._low_price_column,
-                chart._high_price_column,
-                chart._close_price_column
-                )
-        if self._multiplot.mode == Multiplot.LABEL:
-            element = _GNUPlotDataElement("candlesticks", ["(column(0))", *entries])
+        command.title = element["data"][-1]
+        if color is not None:
+            command.lc_rgbcolor_variable(f"(${color}>0?GREEN:RED)")
         else:
-            raise NotImplementedError()
+            # Automatic color
+            # Only implemented for candlesticks
+            if kind == "candlestick":
+                command.lc_rgbcolor_variable(f"(${data[3]}>${data[0]}?GREEN:RED)")
+                command.fs = "solid"
 
-        element.lc_rgbcolor_variable(f"(${entries[3]}>${entries[0]}?GREEN:RED)")
-        element.title = "" # ???
-        element.fs = "solid"
+        # ???
+        # for k,v in kwargs.items():
+        #    setattr(command, k, v)
+        
+        # For candlesticks:
+        # command.lc_rgbcolor_variable(f"(${entries[3]}>${entries[0]}?GREEN:RED)")
+        # command.title = "" # ???
+        # command.fs = "solid"
 
-        write = self._write
         write("$MyData ")
-        write(str(element))
+        write(str(command))
 
     def _get_field_numbers(self, *field_names):
+        """
+        Map column names to their index+1 (gnuplot columns are 1-based)
+        """
         table = self._table
         return [1+table._get_column_index(field_name) if field_name is not None else None for field_name in field_names]
 
@@ -533,4 +531,4 @@ def gnuplot(multiplot, *, log=None, Process=_Process, **kwargs):
         else:
             writer = stdin_write
         visitor = _GNUPlotVisitor(writer, **kwargs)
-        multiplot.accept(visitor)
+        visitor.plot(multiplot)

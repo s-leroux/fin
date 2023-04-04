@@ -327,7 +327,11 @@ class Table:
 
     def _get_column_index(self, index_or_name):
         if type(index_or_name) is str:
-            index_or_name = self.names().index(index_or_name)
+            try:
+                index_or_name = self.names().index(index_or_name)
+            except ValueError:
+                console.info(f"Known columns are {self.names()}")
+                raise
 
         return int(index_or_name)
 
