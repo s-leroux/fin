@@ -192,6 +192,12 @@ class _Plot:
         """
         return self.draw_1d_element("impulse", data_column, color_column)
 
+    def draw_point(self, data_column, color_column=None):
+        """
+        Add a new point graph on the plot.
+        """
+        return self.draw_1d_element("point", data_column, color_column)
+
     def draw_candlestick(self, open_price_column, low_price_column, high_price_column, close_price_column):
         """
         Add a new bargraph on the plot.
@@ -281,6 +287,7 @@ _GNUPLOT_KIND_TO_STYLE={
         "candlestick": "candlesticks",
         "impulse": "impulses",
         "line": "lines",
+        "point": "points",
         }
 
 class _GNUPlotDataElement:

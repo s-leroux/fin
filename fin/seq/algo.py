@@ -228,39 +228,39 @@ def volatility(n, tau=1/252):
 
     return _volatility
 
-def best_fit(rowcount, values):
+def best_fit(rowcount, col_x, col_y):
     """
     Compute the Linear Best Fit over the full dataset.
     """
-    sigma_y = sigma_xy = sigma_xx = 0.0
-    n = 0
-    d = (len(values)-1) / 2.0
-    for i, value in enumerate(values):
+    tx = []
+    ty = []
+    for x, y in zip(col_x, col_y):
+        if x is not None and y is not None:
+            tx.append(x)
+            ty.append(y)
+
+    x_bar = sum(tx)/len(tx)
+    y_bar = sum(ty)/len(ty)
+
+    covar = var = 0.0
+    for x, y in zip(tx, ty):
+        x_minus_x_bar = x-x_bar
+        y_minus_y_bar = y-y_bar
+        covar += x_minus_x_bar*y_minus_y_bar
+        var += x_minus_x_bar*x_minus_x_bar
+
+    beta = covar/var
+    alpha = y_bar-x_bar*beta
+
+    result = [None]*rowcount
+    for i, x, in enumerate(col_x):
         try:
-            x = i-d # ensure ∑x = 0
-            sigma_y += value
-            sigma_xy += x*value
-            sigma_xx += x*x
-            n += 1
+            result[i] = alpha+beta*x
         except TypeError:
             pass
 
-    result = [None]*rowcount
+    return Column(f"BESTFIT, {get_column_name(col_y)}:{get_column_name(col_x)}", result)
 
-    try:
-        a = sigma_xy / sigma_xx
-        b = sigma_y / n
-    except (ZeroDivisionError, TypeError):
-        pass
-    else:
-        for i in range(rowcount):
-            x = i-d
-            try:
-                result[i] = a*x + b
-            except TypeError:
-                pass
-
-    return result
 
 # ======================================================================
 # Greeks
@@ -311,6 +311,22 @@ def beta(n):
         var = [(x-x_bar)**2 for x in col_x]
         return sum(covar)/sum(var)
     return naive_window(_beta, n)
+
+def alpha(n):
+    """
+    Compute the Alpha between two columns over a n-period window.
+    """
+    def _alpha(col_x, col_y):
+        try:
+            x_bar = sum(col_x)/n
+            y_bar = sum(col_y)/n
+        except TypeError:
+            return None
+
+        covar = [(x-x_bar)*(y-y_bar) for x, y in zip(col_x, col_y)]
+        var = [(x-x_bar)**2 for x in col_x]
+        return y_bar - x_bar*sum(covar)/sum(var)
+    return naive_window(_alpha, n)
 
 
 # ======================================================================

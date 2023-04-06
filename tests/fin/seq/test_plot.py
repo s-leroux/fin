@@ -103,6 +103,10 @@ class TestGNUPlotDataElementLine(TestGNUPlotDataElementGeneric, unittest.TestCas
     def test_element(self):
         self._test_element("line", ["A","B"], "lines")
 
+class TestGNUPlotDataElementPoint(TestGNUPlotDataElementGeneric, unittest.TestCase):
+    def test_element(self):
+        self._test_element("point", ["A","B"], "points")
+
 class TestGNUPlotDataElementBar(TestGNUPlotDataElementGeneric, unittest.TestCase):
     def test_element(self):
         self._test_element("bar", ["A","B"], "boxes")
