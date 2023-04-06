@@ -1,5 +1,6 @@
 import unittest
 
+import random
 from fin.seq import algo
 
 ROUNDING=8
@@ -100,6 +101,37 @@ class TestStandardDeviation(unittest.TestCase):
             None,
             36.00462933,
         ])
+
+class TestCorrelation(unittest.TestCase):
+    def test_correlation_with_itself(self):
+        """
+        The correlation of a column against itself is 1.0.
+        """
+        EXPECTED = [None]*5 + [1.0]
+        LEN = len(EXPECTED)
+        INPUT = random.sample([*range(LEN)], LEN)
+        actual = eval(
+            algo.correlation(LEN),
+            INPUT,
+            INPUT
+        )
+
+        self.assertSequenceEqual(actual, EXPECTED)
+
+    def test_correlation(self):
+        """
+        The correlation of a column against itself is 1.0.
+        """
+        X = [ 4.0, 2.0, 3.0, 1.0 ]
+        Y = [x*-10 for x in X]
+        EXPECTED = [None, -1.0, -1.0, -1.0]
+        actual = eval(
+            algo.correlation(2),
+            X,
+            Y
+        )
+
+        self.assertSequenceEqual(actual, EXPECTED)
 
 class TestVolatility(unittest.TestCase):
     def test_volatility(self):

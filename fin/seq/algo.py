@@ -202,6 +202,25 @@ def variance(n):
         return result
     return s
 
+def correlation(n):
+    """
+    Compute the Linear correlation between two columns over a n-period window.
+    """
+    sqrt = math.sqrt
+
+    def _correlation(col_x, col_y):
+        try:
+            x_bar = sum(col_x)/n
+            y_bar = sum(col_y)/n
+        except TypeError:
+            return None
+
+        covar = [(x-x_bar)*(y-y_bar) for x, y in zip(col_x, col_y)]
+        x_minus_x_bar = [(x-x_bar)**2 for x in col_x]
+        y_minus_y_bar = [(y-y_bar)**2 for y in col_y]
+        return sum(covar)/(sqrt(sum(x_minus_x_bar))*sqrt(sum(y_minus_y_bar)))
+    return naive_window(_correlation, n)
+
 def volatility(n, tau=1/252):
     """
     Compute the Annualized Historical Volatility over a n-period window.
