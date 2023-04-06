@@ -178,13 +178,13 @@ class _Plot:
         """
         Add a new line drawing on a plot.
         """
-        return self.draw_1d_element("lines", data_column, color_column)
+        return self.draw_1d_element("line", data_column, color_column)
 
     def draw_bar(self, data_column, color_column=None):
         """
         Add a new bargraph on the plot.
         """
-        return self.draw_1d_element("boxes", data_column, color_column)
+        return self.draw_1d_element("bar", data_column, color_column)
 
     def draw_impulse(self, data_column, color_column=None):
         """
@@ -270,6 +270,19 @@ class _Process:
         self._process.stdin.close()
         self.returncode = self._process.wait()
 
+"""
+Maps plot element's "kinds" to the corresponding GNUPlot plotting style.
+
+TODO: Possibly, this could map to a specific object or class to handle that corresponding
+plotting style.
+"""
+_GNUPLOT_KIND_TO_STYLE={
+        "bar": "boxes",
+        "candlestick": "candlesticks",
+        "impulse": "impulses",
+        "line": "lines",
+        }
+
 class _GNUPlotDataElement:
     """
     Helper class to build gnuplot data plot elements.
@@ -307,7 +320,7 @@ class _GNUPlotDataElement:
         if self._color is not None:
             entries += f":{self._color}"
         parts = []
-        parts.append(f"using {entries} with {kind}")
+        parts.append(f"using {entries} with {_GNUPLOT_KIND_TO_STYLE[kind]}")
 
         if self.title is not None:
             parts.append(f"title \"{self.title}\"")

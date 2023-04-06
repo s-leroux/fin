@@ -67,13 +67,13 @@ class TestProcess(unittest.TestCase):
 # ======================================================================
 class TestGNUPlotDataElement(unittest.TestCase):
     def test_element_core(self):
-        el = plot._GNUPlotDataElement("impulses", [1,2])
+        el = plot._GNUPlotDataElement("impulse", [1,2])
         expected = "using 1:2 with impulses notitle"
 
         self.assertEqual(str(el), expected)
 
     def test_element_title(self):
-        el = plot._GNUPlotDataElement("impulses", [1,2])
+        el = plot._GNUPlotDataElement("impulse", [1,2])
         el.title = "My title"
 
         expected = "using 1:2 with impulses title \"My title\""
@@ -81,12 +81,35 @@ class TestGNUPlotDataElement(unittest.TestCase):
         self.assertEqual(str(el), expected)
 
     def test_element_core_lc_regbolor_variable(self):
-        el = plot._GNUPlotDataElement("impulses", [1,2])
+        el = plot._GNUPlotDataElement("impulse", [1,2])
         el.lc_rgbcolor_variable("(column(1))")
 
         expected = "using 1:2:(column(1)) with impulses notitle lc rgbcolor variable"
 
         self.assertEqual(str(el), expected)
+
+class TestGNUPlotDataElementGeneric():
+    def _test_element(self, kind, data, expected_plotting_style):
+        el = plot._GNUPlotDataElement(kind, data)
+        expected = f"with {expected_plotting_style} notitle"
+
+        self.assertIn(expected, str(el))
+
+class TestGNUPlotDataElementImpulse(TestGNUPlotDataElementGeneric, unittest.TestCase):
+    def test_element(self):
+        self._test_element("impulse", ["A","B"], "impulses")
+
+class TestGNUPlotDataElementLine(TestGNUPlotDataElementGeneric, unittest.TestCase):
+    def test_element(self):
+        self._test_element("line", ["A","B"], "lines")
+
+class TestGNUPlotDataElementBar(TestGNUPlotDataElementGeneric, unittest.TestCase):
+    def test_element(self):
+        self._test_element("bar", ["A","B"], "boxes")
+
+class TestGNUPlotDataElementCandlestick(TestGNUPlotDataElementGeneric, unittest.TestCase):
+    def test_element(self):
+        self._test_element("candlestick", [*"ABCD"], "candlesticks")
 
 import io
 from textwrap import dedent
