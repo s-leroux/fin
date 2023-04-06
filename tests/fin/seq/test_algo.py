@@ -138,6 +138,7 @@ class TestBestFit(unittest.TestCase):
     def test_best_fit(self):
         actual = eval(
                 algo.best_fit,
+                [*range(5)],
                 [
                     1,
                     4,
