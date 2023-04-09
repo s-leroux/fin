@@ -151,14 +151,14 @@ def standard_deviation(n):
     sqrt = math.sqrt
 
     def s(rowcount, values):
-        values = var(rowcount, values)
+        va = var(rowcount, values)
         result = []
         push = result.append
 
-        for v in values:
+        for v in va:
             push(None if v is None else sqrt(v))
 
-        return result
+        return Column(f"STDDEV({n}), {get_column_name(values)}", result)
     return s
 
 def variance(n):
@@ -246,6 +246,34 @@ def volatility(n, tau=1/252):
         return map(vol)(rowcount, result)
 
     return _volatility
+
+def basic_sharpe_ratio(n):
+    """
+    Compute the Sharpe Ratio ignoring risk free return over a n-period window.
+    """
+    stddev = standard_deviation(n)
+
+    def _basic_sharpe_ratio(rowcount, values):
+        s = iter(stddev(rowcount, values))
+        result = [None]*(n-1)
+        push = result.append
+
+        i = iter(values)
+        for _, _, _ in zip(range(n-1), i, s):
+            pass
+
+        j = iter(values)
+        for x_i, x_j, s_i in zip(i, j, s):
+            try:
+                ret = (x_i - x_j) # TODO replace by average daily return
+                push(ret/s_i)
+            except TypeError:
+                push(None)
+
+        return Column(f"BSHARPE({n}), {get_column_name(values)}", result)
+
+
+    return _basic_sharpe_ratio
 
 def best_fit(rowcount, col_x, col_y):
     """
