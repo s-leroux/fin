@@ -8,6 +8,8 @@ from collections import deque
 from fin.utils.log import console
 from fin.seq.column import Column, get_column_name
 
+from fin.seq.algox import *
+
 # ======================================================================
 # Adapters
 # ======================================================================
@@ -101,44 +103,6 @@ def naive_window(fct, n):
         return fct(*[col[start:end] for col in cols])
 
     return window(_fct, n)
-
-# ======================================================================
-# Technical indicator
-# ======================================================================
-def sma(n):
-    """
-    Compute the Simple Moving Average over a n-period window.
-    """
-    def _sma(rowcount, values):
-        result = []
-        push = result.append
-        sigma_x = 0
-        buffer = [None]*n
-        nones = n
-        ptr = 0
-
-        for v in values:
-            x = buffer[ptr]
-            try:
-                sigma_x -= x
-            except TypeError:
-                nones -=1
-
-            buffer[ptr] = v
-            ptr += 1
-            if ptr == n:
-                ptr = 0
-
-            try:
-                sigma_x += v
-            except TypeError:
-                nones +=1
-
-            push(None if nones else sigma_x/n)
-
-
-        return Column(f"SMA({n}), {get_column_name(values)}", result)
-    return _sma
 
 # ======================================================================
 # Stats
@@ -561,7 +525,7 @@ def max(n):
 
     return _max
 
-def ratio(rowcount, a, b):
+def ratio_old(rowcount, a, b):
     """
     Evaluates to the line-by-line ratio of two columns.
 

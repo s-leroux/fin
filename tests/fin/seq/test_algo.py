@@ -5,7 +5,13 @@ from fin.seq import algo
 
 ROUNDING=8
 def eval(fct, *cols):
-    result = fct(len(cols[0]), *cols)
+    try:
+        nrows = len(cols[0])
+    except IndexError:
+        # Fallback in case we want to test zero-column expressions.
+        nrows = 10
+
+    result = fct(nrows, *cols)
     return [round(x, ROUNDING) if type(x) is float else x for x in result]
 
 class TestWindow(unittest.TestCase):
@@ -29,6 +35,49 @@ class TestByRow(unittest.TestCase):
 
         self.assertSequenceEqual(actual, list(range(300, 300+2*LEN, 2)))
 
+class Test_Sum(unittest.TestCase):
+    def test__sum(self):
+        from fin.seq.algox import _Sum
+        actual = eval(
+            _Sum(4),
+            list(range(10, 20)),
+        )
+
+        self.assertSequenceEqual(actual, [None, None, None, 46.0, 50.0, 54.0, 58.0, 62.0, 66.0, 70.0])
+
+class TestAdd(unittest.TestCase):
+    def test_add(self):
+        actual = eval(
+            algo.add(),
+            [*range(0,10)],
+            [*range(10,20)],
+            [*range(100,110)],
+        )
+
+        self.assertSequenceEqual(actual, [110.0, 113.0, 116.0, 119.0, 122.0, 125.0, 128.0, 131.0, 134.0, 137.0])
+
+    def test_add_zero_columns(self):
+        actual = eval(
+            algo.add(),
+        )
+        self.assertSequenceEqual(actual, [None]*10)
+
+class TestSub(unittest.TestCase):
+    def test_sub(self):
+        actual = eval(
+            algo.sub(),
+            [*range(100,110)],
+            [*range(10,20)],
+            [*range(0,10)],
+        )
+
+        self.assertSequenceEqual(actual, [90.0, 89.0, 88.0, 87.0, 86.0, 85.0, 84.0, 83.0, 82.0, 81.0])
+
+    def test_sub_zero_columns(self):
+        actual = eval(
+            algo.sub(),
+        )
+        self.assertSequenceEqual(actual, [None]*10)
 
 class TestSimpleMovingAverage(unittest.TestCase):
     def test_sma(self):
