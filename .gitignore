@@ -4,3 +4,10 @@
 # EDITOR
 .*.swp
 
+# BUILD
+**/*.so
+build/**
+
+# Cython-generated files:
+fin/**/*.c
+fin/**/*.html
