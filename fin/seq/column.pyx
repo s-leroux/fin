@@ -1,3 +1,8 @@
+from cpython cimport array
+from fin.mathx cimport NaN, isnan
+
+import array
+
 # ======================================================================
 # Utilities
 # ======================================================================
@@ -7,14 +12,64 @@ def get_column_name(col):
     except AttributeError:
         return None
 
+cdef from_sequence(sequence):
+    return (x if x is not None else NaN for x in sequence)
+
+cdef to_sequence(double[::1] view):
+    return [ None if isnan(x) else x for x in view]
+
 # ======================================================================
 # Column class
 # ======================================================================
-class Column:
-    __slots__ = (
-            "values",
-            "name",
-            )
+cdef class AnyColumn:
+    pass
+
+cdef class FColumn(AnyColumn):
+    """
+    A Fast float column.
+
+    This is an intermediate representation of a column used to speedup calculations.
+    """
+    def __init__(self, name, double[::1] values):
+        self.values = values
+        self.name = name
+
+    def __len__(self):
+        return len(self.values)
+
+    def __iter__(self):
+        """
+        Make the column iterable.
+        """
+        return iter(to_sequence(self.values))
+
+    def __str__(self):
+        values_str = ", ".join(map(str, self.values))
+        return f"FColumn([{values_str}])"
+
+cpdef FColumn fcolumn_from_slice(name, double[::1] slice):
+    return FColumn(name, slice)
+
+cpdef FColumn fcolumn_from_sequence(name, sequence):
+    lst = [x if x is not None else NaN for x in sequence]
+    cdef array.array arr = array.array("d", lst)
+    cdef double[::1] values = arr[::1]
+    return FColumn(name or get_column_name(sequence), values)
+
+cpdef FColumn as_fcolumn(sequence):
+    try:
+        return <FColumn?>sequence
+    except TypeError:
+        return fcolumn_from_sequence(get_column_name(sequence), sequence)
+
+class Column(AnyColumn):
+
+    # __slots__ = (
+    #         "values",
+    #         "name",
+    #         )
+    # Above: ^^^^^^^^^
+    # __slots__ break when inheriting from a cdef class (using Cython 0.26.1)
 
     def __init__(self, name, sequence):
         self.name = name

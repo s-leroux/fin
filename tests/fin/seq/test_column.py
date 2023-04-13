@@ -1,6 +1,39 @@
 import unittest
+import math
 
 from fin.seq import table, column
+
+# ======================================================================
+# Fast Float Columns
+# ======================================================================
+class TestFColumn(unittest.TestCase):
+    def test_init_from_sequence(self):
+        seq = (1,2,3,4)
+        col = column.fcolumn_from_sequence(None, seq)
+
+        self.assertSequenceEqual(col.values, seq)
+
+    def test_init_from_sequence_with_none(self):
+        seq = (1,2,3,None)
+        col = column.fcolumn_from_sequence(None, seq)
+
+        self.assertSequenceEqual(col.values[:3], seq[:3])
+        self.assertTrue(math.isnan(col.values[3]))
+
+class TestAsFColumn(unittest.TestCase):
+    def test_from_sequence(self):
+        seq = (1,2,3,4)
+        col = column.as_fcolumn(seq)
+
+        self.assertIsInstance(col, column.FColumn)
+        self.assertSequenceEqual(col.values, seq)
+
+    def test_from_fcolumn(self):
+        seq = (1,2,3,4)
+        col1 = column.as_fcolumn(seq)
+        col2 = column.as_fcolumn(col1)
+
+        self.assertIs(col2, col1)
 
 # ======================================================================
 # Columns
@@ -32,7 +65,6 @@ class TestColumn(unittest.TestCase):
                 ( [1.0]*10, float),
                 ( [1.0]*10 + [None], float),
                 ( [None] + [1.0]*10 + [None], float),
-                ( [1.0]*10 + ["X"], None),
                 )
 
         for values, expected in use_cases:

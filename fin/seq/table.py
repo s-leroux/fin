@@ -2,7 +2,7 @@ import operator
 from copy import copy
 
 from fin.seq import formatter
-from fin.seq.column import Column
+from fin.seq.column import AnyColumn, Column
 from fin.utils.log import console
 
 # ======================================================================
@@ -27,7 +27,7 @@ def raise_table_cast_error(something):
 # Utilities
 # ======================================================================
 def C(column):
-    if isinstance(column, Column):
+    if isinstance(column, AnyColumn):
         return column
 
     # otherwise, we assume it's a generator
@@ -88,7 +88,13 @@ class Table:
 
         TODO: Rename this method
         """
-        return [meta.name for meta in self._meta]
+        try:
+            return [meta.name for meta in self._meta]
+        except:
+            for meta in self._meta:
+                print(type(meta))
+                print(meta.name)
+            raise
 
     # ------------------------------------------------------------------
     # Transformations
@@ -246,7 +252,7 @@ class Table:
 
     def add_columns(self, *col_specs):
         for col_spec in col_specs:
-            if isinstance(col_spec, Column):
+            if isinstance(col_spec, AnyColumn):
                 self.add_column(col_spec)
             else:
                 # Assume col_spec is a (name, expr) pair
@@ -302,7 +308,7 @@ class Table:
         if type(item) == str:
             idx = self._get_column_index(item)
             return [ self._meta[idx] ]
-        if isinstance(item, Column):
+        if isinstance(item, AnyColumn):
             return [ item ]
         if isinstance(item, dict): # collections.abc.Mapping ?
             col, =  self.reval(item["expr"])
