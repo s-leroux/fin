@@ -45,20 +45,68 @@ class Test_Sum(unittest.TestCase):
 
         self.assertSequenceEqual(actual, [None, None, None, 46.0, 50.0, 54.0, 58.0, 62.0, 66.0, 70.0])
 
-class TestAdd(unittest.TestCase):
-    def test_add(self):
+class TestMul(unittest.TestCase):
+    def test_mul(self):
         actual = eval(
-            algo.add(),
+            algo.mul(),
             [*range(0,10)],
             [*range(10,20)],
             [*range(100,110)],
         )
 
-        self.assertSequenceEqual(actual, [110.0, 113.0, 116.0, 119.0, 122.0, 125.0, 128.0, 131.0, 134.0, 137.0])
+        self.assertSequenceEqual(actual, [
+            0.0,
+            1111.0,
+            2448.0,
+            4017.0,
+            5824.0,
+            7875.0,
+            10176.0,
+            12733.0,
+            15552.0,
+            18639.0,
+        ])
 
-    def test_add_zero_columns(self):
+    def test_mul_one_columns(self):
+        lst = [*range(0,10)]
         actual = eval(
-            algo.add(),
+            algo.mul(),
+            lst,
+        )
+        self.assertSequenceEqual(actual, lst)
+
+    def test_mul_zero_columns(self):
+        actual = eval(
+            algo.mul(),
+        )
+        self.assertSequenceEqual(actual, [1.0]*10)
+
+
+class TestDiv(unittest.TestCase):
+    def test_div(self):
+        a = [*range(0,10)]
+        b = [*range(10,20)]
+        c = [*range(100,110)]
+        actual = eval(
+            algo.div(),
+            [x*y*z for x,y,z in zip(a,b,c)],
+            b,
+            c,
+        )
+
+        self.assertSequenceEqual(actual, a);
+
+    def test_div_one_columns(self):
+        lst = [*range(0,10)]
+        actual = eval(
+            algo.div(),
+            lst,
+        )
+        self.assertSequenceEqual(actual, [float("inf"), *(round(1/x,8) for x in lst[1:])])
+
+    def test_div_zero_columns(self):
+        actual = eval(
+            algo.div(),
         )
         self.assertSequenceEqual(actual, [None]*10)
 
@@ -73,11 +121,47 @@ class TestSub(unittest.TestCase):
 
         self.assertSequenceEqual(actual, [90.0, 89.0, 88.0, 87.0, 86.0, 85.0, 84.0, 83.0, 82.0, 81.0])
 
+    def test_sub_one_columns(self):
+        lst = [*range(0,10)]
+        actual = eval(
+            algo.sub(),
+            lst,
+        )
+        self.assertSequenceEqual(actual, [-x for x in lst])
+
+
     def test_sub_zero_columns(self):
         actual = eval(
             algo.sub(),
         )
-        self.assertSequenceEqual(actual, [None]*10)
+        self.assertSequenceEqual(actual, [0.0]*10)
+
+
+class TestSub(unittest.TestCase):
+    def test_sub(self):
+        actual = eval(
+            algo.sub(),
+            [*range(100,110)],
+            [*range(10,20)],
+            [*range(0,10)],
+        )
+
+        self.assertSequenceEqual(actual, [90.0, 89.0, 88.0, 87.0, 86.0, 85.0, 84.0, 83.0, 82.0, 81.0])
+
+    def test_sub_one_columns(self):
+        lst = [*range(0,10)]
+        actual = eval(
+            algo.sub(),
+            lst,
+        )
+        self.assertSequenceEqual(actual, [-x for x in lst])
+
+
+    def test_sub_zero_columns(self):
+        actual = eval(
+            algo.sub(),
+        )
+        self.assertSequenceEqual(actual, [0.0]*10)
 
 class TestSimpleMovingAverage(unittest.TestCase):
     def test_sma(self):
