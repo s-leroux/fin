@@ -166,13 +166,19 @@ cdef class _Sum(WindowFunctor1):
         return acc
 
 # ======================================================================
-# Core functions
+# Arithmetic
 # ======================================================================
 cdef class add(RowFunctorN):
-    cdef double eval_one_row(self, unsigned m, double[] src):
-        if m == 0:
-            return NaN
+    """
+    Row-by-row addition over n-columns.
 
+    Formally:
+    * (add, ) => 0
+    * (add, X) => X
+    * (add, X, Y) => (X+Y)
+    * (add, X, Y, Z) => (add, (add, X, Y), Z)
+    """
+    cdef double eval_one_row(self, unsigned m, double[] src):
         cdef double acc = 0.0
         cdef unsigned i
         for i in range(m):
@@ -181,11 +187,23 @@ cdef class add(RowFunctorN):
         return acc
 
 cdef class sub(RowFunctorN):
+    """
+    Row-by-row substraction over n-columns.
+
+    Formally:
+    * (sub, ) => 0
+    * (sub, X) => -X
+    * (sub, X, Y) => (X-Y)
+    * (sub, X, Y, Z) => (sub, (sub, X, Y), Z)
+    """
     cdef double eval_one_row(self, unsigned m, double[] src):
         if m == 0:
-            return NaN
+            return 0.0
 
         cdef double acc = src[0]
+        if m == 1:
+            return -acc
+
         cdef unsigned i
         for i in range(1, m):
             acc -= src[i]
