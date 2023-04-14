@@ -15,6 +15,9 @@ def call(f, *args, name=None):
 def apply(f, *, name=None):
     return lambda rowcount, *args : Column(name, f(rowcount, *args))
 
+def map(f, *, name=None):
+    return lambda rowcount, *args : Column(name, [f(*row) for row in zip(*args)])
+
 def spread(f):
     return lambda rowcount, *args : [(f, arg) for arg in args]
 
