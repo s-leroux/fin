@@ -3,23 +3,42 @@ This project aims to provide a set of personal investment tools with minimum dep
 
 The project does not have a GUI. You interact with the tools by writing Python scripts. The most actively developed part of the project is the `fin.seq` package that provides time/data series manipulation functions.
 
+# Getting started
+I keep the dependencies to a minimum. Currently, outside Python 3 (≥ 3.6.9) and the standard Python library, you need:
+
+* Python Requests (≥ 2.18.4)
+* Cython3 (≥ 0.26.1)
+* Gnuplot (≥ 5.2)
+
+There was some development regarding web crawling and data mining using BeautifulSoup, but it is currently out of the main tree.
+
+## Prerequisites
+The development is done under Linux Ubuntu Bionic.
+
+```
+apt-get install python3 cython3 python3-requests gnuplot-x11
+```
+
+## Installation
+Download the project using Git, enter the directory, and run `make compile` to compile and build the Cython-generated C files, and `make tests-all` to run the all test suite:
+
+```
+git clone git@github.com:s-leroux/fin.git
+cd fin
+make compile
+make tests-all
+```
+
 # `fin.seq`
 This package allows data manipulations using the concept of table and columns. You may think of it like a spreadsheet, but without the WISIWIG interface.
 
-Here is a short example:
+Here is a short example (from `examples/fin/seq/basic.py`):
 ```
 from fin.seq import table
 from fin.seq import algo
 from fin.seq import expr
 
 from math import pi, sin, cos
-
-"""
-Basic usage of the `fin.seq` package
-
-Usage:
-    PYTHONPATH="$PWD" python3 examples/fin/seq/basic.py
-"""
 
 # Create an empty table with provision for 361 rows:
 t = table.Table(361)
@@ -75,7 +94,7 @@ You can use the `fin.seq` package like a command-line spreadsheet. But its prima
 
 Currently, the library supports the *Yahoo! Finance* and *eodhistoricaldata.com* data providers for historical quotes. 
 
-n the next example, we will load from *Yahoo! Finance* the last 100 end-of-day quote for *Bank of America* (ticker `bac`):
+In the next example, we will load from *Yahoo! Finance* the last 100 end-of-day quote for *Bank of America* (ticker `BAC`):
 ```
 from fin.api import yf
 from fin.seq import algo
