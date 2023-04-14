@@ -210,6 +210,48 @@ cdef class sub(RowFunctorN):
 
         return acc
 
+cdef class mul(RowFunctorN):
+    """
+    Row-by-row multiplication over n-columns.
+
+    Formally:
+    * (mul, ) => 1
+    * (mul, X) => X
+    * (mul, X, Y) => (X*Y)
+    * (mul, X, Y, Z) => (mul, (mul, X, Y), Z)
+    """
+    cdef double eval_one_row(self, unsigned m, double[] src):
+        cdef double acc = 1
+        cdef unsigned i
+        for i in range(m):
+            acc *= src[i]
+
+        return acc
+
+cdef class div(RowFunctorN):
+    """
+    Row-by-row division over n-columns.
+
+    Formally:
+    * (div, ) => NaN
+    * (div, X) => 1/X
+    * (div, X, Y) => (X/Y)
+    * (div, X, Y, Z) => (div, (div, X, Y), Z)
+    """
+    cdef double eval_one_row(self, unsigned m, double[] src):
+        if m == 0:
+            return NaN
+
+        cdef double acc = src[0]
+        if m == 1:
+            return 1.0/acc
+
+        cdef unsigned i
+        for i in range(1,m):
+            acc /= src[i]
+
+        return acc
+
 cdef class Ratio(Functor2):
     """
     Evaluate the line-by-line ratio of two columns.
