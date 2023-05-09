@@ -122,3 +122,40 @@ plot.gnuplot(mp, size=(1000,600), font="Sans,8")
 ```
 Et voilà:
 ![A candlestick plot of the last 100 daily quotations for Bank of America](docs/images/candlesticks.png)
+
+
+# `fin.model`
+The ``fin`` package also contains a simple 1-variable solver (implemented in ``fin.math``) designed to work seamlessly with predefined models.
+
+For example, using the [Kelly Criterion](https://en.wikipedia.org/wiki/Kelly_criterion) you can find the optimum allocation for a risky investment:
+
+```
+WIN=0.20
+LOSS=0.20
+WIN_PROB=0.60
+
+model = kelly.KellyCriterion(dict(
+    p=WIN_PROB,
+    a=WIN,
+    b=LOSS,
+    ))
+
+f_star = model['f_star']
+```
+
+You can solve a model for any variable (bearing the solver's limitation).
+For example, if I'm ready to raise my allocation up to 50% of the available funds, and given a +/- 20% outcome, which probability to win do I implicitly assume?
+
+```
+WIN=0.20
+LOSS=0.20
+ALLOC=0.50
+
+model = kelly.KellyCriterion(dict(
+    a=WIN,
+    b=LOSS,
+    f_star=ALLOC
+    ))
+
+print("Implied probability to win =", model['p'])
+```
