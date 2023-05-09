@@ -10,5 +10,4 @@ from fin.model.kellyx import kelly_criterion
 # ======================================================================
 KellyCriterion = fin.model.Model(kelly_criterion, dict(
         p=(0.0, 1.0),
-        f_star=(0.0, 1.0),
     ))
