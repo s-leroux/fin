@@ -14,14 +14,17 @@ client = yf.Client()
 load = yf.Client().historical_data
 
 duration = CalendarDateDelta(days=25)
-ta = load("QQQ", duration, select=["Date", dict(name="QQQ", expr="Adj Close")])
-tb = load("SPY", duration, select=["Date", dict(name="SPY", expr="Adj Close")])
+ta = load("QQQ", duration)
+tb = load("SPY", duration)
 t = table.join(ta,tb,"Date")
-t.add_column("BEST FIT", (algo.best_fit, "QQQ", "SPY"))
+keyX="QQQ:Adj Close"
+keyY="SPY:Adj Close"
 
-mp = plot.Multiplot(t, "QQQ", mode=plot.Multiplot.XY)
+t.add_column("BEST FIT", (algo.best_fit, keyX, keyY))
+
+mp = plot.Multiplot(t, keyX, mode=plot.Multiplot.XY)
 p = mp.new_plot(3)
-p.draw_point("SPY")
+p.draw_point(keyY)
 p.draw_line("BEST FIT")
 
 plot.gnuplot(mp, size=(1000,600), font="Sans,8")

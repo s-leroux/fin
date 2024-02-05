@@ -747,6 +747,31 @@ class TestTableJoin(unittest.TestCase):
             self.assertSequenceEqual([*t.row_iterator()], expected)
             self.assertSequenceEqual(t.names(), ("T",))
 
+    def test_join_rename(self):
+        """
+        When the source tables are named, the column in the result table
+        are renamed accordingly.
+        """
+        self._tableA._name="TA"
+        self._tableB._name="TB"
+
+        for fct in (table.join, table.outer_join):
+            with self.subTest(join="join no rename", fct=fct):
+                expected = ["A","U","B","C","V","W"]
+                t = fct(self._tableA, self._tableB, "A", "U", rename=False)
+                self.assertSequenceEqual(t.names(), expected)
+
+            with self.subTest(join="join w/rename", fct=fct):
+                expected = ["TA:A","TB:U","TA:B","TA:C","TB:V","TB:W"]
+                t = fct(self._tableA, self._tableB, "A", "U")
+                self.assertSequenceEqual(t.names(), expected)
+
+            tableC = self._tableA.copy(name="TC")
+            with self.subTest(join="join w/rename using common column", fct=fct):
+                expected = ["A","TA:B","TA:C","TC:B","TC:C"]
+                t = fct(self._tableA, tableC, "A")
+                self.assertSequenceEqual(t.names(), expected)
+
 # ======================================================================
 # Table factories
 # ======================================================================

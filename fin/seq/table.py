@@ -131,11 +131,11 @@ class Table:
 
         return t
 
-    def copy(self):
+    def copy(self, *, name=None):
         """
         Return a copy of the table.
         """
-        t = Table(self._rows, name=self.name())
+        t = Table(self._rows, name=self.name() if name is None else name)
         t.add_columns(*self)
 
         return t
@@ -400,7 +400,7 @@ def as_table(something):
 # ======================================================================
 # Join
 # ======================================================================
-def join(tableA, tableB, keyA, keyB=None, *, name=None):
+def join(tableA, tableB, keyA, keyB=None, *, name=None, rename=True):
     """
     Join tableA and tableB using their respective columns keyA and keyB.
 
@@ -409,6 +409,9 @@ def join(tableA, tableB, keyA, keyB=None, *, name=None):
     Rows containing the None value in their key column are ignored.
     Discard the rows whose key is None and rows without a matching key in the
     other table.
+    If the `rename` keyword parameter is set to `True` (the default) column's name
+    in the result table are rename according to the table's name (thus avoiding
+    duplicate column names in common use cases).
     """
     tableA = as_table(tableA)
     tableB = as_table(tableB)
@@ -451,6 +454,19 @@ def join(tableA, tableB, keyA, keyB=None, *, name=None):
     except StopIteration:
         pass
 
+    # Rename columns in the result table
+    if rename:
+        nameA = tableA.name()
+        nameB = tableB.name()
+        if nameA:
+            if keyA != keyB:
+                keyA = nameA+":"+keyA
+            colsA = [nameA+":"+col for col in colsA]
+        if nameB:
+            if keyA != keyB:
+                keyB = nameB+":"+keyB
+            colsB = [nameB+":"+col for col in colsB]
+
     # Remove redundant column if needed
     by_cols = [*zip(*result)]
     cols = [keyA, keyB, *colsA, *colsB]
@@ -460,7 +476,7 @@ def join(tableA, tableB, keyA, keyB=None, *, name=None):
 
     return table_from_data(by_cols, cols, name=name)
 
-def outer_join(tableA, tableB, keyA, keyB=None, *, name=None, propagate=False):
+def outer_join(tableA, tableB, keyA, keyB=None, *, name=None, propagate=False, rename=True):
     """
     Join tableA and tableB using their respective columns keyA and keyB.
 
@@ -471,6 +487,9 @@ def outer_join(tableA, tableB, keyA, keyB=None, *, name=None, propagate=False):
     Keep the rows without a matching entry in the other table.
     If `propagate` is set to `True`, missing data are replaced by the last known
     values, otherwise, missing data are set to `None`.
+    If the `rename` keyword parameter is set to `True` (the default) column's name
+    in the result table are rename according to the table's name (thus avoiding
+    duplicate column names in common use cases).
     """
     tableA = as_table(tableA)
     tableB = as_table(tableB)
@@ -549,6 +568,19 @@ def outer_join(tableA, tableB, keyA, keyB=None, *, name=None, propagate=False):
             kB, *rB = next(itB)
     except StopIteration:
         pass
+
+    # Rename columns in the result table
+    if rename:
+        nameA = tableA.name()
+        nameB = tableB.name()
+        if nameA:
+            if not merge_keys:
+                keyA = nameA+":"+keyA
+            colsA = [nameA+":"+col for col in colsA]
+        if nameB:
+            if not merge_keys:
+                keyB = nameB+":"+keyB
+            colsB = [nameB+":"+col for col in colsB]
 
     # Remove redundant column if needed
     by_cols = [*zip(*result)]
