@@ -101,19 +101,21 @@ When performing an inner-join, the result table will contain only rows present i
 from fin.seq import table as table
 
 t1 = table.table_from_dict({"c":[1,2,3,4], "d":[1,1,1,1]})
-t2 = table.table_from_dict({"c":[1,3], "d":[2,2]})
+t2 = table.table_from_dict({"c":[1,3], "e":[21,23]})
 t3 = table.join(t1, t2, "c")
 print(t3)
 
  c d e
 -------
- 1 1 2
- 3 1 2
+ 1 1 21
+ 3 1 23
 ```
 
 ### Outer join
 When performing an outer-join, the result table will contain rows present in either (or both tables) according to the key column.
-Missing data will be set to `None` in the result table.
+
+If the keyword parameter `propagate` is set to `False` (the dafault), missing data will be set to `None` in the result table.
+Otherwise, the last known values are used.
 
 ```
 # Continuing from the previous example
@@ -123,10 +125,24 @@ print(t3)
 
  c d    e
 ----------
- 1 1    2
+ 1 1   21
  2 1 None
- 3 1    2
+ 3 1   23
  4 1 None
+```
+
+```
+# Continuing from the previous example
+
+t3 = table.outer_join(t1,t2,"c", propagate=True)
+print(t3)
+
+ c d    e
+----------
+ 1 1   21
+ 2 1   21
+ 3 1   23
+ 4 1   23
 ```
 
 ## Loading financial data

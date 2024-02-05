@@ -460,7 +460,7 @@ def join(tableA, tableB, keyA, keyB=None, *, name=None):
 
     return table_from_data(by_cols, cols, name=name)
 
-def outer_join(tableA, tableB, keyA, keyB=None, *, name=None):
+def outer_join(tableA, tableB, keyA, keyB=None, *, name=None, propagate=False):
     """
     Join tableA and tableB using their respective columns keyA and keyB.
 
@@ -469,6 +469,8 @@ def outer_join(tableA, tableB, keyA, keyB=None, *, name=None):
     Rows containing the None value in their key column are ignored.
     Discard the rows whose key is None.
     Keep the rows without a matching entry in the other table.
+    If `propagate` is set to `True`, missing data are replaced by the last known
+    values, otherwise, missing data are set to `None`.
     """
     tableA = as_table(tableA)
     tableB = as_table(tableB)
@@ -506,14 +508,21 @@ def outer_join(tableA, tableB, keyA, keyB=None, *, name=None):
                 kB, *rB = next(itB)
             if kA < kB:
                 result.append([kA, None, *rA, *emptyRowB])
+                if propagate:
+                    emptyRowA=rA
                 kA = None
                 kA, *rA = next(itA)
             elif kB < kA:
                 result.append([None, kB, *emptyRowA, *rB])
+                if propagate:
+                    emptyRowB=rB
                 kB = None
                 kB, *rB = next(itB)
             else:
                 result.append([kA, kB, *rA, *rB])
+                if propagate:
+                    emptyRowA=rA
+                    emptyRowB=rB
                 kA = None
                 kB = None
                 kA, *rA = next(itA)
@@ -525,6 +534,8 @@ def outer_join(tableA, tableB, keyA, keyB=None, *, name=None):
         while True:
             if kA is not None:
                 result.append([kA, kB, *rA, *emptyRowB])
+            if propagate:
+                emptyRowA=rA
             kA, *rA = next(itA)
     except StopIteration:
         pass
@@ -533,6 +544,8 @@ def outer_join(tableA, tableB, keyA, keyB=None, *, name=None):
         while True:
             if kB is not None:
                 result.append([kA, kB, *emptyRowA, *rB])
+            if propagate:
+                emptyRowB=rB
             kB, *rB = next(itB)
     except StopIteration:
         pass

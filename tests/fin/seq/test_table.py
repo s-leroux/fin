@@ -509,6 +509,21 @@ class TestTableJoin(unittest.TestCase):
              ]
             t = table.outer_join(self._tableA, self._tableB, "A", "U")
             self.assertSequenceEqual([*t.row_iterator()], expected)
+        with self.subTest(join="outer join w/propagate"):
+            expected = [
+                (100,  100,  200,  300,  600,  700),
+                (101,  101,  201,  301,  601,  701),
+                (None, 102,  201,  301,  602,  702),
+                (103,  103,  203,  303,  603,  703),
+                (104,  104,  204,  304,  604,  704),
+                (105,  None, 205,  305,  604,  704),
+                (106,  106,  206,  306,  606,  706),
+                (107,  107,  207,  307,  607,  707),
+                (108,  108,  208,  308,  608,  708),
+                (109,  109,  209,  309,  609,  709)
+             ]
+            t = table.outer_join(self._tableA, self._tableB, "A", "U", propagate=True)
+            self.assertSequenceEqual([*t.row_iterator()], expected)
 
     def test_join_2(self):
         """
@@ -516,6 +531,7 @@ class TestTableJoin(unittest.TestCase):
         """
         self.maxDiff = None
         self._tableA["A"].values[4] = None
+        self._tableA["A"].values[7:9] = [None]*2
         self._tableB["U"].values[3:6] = [None]*3
 
         with self.subTest(join="inner join"):
@@ -524,8 +540,6 @@ class TestTableJoin(unittest.TestCase):
                 (101,  101,  201,  301,  601,  701),
                 (102,  102,  202,  302,  602,  702),
                 (106,  106,  206,  306,  606,  706),
-                (107,  107,  207,  307,  607,  707),
-                (108,  108,  208,  308,  608,  708),
                 (109,  109,  209,  309,  609,  709)
              ]
             t = table.join(self._tableA, self._tableB, "A", "U")
@@ -538,11 +552,25 @@ class TestTableJoin(unittest.TestCase):
                 (103,  None, 203,  303,  None, None),
                 (105,  None, 205,  305,  None, None),
                 (106,  106,  206,  306,  606,  706),
-                (107,  107,  207,  307,  607,  707),
-                (108,  108,  208,  308,  608,  708),
+                (None, 107, None, None,  607,  707),
+                (None, 108, None, None,  608,  708),
                 (109,  109,  209,  309,  609,  709)
              ]
             t = table.outer_join(self._tableA, self._tableB, "A", "U")
+            self.assertSequenceEqual([*t.row_iterator()], expected)
+        with self.subTest(join="outer join w/propagate"):
+            expected = [
+                (100,  100,  200,  300,  600,  700),
+                (101,  101,  201,  301,  601,  701),
+                (102,  102,  202,  302,  602,  702),
+                (103,  None, 203,  303,  602,  702),
+                (105,  None, 205,  305,  602,  702),
+                (106,  106,  206,  306,  606,  706),
+                (None, 107,  206,  306,  607,  707),
+                (None, 108,  206,  306,  608,  708),
+                (109,  109,  209,  309,  609,  709)
+             ]
+            t = table.outer_join(self._tableA, self._tableB, "A", "U", propagate=True)
             self.assertSequenceEqual([*t.row_iterator()], expected)
 
     def test_join_at_end(self):
@@ -551,8 +579,8 @@ class TestTableJoin(unittest.TestCase):
         """
         self.maxDiff = None
 
-        ta = self._tableA.select("B")
-        tb = self._tableB.select("V")
+        ta = self._tableA.select("B", "C")
+        tb = self._tableB.select("V", "W")
 
         with self.subTest(join="inner join"):
             expected = [
@@ -561,54 +589,103 @@ class TestTableJoin(unittest.TestCase):
             self.assertSequenceEqual([*t.row_iterator()], expected)
         with self.subTest(join="outer join"):
             expected = [
-                (200,  None,),
-                (201,  None,),
-                (202,  None,),
-                (203,  None,),
-                (204,  None,),
-                (205,  None,),
-                (206,  None,),
-                (207,  None,),
-                (208,  None,),
-                (209,  None,),
-                (None, 600, ),
-                (None, 601, ),
-                (None, 602, ),
-                (None, 603, ),
-                (None, 604, ),
-                (None, 605, ),
-                (None, 606, ),
-                (None, 607, ),
-                (None, 608, ),
-                (None, 609, ),
+                (200,  None,  300,  None,),
+                (201,  None,  301,  None,),
+                (202,  None,  302,  None,),
+                (203,  None,  303,  None,),
+                (204,  None,  304,  None,),
+                (205,  None,  305,  None,),
+                (206,  None,  306,  None,),
+                (207,  None,  307,  None,),
+                (208,  None,  308,  None,),
+                (209,  None,  309,  None,),
+                (None, 600,   None,  700),
+                (None, 601,   None,  701),
+                (None, 602,   None,  702),
+                (None, 603,   None,  703),
+                (None, 604,   None,  704),
+                (None, 605,   None,  705),
+                (None, 606,   None,  706),
+                (None, 607,   None,  707),
+                (None, 608,   None,  708),
+                (None, 609,   None,  709),
              ]
             t = table.outer_join(ta, tb, "B", "V")
             self.assertSequenceEqual([*t.row_iterator()], expected)
-        # Check if order is maintained
+        with self.subTest(join="outer join w/propagate"):
+            expected = [
+                (200,  None,  300,  None,),
+                (201,  None,  301,  None,),
+                (202,  None,  302,  None,),
+                (203,  None,  303,  None,),
+                (204,  None,  304,  None,),
+                (205,  None,  305,  None,),
+                (206,  None,  306,  None,),
+                (207,  None,  307,  None,),
+                (208,  None,  308,  None,),
+                (209,  None,  309,  None,),
+                (None, 600,   309,  700),
+                (None, 601,   309,  701),
+                (None, 602,   309,  702),
+                (None, 603,   309,  703),
+                (None, 604,   309,  704),
+                (None, 605,   309,  705),
+                (None, 606,   309,  706),
+                (None, 607,   309,  707),
+                (None, 608,   309,  708),
+                (None, 609,   309,  709),
+             ]
+            t = table.outer_join(ta, tb, "B", "V", propagate=True)
+            self.assertSequenceEqual([*t.row_iterator()], expected)
         with self.subTest(join="outer join"):
             expected = [
-                (None, 200, ),
-                (None, 201, ),
-                (None, 202, ),
-                (None, 203, ),
-                (None, 204, ),
-                (None, 205, ),
-                (None, 206, ),
-                (None, 207, ),
-                (None, 208, ),
-                (None, 209, ),
-                (600,  None,),
-                (601,  None,),
-                (602,  None,),
-                (603,  None,),
-                (604,  None,),
-                (605,  None,),
-                (606,  None,),
-                (607,  None,),
-                (608,  None,),
-                (609,  None,),
+                (None, 200,  None,  300,),
+                (None, 201,  None,  301,),
+                (None, 202,  None,  302,),
+                (None, 203,  None,  303,),
+                (None, 204,  None,  304,),
+                (None, 205,  None,  305,),
+                (None, 206,  None,  306,),
+                (None, 207,  None,  307,),
+                (None, 208,  None,  308,),
+                (None, 209,  None,  309,),
+                (600,  None,  700,  None,),
+                (601,  None,  701,  None,),
+                (602,  None,  702,  None,),
+                (603,  None,  703,  None,),
+                (604,  None,  704,  None,),
+                (605,  None,  705,  None,),
+                (606,  None,  706,  None,),
+                (607,  None,  707,  None,),
+                (608,  None,  708,  None,),
+                (609,  None,  709,  None,),
              ]
             t = table.outer_join(tb, ta, "V", "B")
+            self.assertSequenceEqual([*t.row_iterator()], expected)
+        with self.subTest(join="outer join"):
+            expected = [
+                (None, 200,  None,  300,),
+                (None, 201,  None,  301,),
+                (None, 202,  None,  302,),
+                (None, 203,  None,  303,),
+                (None, 204,  None,  304,),
+                (None, 205,  None,  305,),
+                (None, 206,  None,  306,),
+                (None, 207,  None,  307,),
+                (None, 208,  None,  308,),
+                (None, 209,  None,  309,),
+                (600,  None,  700,  309,),
+                (601,  None,  701,  309,),
+                (602,  None,  702,  309,),
+                (603,  None,  703,  309,),
+                (604,  None,  704,  309,),
+                (605,  None,  705,  309,),
+                (606,  None,  706,  309,),
+                (607,  None,  707,  309,),
+                (608,  None,  708,  309,),
+                (609,  None,  709,  309,),
+             ]
+            t = table.outer_join(tb, ta, "V", "B", propagate=True)
             self.assertSequenceEqual([*t.row_iterator()], expected)
 
     def test_outer_join_extend(self):
