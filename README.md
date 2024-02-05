@@ -89,6 +89,46 @@ plot.gnuplot(mp, size=(800,600))
 
 ![A basic usage example of `fin.seq` displaying a circle](docs/images/basic.png)
 
+## Joining two tables
+Tables support join operation on *key* columns.
+It is caller's responsability to ensure the key columns are *sorted in ascending order*.
+Joining tables on unordered key columns is an *undefined behavior*.
+
+### Inner join
+When performing an inner-join, the result table will contain only rows present in both tables according to the key column.
+
+```
+from fin.seq import table as table
+
+t1 = table.table_from_dict({"c":[1,2,3,4], "d":[1,1,1,1]})
+t2 = table.table_from_dict({"c":[1,3], "d":[2,2]})
+t3 = table.join(t1, t2, "c")
+print(t3)
+
+ c d e
+-------
+ 1 1 2
+ 3 1 2
+```
+
+### Outer join
+When performing an outer-join, the result table will contain rows present in either (or both tables) according to the key column.
+Missing data will be set to `None` in the result table.
+
+```
+# Continuing from the previous example
+
+t3 = table.outer_join(t1,t2,"c")
+print(t3)
+
+ c d    e
+----------
+ 1 1    2
+ 2 1 None
+ 3 1    2
+ 4 1 None
+```
+
 ## Loading financial data
 You can use the `fin.seq` package like a command-line spreadsheet. But its primary purpose remains working with financial data.
 
