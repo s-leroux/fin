@@ -155,12 +155,11 @@ In the next example, we will load from *Yahoo! Finance* the last 100 end-of-day 
 from fin.api import yf
 from fin.seq import algo
 from fin.seq import plot
-from fin.datetime import CalendarDateDelta
 
 # Use the Yahoo! Finance provider
 provider = yf.Client()
 
-t = provider.historical_data("BAC", CalendarDateDelta(days=100))
+t = provider.historical_data("BAC", dict(days=100))
 ```
 The provider returns a table (instance of `table.Table`) with the data, open, high, low, close, adj close and volumes columns. You can add more columns if you need. In the example, I will add a 5-period simple moving average:
 ```
