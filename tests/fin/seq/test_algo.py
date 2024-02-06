@@ -172,48 +172,6 @@ class TestSimpleMovingAverage(unittest.TestCase):
 
         self.assertSequenceEqual(actual, [ None, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5, 17.5, 18.5 ])
 
-class TestExponentialMovingAverage(unittest.TestCase):
-    def test_ema(self):
-        actual = eval(
-            algo.ema(3),
-            list(range(10, 20)),
-        )
-
-        self.assertSequenceEqual(actual, [
-           None,
-           None,
-           None,
-           12.125, # XXX should we discard that value or not?
-           13.0625,
-           14.03125,
-           15.015625,
-           16.0078125,
-           17.00390625,
-           18.00195312,
-         ])
-
-    def test_ema_reset(self):
-        """ ema hould reset if it encounters a `None` value.
-        """
-        data = list(range(10, 20))
-        data[5] = None
-        actual = eval(
-            algo.ema(3),
-            data,
-        )
-
-        self.assertSequenceEqual(actual, [
-           None,
-           None,
-           None,
-           12.125,
-           13.0625,
-           None,
-           None,
-           None,
-           None,
-           18.125,
-         ])
 
 class TestIndicators(unittest.TestCase):
     """
@@ -224,6 +182,49 @@ class TestIndicators(unittest.TestCase):
         # Test definitions
         #
         tests = [
+            #
+            # Exponential Moving Average
+            #
+            [
+                algo.ema(3),
+                "ema",
+                1, 1, # data geometry
+                5, # precision
+                # Data
+                10, None,
+                11, None,
+                12, None,
+                13, 12.12500, # XXX should we discard that value or not?
+                14, 13.06250,
+                15, 14.03125,
+                16, 15.01562,
+                17, 16.00781,
+                18, 17.00391,
+                19, 18.00195,
+            ],
+            #
+            # Exponential Moving Average
+            #
+            [
+                algo.ema(3),
+                "ema with missing data",
+                1, 1, # data geometry
+                5, # precision
+                # Data
+                10,   None,
+                11,   None,
+                12,   None,
+                13,   12.12500,
+                14,   13.06250,
+                None, None,
+                16,   None,
+                17,   None,
+                18,   None,
+                19,   18.12500,
+            ],
+            #
+            # Wilder's Smooting
+            #
             [
                 algo.wilders(5),
                 "from 'Technical Analysis from A to Z, 2nd edition', p366",

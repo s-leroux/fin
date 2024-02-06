@@ -31,7 +31,10 @@ cdef class Functor1:
         pass
 
     cdef make_name(self, col):
-        return None
+        return f"{repr(self)}, {column.get_column_name(col)}"
+
+    def __repr__(self):
+        return self.__class__.__qualname__
 
     def __call__(self, rowcount, sequence):
         cdef column.FColumn fcolumn = column.as_fcolumn(sequence)
@@ -278,8 +281,8 @@ cdef class sma(Functor1):
     def __init__(self, n):
         self.n = n
 
-    cdef make_name(self, col):
-        return f"SMA({self.n}), {column.get_column_name(col)}"
+    def __repr__(self):
+        return f"SMA({self.n})"
 
     cdef void eval(self, unsigned l, double* dst, double* src):
         cdef unsigned n = self.n
@@ -323,8 +326,8 @@ cdef class ema(Functor1):
         self.n = n
         self.alpha = 2.0/(1+n)
 
-    cdef make_name(self, col):
-        return f"EMA({self.n}), {column.get_column_name(col)}"
+    def __repr__(self):
+        return f"EMA({self.n})"
 
     cdef void eval(self, unsigned l, double* dst, double* src):
         cdef unsigned n = self.n
@@ -363,8 +366,8 @@ cdef class wilders(Functor1):
         self.n = n
         self.alpha = 1.0/n
 
-    cdef make_name(self, col):
-        return f"WILDERS({self.n}), {column.get_column_name(col)}"
+    def __repr__(self):
+        return f"WILDERS({self.n})"
 
     cdef void eval(self, unsigned l, double* dst, double* src):
         cdef unsigned n = self.n
