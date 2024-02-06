@@ -446,19 +446,16 @@ cdef class tr(Functor3):
             th = high[i]
             tl = low[i]
 
-            if isnan(th) or isnan(tl) or isnan(yc):
-                dst[i] = NaN
-            else:
+            tr = th-tl
+            if not isnan(yc):
                 hc = abs(th-yc)
                 lc = abs(tl-yc)
 
-                tr = th-tl
                 if hc > tr:
                     tr = hc
                 if lc > tr:
                     tr = lc
 
-                dst[i] = tr
-
+            dst[i] = tr
             yc = close[i]
 
