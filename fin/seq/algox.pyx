@@ -296,7 +296,7 @@ cdef class Ratio(Functor2):
 ratio = Ratio()
 
 # ======================================================================
-# Moving averages
+# Moving averages and smoothing functions
 # ======================================================================
 cdef class sma(Functor1):
     """
@@ -417,7 +417,10 @@ cdef class wilders(Functor1):
 
             dst[i] = NaN if history<n else acc
 
-cdef class tr(Functor3):
+# ======================================================================
+# Technical Indicators
+# ======================================================================
+cdef class Tr(Functor3):
     """
     Compute the True Range
 
@@ -458,6 +461,7 @@ cdef class tr(Functor3):
             dst[i] = tr
             yc = close[i]
 
+tr = Tr()
 
 class atr(Functor3):
     """
@@ -470,7 +474,7 @@ class atr(Functor3):
     """
     def __init__(self, n):
         self.n = n
-        self.tr = tr()
+        self.tr = tr
         self.smooth = wilders(n)
 
     def __repr__(self):

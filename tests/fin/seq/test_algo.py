@@ -279,7 +279,7 @@ class TestIndicators(unittest.TestCase):
             # True Range
             #
             [
-                algo.tr(),
+                algo.tr,
                 "from 'Technical Analysis from A to Z, 2nd edition', p69",
                 3, 1, # data geometry
                 4, # precision
@@ -306,7 +306,7 @@ class TestIndicators(unittest.TestCase):
                 12.3125, 12.1250, 12.1562, 0.1875,
             ],
             [
-                algo.tr(),
+                algo.tr,
                 "tr with missing data",
                 3, 1, # data geometry
                 4, # precision
