@@ -417,7 +417,6 @@ cdef class wilders(Functor1):
 
             dst[i] = NaN if history<n else acc
 
-
 cdef class tr(Functor3):
     """
     Compute the True Range
@@ -459,3 +458,25 @@ cdef class tr(Functor3):
             dst[i] = tr
             yc = close[i]
 
+
+class atr(Functor3):
+    """
+    Compute the Average True Range.
+
+    The Average True Range is the smoothed value of the True Range indicator.
+    
+    This indicator uses the Wilder's Smoothing.
+    Potentially this could be parameterized.
+    """
+    def __init__(self, n):
+        self.n = n
+        self.tr = tr()
+        self.smooth = wilders(n)
+
+    def __repr__(self):
+        return f"ATR({self.n})"
+
+    def __call__(self, rowcount, high, low, close):
+        tr = self.tr(rowcount, high, low, close)
+        atr = self.smooth(rowcount, tr)
+        return atr
