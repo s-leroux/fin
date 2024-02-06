@@ -215,6 +215,78 @@ class TestExponentialMovingAverage(unittest.TestCase):
            18.125,
          ])
 
+class TestWildersSmoothing(unittest.TestCase):
+    def test_wilders(self):
+        tests = [
+            [
+                "from 'Technical Analysis from A to Z, 2nd edition', p366",
+                5, # window size
+                4, # precision
+                # Data
+                62.1250, None,
+                61.1250, None,
+                62.3438, None,
+                65.3125, None,
+                63.9688, 62.9750,
+                63.4375, 63.0675,
+                63.0000, 63.0540,
+                63.7812, 63.1995,
+                63.4062, 63.2408,
+                63.4062, 63.2739,
+                62.4375, 63.1066,
+                61.8438, 62.8540,
+            ],
+            [
+                "from https://github.com/TulipCharts/tulipindicators/blob/master/tests/untest.txt",
+                5, # window size
+                3, # precision
+                # Data
+                81.59, None,
+                81.06, None,
+                82.87, None,
+                83.00, None,
+                83.61, 82.426,
+                83.15, 82.571,
+                82.84, 82.625,
+                83.99, 82.898,
+                84.55, 83.228,
+                84.36, 83.455,
+                85.53, 83.870,
+                86.54, 84.404,
+                86.89, 84.901,
+                87.77, 85.475,
+                87.29, 85.838,
+            ],
+            [
+                "missing data",
+                5, # window size
+                3, # precision
+                # Data
+                81.59, None,
+                81.06, None,
+                82.87, None,
+                83.00, None,
+                83.61, 82.426,
+                83.15, 82.571,
+                82.84, 82.625,
+                None,  None,
+                84.55, None,
+                84.36, None,
+                85.53, None,
+                86.54, None,
+                86.89, 85.574,
+                87.77, 86.013,
+                87.29, 86.269,
+            ],
+        ]
+        for (desc, size, precision, *data) in tests:
+            with self.subTest(desc=desc):
+                src = data[::2]
+                expected = data[1::2]
+                actual = eval(algo.wilders(size), src)
+                actual = [x and round(x, precision) for x in actual]
+                self.assertSequenceEqual(actual, expected)
+
 class TestStandardDeviation(unittest.TestCase):
     def test_standard_deviation(self):
         actual = eval(

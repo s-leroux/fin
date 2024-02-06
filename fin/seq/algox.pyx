@@ -348,3 +348,43 @@ cdef class ema(Functor1):
 
             dst[i] = NaN if nans>0 else acc
 
+
+cdef class wilders(Functor1):
+    """
+    Compute the Wilder's Smoothing.
+
+    Except for the initialization stage, a `n` periode Wilder's Smoothing is equivalent
+    to a `2n-1` Exponential Moving Average.
+    """
+    cdef unsigned n
+    cdef double alpha
+
+    def __init__(self, n):
+        self.n = n
+        self.alpha = 1.0/n
+
+    cdef make_name(self, col):
+        return f"WILDERS({self.n}), {column.get_column_name(col)}"
+
+    cdef void eval(self, unsigned l, double* dst, double* src):
+        cdef unsigned n = self.n
+        cdef double alpha = self.alpha
+
+        cdef double acc = 0.0
+        cdef signed nans = n
+        cdef double curr
+        cdef unsigned i
+        for i in range(l):
+            curr = src[i]
+            if isnan(curr):
+                nans = n
+                acc = 0.0
+            else:
+                if nans>0:
+                    acc += curr*alpha
+                else:
+                    acc += (curr-acc)*alpha
+                nans -= 1
+
+            dst[i] = NaN if nans>0 else acc
+
