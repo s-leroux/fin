@@ -609,8 +609,12 @@ def table_from_csv(iterator, format='', *, delimiter=',', select=None, **kwargs)
             continue
         elif fchar=='n': # NUMERIC
             f = float
-        elif fchar=='d': # DATE
+        elif fchar=='d': # ISO DATE
             f = datetime.parseisodate
+        elif fchar=='s': # SECONDS SINCE UNIX EPOCH
+            f = datetime.parsetimestamp
+        elif fchar=='m': # MILLISECONDS SINCE UNIX EPOCH
+            f = datetime.parsetimestamp_ms
         elif fchar=='i': # INTEGER
             f = int
 
@@ -619,7 +623,7 @@ def table_from_csv(iterator, format='', *, delimiter=',', select=None, **kwargs)
             try:
                 col[index] = f(value)
             except:
-                col[index] = None
+                col[index] = None # XXX This silently discards potential errors
 
         names.append(name)
         cols.append(col)

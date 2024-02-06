@@ -3,7 +3,7 @@ Core set of test usable on all API
 """
 import os
 
-from fin.datetime import CalendarDate, CalendarDateDelta
+from fin.datetime import CalendarDate, CalendarDateDelta, parseisodate
 
 class HistoricalDataTest:
     if os.environ.get('SLOW_TESTS'):
@@ -20,7 +20,7 @@ class HistoricalDataTest:
             The historical_data() method should honnor the `end` and `duration` parameters.
             """
             params=dict(
-                end = CalendarDate.fromisoformat("2023-01-03"),
+                end = parseisodate("2023-01-03"),
                 duration = CalendarDateDelta(weeks=1),
                 )
 
