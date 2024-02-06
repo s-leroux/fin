@@ -172,6 +172,48 @@ class TestSimpleMovingAverage(unittest.TestCase):
 
         self.assertSequenceEqual(actual, [ None, 10.5, 11.5, 12.5, 13.5, 14.5, 15.5, 16.5, 17.5, 18.5 ])
 
+class TestExponentialMovingAverage(unittest.TestCase):
+    def test_ema(self):
+        actual = eval(
+            algo.ema(3),
+            list(range(10, 20)),
+        )
+
+        self.assertSequenceEqual(actual, [
+           None,
+           None,
+           None,
+           12.125, # XXX should we discard that value or not?
+           13.0625,
+           14.03125,
+           15.015625,
+           16.0078125,
+           17.00390625,
+           18.00195312,
+         ])
+
+    def test_ema_reset(self):
+        """ ema hould reset if it encounters a `None` value.
+        """
+        data = list(range(10, 20))
+        data[5] = None
+        actual = eval(
+            algo.ema(3),
+            data,
+        )
+
+        self.assertSequenceEqual(actual, [
+           None,
+           None,
+           None,
+           12.125,
+           13.0625,
+           None,
+           None,
+           None,
+           None,
+           18.125,
+         ])
 
 class TestStandardDeviation(unittest.TestCase):
     def test_standard_deviation(self):

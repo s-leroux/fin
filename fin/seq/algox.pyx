@@ -310,3 +310,41 @@ cdef class sma(Functor1):
 
             dst[i] = NaN if nans else acc/n
 
+cdef class ema(Functor1):
+    """
+    Compute the Exponential Moving Average over a n-period window.
+
+    The smoothing factor is assumed to be `2/(1+n)` where `n` is the window size.
+    """
+    cdef unsigned n
+    cdef double alpha
+
+    def __init__(self, n):
+        self.n = n
+        self.alpha = 2.0/(1+n)
+
+    cdef make_name(self, col):
+        return f"EMA({self.n}), {column.get_column_name(col)}"
+
+    cdef void eval(self, unsigned l, double* dst, double* src):
+        cdef unsigned n = self.n
+        cdef double alpha = self.alpha
+
+        cdef double acc = NaN
+        cdef signed nans = n
+        cdef double curr
+        cdef unsigned i
+        for i in range(l):
+            curr = src[i]
+            if isnan(acc):
+                nans = n
+                acc = curr
+            elif isnan(curr):
+                nans = n
+                acc = NaN
+            else:
+                acc += (curr-acc)*alpha
+                nans -= 1
+
+            dst[i] = NaN if nans>0 else acc
+
