@@ -331,22 +331,22 @@ cdef class ema(Functor1):
         cdef double alpha = self.alpha
 
         cdef double acc = NaN
-        cdef signed nans = n
+        cdef unsigned history = 0
         cdef double curr
         cdef unsigned i
         for i in range(l):
             curr = src[i]
             if isnan(acc):
-                nans = n
+                history = 0
                 acc = curr
             elif isnan(curr):
-                nans = n
+                history = 0
                 acc = NaN
             else:
                 acc += (curr-acc)*alpha
-                nans -= 1
+                history += 1
 
-            dst[i] = NaN if nans>0 else acc
+            dst[i] = NaN if history<n else acc
 
 
 cdef class wilders(Functor1):
@@ -371,20 +371,20 @@ cdef class wilders(Functor1):
         cdef double alpha = self.alpha
 
         cdef double acc = 0.0
-        cdef signed nans = n
+        cdef unsigned history = 0
         cdef double curr
         cdef unsigned i
         for i in range(l):
             curr = src[i]
             if isnan(curr):
-                nans = n
+                history = 0
                 acc = 0.0
             else:
-                if nans>0:
+                if history<n:
                     acc += curr*alpha
                 else:
                     acc += (curr-acc)*alpha
-                nans -= 1
+                history += 1
 
-            dst[i] = NaN if nans>0 else acc
+            dst[i] = NaN if history<n else acc
 
