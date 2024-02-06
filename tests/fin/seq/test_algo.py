@@ -215,12 +215,19 @@ class TestExponentialMovingAverage(unittest.TestCase):
            18.125,
          ])
 
-class TestWildersSmoothing(unittest.TestCase):
-    def test_wilders(self):
+class TestIndicators(unittest.TestCase):
+    """
+    Test engine for indicators.
+    """
+    def test_indicators(self):
+        #
+        # Test definitions
+        #
         tests = [
             [
+                algo.wilders(5),
                 "from 'Technical Analysis from A to Z, 2nd edition', p366",
-                5, # window size
+                1, 1, # data geometry
                 4, # precision
                 # Data
                 62.1250, None,
@@ -237,8 +244,9 @@ class TestWildersSmoothing(unittest.TestCase):
                 61.8438, 62.8540,
             ],
             [
+                algo.wilders(5),
                 "from https://github.com/TulipCharts/tulipindicators/blob/master/tests/untest.txt",
-                5, # window size
+                1, 1, # data geometry
                 3, # precision
                 # Data
                 81.59, None,
@@ -258,8 +266,9 @@ class TestWildersSmoothing(unittest.TestCase):
                 87.29, 85.838,
             ],
             [
+                algo.wilders(5),
                 "missing data",
-                5, # window size
+                1, 1, # data geometry
                 3, # precision
                 # Data
                 81.59, None,
@@ -279,12 +288,29 @@ class TestWildersSmoothing(unittest.TestCase):
                 87.29, 86.269,
             ],
         ]
-        for (desc, size, precision, *data) in tests:
-            with self.subTest(desc=desc):
-                src = data[::2]
-                expected = data[1::2]
-                actual = eval(algo.wilders(size), src)
-                actual = [x and round(x, precision) for x in actual]
+        #
+        # End of definitions
+        #
+
+        for (fct, desc, input_size, output_size, precision, *data) in tests:
+            # Split the data in columns
+            total_size = input_size+output_size
+            src = []
+            for i in range(input_size):
+                src.append(data[i::total_size])
+            expected = []
+            for i in range(input_size, total_size):
+                expected.append(data[i::total_size])
+
+            try:
+                nrows = len(src[0])
+            except IndexError:
+                # Fallback in case we want to test zero-column expressions.
+                nrows = 10
+
+            with self.subTest(fct=fct, desc=desc):
+                actual = [ fct(nrows, *src) ]
+                actual = [[x and round(x, precision) for x in col] for col in actual]
                 self.assertSequenceEqual(actual, expected)
 
 class TestStandardDeviation(unittest.TestCase):
