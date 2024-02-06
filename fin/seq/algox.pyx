@@ -22,19 +22,16 @@ cdef extern from "<alloca.h>":
 # ======================================================================
 cdef class Functor1:
     """
-    A simple functor accepting one column argument.
+    A simple functor accepting one-column argument.
 
     Actual calculation are delegate to the eval() method that should be
-    overrided by the actual implementation.
+    overrided by the implementation.
     """
     cdef void eval(self, unsigned l, double* dst, const double* src):
         pass
 
     cdef make_name(self, col):
         return f"{repr(self)}, {column.get_column_name(col)}"
-
-    def __repr__(self):
-        return self.__class__.__qualname__
 
     def __call__(self, rowcount, sequence):
         cdef column.FColumn fcolumn = column.as_fcolumn(sequence)
@@ -48,16 +45,16 @@ cdef class Functor1:
 
 cdef class Functor2:
     """
-    A simple functor accepting two column arguments.
+    A simple functor accepting two-column arguments.
 
     Actual calculation are delegate to the eval() method that should be
-    overrided by the actual implementation.
+    overrided by the implementation.
     """
     cdef void eval(self, unsigned l, double* dst, const double* src1, const double* src2):
         pass
 
     cdef make_name(self, col1, col2):
-        return None
+        return f"{repr(self)}, {column.get_column_name(col1)}, {column.get_column_name(col2)}"
 
     def __call__(self, rowcount, sequence1, sequence2):
         cdef column.FColumn fcolumn1 = column.as_fcolumn(sequence1)
@@ -73,18 +70,47 @@ cdef class Functor2:
 
         return column.FColumn(self.make_name(sequence1, sequence2), result)
 
-cdef class FunctorN:
+cdef class Functor3:
     """
-    A simple functor accepting N column argument.
+    A simple functor accepting three-column arguments.
 
     Actual calculation are delegate to the eval() method that should be
-    overrided by the actual implementation.
+    overrided by the implementation.
+    """
+    cdef void eval(self, unsigned l, double* dst, const double* src1, const double* src2, const double* src3):
+        pass
+
+    cdef make_name(self, col1, col2, col3):
+        return f"{repr(self)}, {column.get_column_name(col1)}, {column.get_column_name(col2)}, {column.get_column_name(col3)}"
+
+    def __call__(self, rowcount, sequence1, sequence2, sequence3):
+        cdef column.FColumn fcolumn1 = column.as_fcolumn(sequence1)
+        cdef column.FColumn fcolumn2 = column.as_fcolumn(sequence2)
+        cdef column.FColumn fcolumn3 = column.as_fcolumn(sequence3)
+        cdef const double *src1 = &fcolumn1.values[0]
+        cdef const double *src2 = &fcolumn2.values[0]
+        cdef const double *src3 = &fcolumn3.values[0]
+        cdef unsigned l = len(fcolumn1)
+
+        assert len(fcolumn1) == l
+
+        cdef double[::1] result = alloc(l)
+        self.eval(l, &result[0], src1, src2, src3)
+
+        return column.FColumn(self.make_name(sequence1, sequence2, sequence3), result)
+
+cdef class FunctorN:
+    """
+    A simple functor accepting N-column argument.
+
+    Actual calculation are delegate to the eval() method that should be
+    overrided by the implementation.
     """
     cdef void eval(self, unsigned l, double* dst, unsigned m, (const double*)[] src):
         pass
 
     cdef make_name(self, sequences):
-        return None
+        return f"{repr(self)}"
 
     def __call__(self, rowcount, *sequences):
         cdef list seqs = [column.as_fcolumn(s) for s in sequences]
@@ -390,4 +416,49 @@ cdef class wilders(Functor1):
                 history += 1
 
             dst[i] = NaN if history<n else acc
+
+
+cdef class tr(Functor3):
+    """
+    Compute the True Range
+
+    On day `i`, the True Range is the greatest of:
+    * `high[i]-low[i]`
+    * `abs(high[i]-close[i-1])`
+    * `abs(low[i]-close[i-1])`
+    """
+
+    def __repr__(self):
+        return f"TR"
+
+    cdef void eval(self, unsigned l, double* dst, double* high, double* low, double* close):
+        cdef double yc = NaN # Yesterday's close
+        cdef double th # today's high
+        cdef double tl # today's low
+
+        cdef double hc
+        cdef double lc
+
+        cdef double tr
+
+        cdef unsigned i
+        for i in range(l):
+            th = high[i]
+            tl = low[i]
+
+            if isnan(th) or isnan(tl) or isnan(yc):
+                dst[i] = NaN
+            else:
+                hc = abs(th-yc)
+                lc = abs(tl-yc)
+
+                tr = th-tl
+                if hc > tr:
+                    tr = hc
+                if lc > tr:
+                    tr = lc
+
+                dst[i] = tr
+
+            yc = close[i]
 
