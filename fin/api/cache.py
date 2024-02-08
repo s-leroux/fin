@@ -2,10 +2,10 @@
 SQLite3-backed cache
 """
 import sqlite3
-from fin.datetime import CalendarDate
+from fin.datetime import CalendarDate, parseisodate
 
 sqlite3.register_adapter(CalendarDate, str)
-sqlite3.register_converter("CalendarDate", CalendarDate.fromisoformat)
+sqlite3.register_converter("CalendarDate", parseisodate)
 
 from fin.api.core import HistoricalData
 from fin.seq import column

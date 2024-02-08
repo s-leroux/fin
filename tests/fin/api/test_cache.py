@@ -2,7 +2,7 @@ import unittest
 import os
 
 from fin.api import yf, cache
-from fin.datetime import CalendarDate, CalendarDateDelta
+from fin.datetime import CalendarDate, CalendarDateDelta, parseisodate
 
 class TestCache(unittest.TestCase):
     def setUp(self):
@@ -11,7 +11,7 @@ class TestCache(unittest.TestCase):
 
     if os.environ.get('SLOW_TESTS'):
         def test_historical_data(self):
-            end = CalendarDate.fromisoformat("2023-03-31")
+            end = parseisodate("2023-03-31")
             duration = CalendarDateDelta(weeks=5)
 
             t1 = self.client.historical_data(self.ticker, duration, end)
