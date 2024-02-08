@@ -1,3 +1,4 @@
+import sys
 import operator
 from copy import copy
 
@@ -597,10 +598,14 @@ def outer_join(tableA, tableB, keyA, keyB=None, *, name=None, propagate=False, r
 import csv
 from fin import datetime
 
-def table_from_csv(iterator, format='', *, delimiter=',', select=None, **kwargs):
+def table_from_csv(iterator, format='', *, fieldnames=None, delimiter=',', select=None, **kwargs):
     rows = []
     reader = csv.reader(iterator, delimiter=delimiter)
-    heading = next(reader)
+    if fieldnames is not None:
+        heading = [str(fieldname) for fieldname in fieldnames]
+    else:
+        # default to first line
+        heading = next(reader)
     rows = list(reader)
     cols = []
     names = []
@@ -623,7 +628,10 @@ def table_from_csv(iterator, format='', *, delimiter=',', select=None, **kwargs)
             try:
                 col[index] = f(value)
             except:
-                col[index] = None # XXX This silently discards potential errors
+                e = sys.exc_info()[1] # This will also catch an exception that doesn't inherit from Exception
+                console.warn(f"Can't convert {col[index]} using {f}")
+                console.info(str(e))
+                col[index] = None
 
         names.append(name)
         cols.append(col)

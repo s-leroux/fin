@@ -541,8 +541,8 @@ class _GNUPlotVisitor:
     def _make_fields(self, *field_names):
         return ":".join(map(str, self._get_field_numbers(*field_names)))
 
-def gnuplot(multiplot, *, log=None, Process=_Process, **kwargs):
-    with Process(['gnuplot', '-p']) as p:
+def gnuplot(multiplot, *, log=None, Process=_Process, cmd=['gnuplot', '-p'], **kwargs):
+    with Process(cmd) as p:
         stdin_write = p.stdin.write
         if log is not None:
             def writer(str):

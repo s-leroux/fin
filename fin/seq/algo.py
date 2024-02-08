@@ -652,6 +652,10 @@ def line(x1, x2):
 import fin.seq.table
 from fin import datetime
 
+
+import inspect # XXX Move me to the head of this file!
+
+
 def shift_date(delta):
     """
     Offset a calendar date.
@@ -665,8 +669,9 @@ def shift_date(delta):
         for idx, date in enumerate(dates):
             try:
                 result[idx] = date+offset
-            except ValueError:
-                pass
+            except ValueError as e:
+                console.warn(f"Can't apply {inspect.currentframe().f_code.co_name} to {date}")
+                console.info(str(e))
 
         return fin.seq.table.Column(name,result)
 

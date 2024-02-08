@@ -183,7 +183,7 @@ class TestCalendarDate(unittest.TestCase):
         It should parse dates expressed as a number of milliseconds since Unix Epoch.
         """
         date = parsetimestamp_ms(f"{TM_TIMESTAMP*1000}")
-        self.assertEqual(str(date), f"{TM_DATE} {TM_TIME}.{TM_MICRO}")
+        self.assertEqual(str(date), f"{TM_DATE}T{TM_TIME}.{TM_MICRO}")
 
     def test_init_from_timestamp(self):
         """
@@ -254,8 +254,8 @@ class TestCalendarDate(unittest.TestCase):
         timestamp = TM_TIMESTAMP
         testcases=(
             CalendarDate, f"{TM_DATE}",
-            CalendarDateTime, f"{TM_DATE} {TM_TIME}",
-            CalendarDateTimeMicro, f"{TM_DATE} {TM_TIME}.{TM_MICRO}",
+            CalendarDateTime, f"{TM_DATE}T{TM_TIME}",
+            CalendarDateTimeMicro, f"{TM_DATE}T{TM_TIME}.{TM_MICRO}",
         )
 
         while testcases:

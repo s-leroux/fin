@@ -26,8 +26,8 @@ DATETIMEMS="DATETIMEMS"
 
 DATE_FORMAT={
     DATE: "%Y-%m-%d",
-    DATETIME: "%Y-%m-%d %H:%M:%S",
-    DATETIMEMS: "%Y-%m-%d %H:%M:%S.%f",
+    DATETIME: "%Y-%m-%dT%H:%M:%S",
+    DATETIMEMS: "%Y-%m-%dT%H:%M:%S.%f",
 }
 
 # ======================================================================
