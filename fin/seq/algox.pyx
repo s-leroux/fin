@@ -10,6 +10,8 @@ from __future__ import print_function
 # function without that import.
 # See: https://stackoverflow.com/questions/19185338/cython-error-compiling-with-print-function-parameters
 
+from libc.math cimport sqrt
+
 from fin.mathx cimport alloc, isnan, NaN
 from fin.seq cimport column
 from fin.seq import column
@@ -42,6 +44,44 @@ cdef class Functor1:
         self.eval(l, &result[0], &values[0])
 
         return column.FColumn(self.make_name(sequence), result)
+
+cdef class Functor1_3:
+    """
+    A simple functor accepting a one-column argument and returning three columns.
+
+    Actual calculation are delegate to the eval() method that should be
+    overrided by the implementation.
+    """
+    cdef void eval(self, unsigned l,
+            double* dst1, double* dst2, double* dst3,
+            const double* src1):
+        pass
+
+    cdef make_names(self, col1):
+        return [
+                "A",
+                "B",
+                "C"
+                ]
+
+    def __call__(self, rowcount, sequence1):
+        cdef column.FColumn fcolumn1 = column.as_fcolumn(sequence1)
+        cdef const double *src1 = &fcolumn1.values[0]
+        cdef unsigned l = len(fcolumn1)
+
+        assert len(fcolumn1) == l
+
+        cdef double[::1] dst1 = alloc(l)
+        cdef double[::1] dst2 = alloc(l)
+        cdef double[::1] dst3 = alloc(l)
+        self.eval(l, &dst1[0], &dst2[0], &dst3[0], src1)
+        names = self.make_names(sequence1);
+
+        return [
+                column.FColumn(names[0], dst1),
+                column.FColumn(names[1], dst2),
+                column.FColumn(names[2], dst3),
+                ]
 
 cdef class Functor2:
     """
@@ -403,6 +443,26 @@ cdef class variance(Functor1):
             else:
                 nones -= 1
 
+cdef class standard_deviation(Functor1):
+    """
+    Compute the Standard Deviation over a n-period window.
+
+    The standard deviation is defined as the square root of the variance
+    as implemented here.
+    """
+    cdef variance delegate
+
+    def __init__(self, unsigned n):
+        self.delegate = variance(n)
+
+    cdef make_name(self, col):
+        return f"STDDEV({self.delegate.n}), {column.get_column_name(col)}"
+
+    cdef void eval(self, unsigned l, double* dst, const double* src):
+        self.delegate.eval(l, dst, src)
+        for i in range(l):
+            dst[i] = sqrt(dst[i])
+
 # ======================================================================
 # Moving averages and smoothing functions
 # ======================================================================
@@ -601,7 +661,7 @@ cdef class band(Functor2_3):
         basename = col1.name
         return [
                 f"{basename}:B",
-                f"{basename}",
+                f"{basename}:M",
                 f"{basename}:A",
                 ]
 
@@ -613,4 +673,38 @@ cdef class band(Functor2_3):
             dst1[i] = src1[i]-src2[i]
             dst2[i] = src1[i]
             dst3[i] = src1[i]+src2[i]
+
+cdef class bband(Functor1_3):
+    """
+    Compute the Bollinger's band.
+
+    *Dummy implementation*
+    """
+    cdef sma _sma
+    cdef standard_deviation _stdev
+    cdef band _band
+    cdef unsigned n
+
+    def __init__(self, n):
+        self._sma = sma(n)
+        self._stdev = standard_deviation(n)
+        self._band = band()
+        self.n = n
+
+    cdef make_names(self, col1):
+        basename = col1.name
+        return [
+                f"{basename}:B",
+                f"{basename}:M",
+                f"{basename}:A",
+                ]
+
+    cdef void eval(self, unsigned l,
+            double* dst1, double* dst2, double* dst3,
+            const double* src1):
+        cdef double[::1] middle = alloc(l)
+        cdef double[::1] sd = alloc(l)
+        self._sma.eval(l, &middle[0], src1)
+        self._stdev.eval(l, &sd[0], &middle[0])
+        self._band.eval(l, dst1, dst2, dst3, &middle[0], &sd[0])
 

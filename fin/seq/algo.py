@@ -116,24 +116,6 @@ def naive_window(fct, n):
 # ======================================================================
 # Stats
 # ======================================================================
-def standard_deviation(n):
-    """
-    Compute the Standard Deviation over a n-period window.
-    """
-    var = variance(n)
-    sqrt = math.sqrt
-
-    def s(rowcount, values):
-        va = var(rowcount, values)
-        result = []
-        push = result.append
-
-        for v in va:
-            push(None if v is None else sqrt(v))
-
-        return Column(f"STDDEV({n}), {get_column_name(values)}", result)
-    return s
-
 def correlation(n):
     """
     Compute the Linear correlation between two columns over a n-period window.

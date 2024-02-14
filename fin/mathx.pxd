@@ -5,7 +5,7 @@ from cpython cimport array
 # ======================================================================
 cdef double NaN
 
-cdef double[::1] alloc(unsigned n)
+cdef double[::1] alloc(unsigned n, double init_value=*)
 
 from libc.math cimport isnan
 
