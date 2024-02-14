@@ -11,7 +11,7 @@ Usage:
 client = yf.Client()
 
 t = client.historical_data("BAC", CalendarDateDelta(days=100))
-sma = t.add_column((algo.sma(5), "Close"))
+sma, = t.add_column((algo.sma(5), "Close"))
 
 mp = plot.Multiplot(t, "Date")
 p = mp.new_plot(3)

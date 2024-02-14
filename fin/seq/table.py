@@ -3,7 +3,7 @@ import operator
 from copy import copy
 
 from fin.seq import formatter
-from fin.seq.column import AnyColumn, Column
+from fin.seq.column import AnyColumn, Column, as_column
 from fin.utils.log import console
 
 # ======================================================================
@@ -228,28 +228,40 @@ class Table:
         becomes the new table value.
         """
         if expr is None:
-            column, *remainer = self.reval(name_or_expr)
-            name = column.name
+            columns = self.reval(name_or_expr)
+            name = None
         else:
-            column, *remainer = self.reval(expr)
+            columns = self.reval(expr)
             name = name_or_expr
 
-        if name is None:
-            name = "C" + str(len(self._meta))
-        if name in self.names():
-            raise DuplicateName(name)
+        new_cols = []
+        n = len(columns)
+        for column in columns:
+            # Rename the column if needed
+            column = as_column(column)
 
-        if len(remainer):
-            console.debug(f"column={column}")
-            console.debug(f"remainer={remainer}")
-            raise ValueError("Too many columns")
-        if len(column) != self._rows:
-            raise RowCountMismatch("column " + name, self._rows, len(column))
+            if name:
+                if n == 1:
+                    # Override column's name
+                    column = column.named(name)
+                else:
+                    # name act as a namespace
+                    column = column.named(f"{name}:{column.name}")
+            elif not column.name:
+                # No default. Infer a name.
+                column = column.named(f"C{len(self._meta)}")
 
-        meta = Column(name, column)
-        self._meta.append(meta)
+            # Sanity checks
+            if name in self.names():
+                raise DuplicateName(name)
+            if len(column) != self._rows:
+                raise RowCountMismatch(f"column {name}", self._rows, len(column))
 
-        return meta
+            # Finally, append the column
+            self._meta.append(column)
+            new_cols.append(column)
+
+        return new_cols
 
     def add_columns(self, *col_specs):
         for col_spec in col_specs:

@@ -18,11 +18,26 @@ cdef from_sequence(sequence):
 cdef to_sequence(double[::1] view):
     return [ None if isnan(x) else x for x in view]
 
+def as_column(obj):
+    try:
+        return obj.as_column()
+    except AttributeError:
+        return Column(None, obj)
+
 # ======================================================================
 # Column class
 # ======================================================================
 cdef class AnyColumn:
-    pass
+    def as_column(self):
+        return self
+
+    def min_max(self):
+        """
+        Return the minimum and maximum values in the column.
+        None values are ignored.
+        """
+        values = [v for v in self.values if v is not None]
+        return min(values), max(values)
 
 cdef class FColumn(AnyColumn):
     """
@@ -43,9 +58,28 @@ cdef class FColumn(AnyColumn):
         """
         return iter(to_sequence(self.values))
 
-    def __str__(self):
+    def __getitem__(self, index):
+        return self.values[index]
+
+    def __repr__(self):
         values_str = ", ".join(map(str, self.values))
-        return f"FColumn([{values_str}])"
+        return f"FColumn({self.name}, ({values_str}))"
+
+    def named(self, name):
+        return FColumn(name, self.values)
+
+    def slice(self, start, end=None):
+        """
+        Return a new column containing a copy of the data in the range [start;end)
+
+        Negative values for `start` or `end` are not allowed.
+        """
+        if end is None:
+            end = len(self.values)
+
+        assert end >= start >= 0
+
+        return FColumn(self.name, self.values[start:end])
 
 cpdef FColumn fcolumn_from_slice(name, double[::1] slice):
     return FColumn(name, slice)
@@ -97,13 +131,8 @@ class Column(AnyColumn):
     def __repr__(self):
         return "Column(\"{}\", {})".format(self.name, self.values)
 
-    def min_max(self):
-        """
-        Return the minimum and maximum values in the column.
-        None values are ignored.
-        """
-        values = [v for v in self.values if v is not None]
-        return min(values), max(values)
+    def named(self, name):
+        return Column(name, self.values)
 
     def slice(self, start, end=None):
         """
