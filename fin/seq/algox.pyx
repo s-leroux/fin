@@ -336,6 +336,74 @@ cdef class Ratio(Functor2):
 ratio = Ratio()
 
 # ======================================================================
+# Math and stats
+# ======================================================================
+cdef class variance(Functor1):
+    """
+    Compute the Variance over a n-period window.
+
+    This is an implementation of the naive algorithm which is not numerically
+    stable in the general case, but this should be sufficient for financial data.
+
+    We use the Bessel's correction since we use sampled data.
+    """
+    cdef double a
+    cdef double b
+    cdef unsigned n
+
+    def __init__(self, unsigned n):
+        self.a = 1.0/(n-1.0)
+        self.b = self.a/n
+        self.n = n
+
+    cdef make_name(self, col):
+        return f"{repr(self)}, {column.get_column_name(col)}"
+
+    cdef void eval(self, unsigned l, double* dst, const double* src):
+        cdef double a = self.a
+        cdef double b = self.b
+        cdef unsigned n = self.n
+
+        cdef double sigma_ui = 0.0
+        cdef double sigma_ui2 = 0.0
+        cdef unsigned nones = 0
+        cdef unsigned i = 0
+
+        # degenerate case
+        if l < n:
+            return
+
+        # general case
+        while i < n-1:
+            v = src[i]
+            if not isnan(v):
+                sigma_ui += v
+                sigma_ui2 += v*v
+            else:
+                nones += 1
+
+            i += 1
+
+        while i < l:
+            v = src[i]
+            if not isnan(v):
+                sigma_ui += v
+                sigma_ui2 += v*v
+            else:
+                nones += 1
+
+            dst[i] = NaN if nones else a*sigma_ui2 - b*sigma_ui*sigma_ui
+
+            i += 1
+
+            v = src[i-n]
+            if not isnan(v):
+                sigma_ui -= v
+                sigma_ui2 -= v*v
+            else:
+                nones -= 1
+
+# ======================================================================
 # Moving averages and smoothing functions
 # ======================================================================
 cdef class sma(Functor1):

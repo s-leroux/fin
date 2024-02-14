@@ -134,47 +134,6 @@ def standard_deviation(n):
         return Column(f"STDDEV({n}), {get_column_name(values)}", result)
     return s
 
-def variance(n):
-    """
-    Compute the Variance over a n-period window.
-    """
-    a = 1.0/(n-1.0)
-    b = a/n
-
-    def s(rowcount, values):
-        sigma_ui = 0.0
-        sigma_ui2 = 0.0
-        buffer = [None]*n
-        nones = n
-        ptr = 0
-        result = []
-        push = result.append
-
-        for i, v in enumerate(values):
-            x = buffer[ptr]
-
-            try:
-                sigma_ui -= x
-                sigma_ui2 -= x*x
-            except TypeError:
-                nones -= 1
-
-            buffer[ptr] = v
-            ptr += 1
-            if ptr == n:
-                ptr = 0
-
-            try:
-                sigma_ui += v
-                sigma_ui2 += v*v
-            except TypeError:
-                nones += 1
-
-            push(None if nones else a*sigma_ui2 - b*sigma_ui*sigma_ui)
-
-        return result
-    return s
-
 def correlation(n):
     """
     Compute the Linear correlation between two columns over a n-period window.
