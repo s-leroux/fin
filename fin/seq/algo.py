@@ -35,6 +35,15 @@ def by_row(fct):
     return _by_row
 
 # ======================================================================
+# Test functions
+# ======================================================================
+def constants(*values):
+    def _constants(rowcount):
+        return [Column(None, [value]*rowcount) for value in values]
+
+    return _constants
+
+# ======================================================================
 # Accumulator
 # ======================================================================
 def acc(value, neg=False, pos=True):

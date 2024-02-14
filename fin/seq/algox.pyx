@@ -70,6 +70,46 @@ cdef class Functor2:
 
         return column.FColumn(self.make_name(sequence1, sequence2), result)
 
+cdef class Functor2_3:
+    """
+    A simple functor accepting two-column arguments and returning three columns.
+
+    Actual calculation are delegate to the eval() method that should be
+    overrided by the implementation.
+    """
+    cdef void eval(self, unsigned l,
+            double* dst1, double* dst2, double* dst3,
+            const double* src1, const double* src2):
+        pass
+
+    cdef make_names(self, col1, col2):
+        return [
+                "A",
+                "B",
+                "C"
+                ]
+
+    def __call__(self, rowcount, sequence1, sequence2):
+        cdef column.FColumn fcolumn1 = column.as_fcolumn(sequence1)
+        cdef column.FColumn fcolumn2 = column.as_fcolumn(sequence2)
+        cdef const double *src1 = &fcolumn1.values[0]
+        cdef const double *src2 = &fcolumn2.values[0]
+        cdef unsigned l = len(fcolumn1)
+
+        assert len(fcolumn1) == l
+
+        cdef double[::1] dst1 = alloc(l)
+        cdef double[::1] dst2 = alloc(l)
+        cdef double[::1] dst3 = alloc(l)
+        self.eval(l, &dst1[0], &dst2[0], &dst3[0], src1, src2)
+        names = self.make_names(sequence1, sequence2);
+
+        return [
+                column.FColumn(names[0], dst1),
+                column.FColumn(names[1], dst2),
+                column.FColumn(names[2], dst3),
+                ]
+
 cdef class Functor3:
     """
     A simple functor accepting three-column arguments.
@@ -484,3 +524,25 @@ class atr(Functor3):
         tr = self.tr(rowcount, high, low, close)
         atr = self.smooth(rowcount, tr)
         return atr
+
+cdef class band(Functor2_3):
+    """
+    Compute a band arround a middle value.
+    """
+    cdef make_names(self, col1, col2):
+        basename = col1.name
+        return [
+                f"{basename}:B",
+                f"{basename}",
+                f"{basename}:A",
+                ]
+
+    cdef void eval(self, unsigned l,
+            double* dst1, double* dst2, double* dst3,
+            const double* src1, const double* src2):
+        cdef unsigned i
+        for i in range(l):
+            dst1[i] = src1[i]-src2[i]
+            dst2[i] = src1[i]
+            dst3[i] = src1[i]+src2[i]
+
