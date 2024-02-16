@@ -3,7 +3,7 @@ import operator
 from copy import copy
 
 from fin.seq import formatter
-from fin.seq.column import AnyColumn, Column, as_column
+from fin.seq.column import Column, as_column
 from fin.utils.log import console
 
 # ======================================================================
@@ -23,19 +23,6 @@ class DuplicateName(ValueError):
 def raise_table_cast_error(something):
     console.debug(something)
     raise TypeError(f"Can't convert {type(something)} to Table")
-
-# ======================================================================
-# Utilities
-# ======================================================================
-def C(column):
-    if isinstance(column, AnyColumn):
-        return column
-
-    # otherwise, we assume it's a generator
-    return Column(None, column)
-
-named = lambda name : lambda rowcount, col : Column(name, col.values)
-
 
 # ======================================================================
 # Table class
@@ -70,9 +57,9 @@ class Table:
         Return the raw data for the given columns (or all if not specificed).
         """
         if columns != None:
-            return [self[name_or_index] for name_or_index in columns]
+            return [self[name_or_index].py_values for name_or_index in columns]
         else:
-            return [ it.values for it in self._meta ]
+            return [ it.py_values for it in self._meta ]
 
     def row_iterator(self, columns=None):
         """
@@ -114,8 +101,7 @@ class Table:
 
         t = Table(len(rows), name=self.name())
         for meta, column in zip(self._meta, zip(*rows)):
-            meta = copy(meta)
-            meta.values = column
+            meta = Column.from_sequence(meta.name, column)
             t._meta.append(meta)
 
         return t
@@ -160,7 +146,7 @@ class Table:
         end = self._rows
         t = Table(end-i, name=self.name())
         for col in self._meta:
-            t.add_column(col.slice(i, end))
+            t.add_column(col[i:end])
 
         return t
 
@@ -216,7 +202,7 @@ class Table:
             If the name is ambiguous, the behavior is unspecified.
         """
         index = self._get_column_index(name_or_index)
-        self._meta[index].name = newname
+        self._meta[index] = self._meta[index].named(newname)
 
     def add_column(self, name_or_expr, expr=None):
         """
@@ -265,7 +251,7 @@ class Table:
 
     def add_columns(self, *col_specs):
         for col_spec in col_specs:
-            if isinstance(col_spec, AnyColumn):
+            if isinstance(col_spec, Column):
                 self.add_column(col_spec)
             else:
                 # Assume col_spec is a (name, expr) pair
@@ -303,6 +289,8 @@ class Table:
         Recursive evaluation of a table expression.
         """
         while True:
+            # print(f"reval {head!r} {tail!r}")
+
             if callable(head):
                 # It's an f-expression
                 if tail:
@@ -321,11 +309,11 @@ class Table:
         if type(item) == str:
             idx = self._get_column_index(item)
             return [ self._meta[idx] ]
-        if isinstance(item, AnyColumn):
+        if isinstance(item, Column):
             return [ item ]
         if isinstance(item, dict): # collections.abc.Mapping ?
             col, =  self.reval(item["expr"])
-            return [ col.alter(**item) ]
+            return [ col.named(item["name"]) ]
 
         try:
             it = iter(item)
@@ -334,7 +322,7 @@ class Table:
         else:
             return self.reval(*it)
 
-        return [ Column(None, [item]*self._rows) ]
+        return [ Column.from_sequence(None, [item]*self._rows) ]
 
     def __getitem__(self,c):
         c = self._get_column_index(c)
@@ -378,7 +366,7 @@ def table_from_data(data, headings, *, name=""):
 
     t = Table(rowcount, name=name)
     for heading, column in zip(headings, data):
-        t.add_column(Column(heading, column))
+        t.add_column(Column.from_sequence(heading, column))
 
     return t
 

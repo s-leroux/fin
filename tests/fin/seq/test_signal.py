@@ -19,7 +19,7 @@ class TestAbove(unittest.TestCase):
 
         expected = [x > y for x,y in zip(t["A"],t["B"])]
         [actual] = t.reval(signal.above(), "A","B")
-        self.assertSequenceEqual(actual, expected)
+        self.assertSequenceEqual(actual.py_values, expected)
 
 class TestBelow(unittest.TestCase):
     def test_data(self):
@@ -45,7 +45,7 @@ class TestAlmostEqual(unittest.TestCase):
 
         expected = [-delta <= a-b <= delta for a,b,delta in zip(t["A"],t["B"],t["DELTA"])]
         [actual] = t.reval(signal.almost_equal(), "A","B", "DELTA")
-        self.assertSequenceEqual(actual, expected)
+        self.assertSequenceEqual(actual.py_values, expected)
 
 class TestIncrease(unittest.TestCase):
     def test_data(self):
@@ -57,7 +57,7 @@ class TestIncrease(unittest.TestCase):
 
         expected = [None] + [True]*LEN + [False]*(LEN-1)
         [actual] = t.reval(signal.increase(), "A")
-        self.assertSequenceEqual(actual, expected)
+        self.assertSequenceEqual(actual.py_values, expected)
 
 # ======================================================================
 # Algorithms
@@ -82,7 +82,7 @@ class TestPattern(unittest.TestCase):
             signal.above("A", LIMIT1),
             signal.below("A", LIMIT2),
             ))
-        self.assertSequenceEqual(actual, expected)
+        self.assertSequenceEqual(actual.py_values, expected)
 
 class TestWhen(unittest.TestCase):
     def test_when(self):
@@ -97,7 +97,7 @@ class TestWhen(unittest.TestCase):
 
         expected = [a if t > l else b for t,l,a,b in zip(t["T"],t["LIMIT"],t["A"],t["B"])]
         [actual] = t.reval(signal.when(), (signal.above(), "T", "LIMIT"), "A", "B")
-        self.assertSequenceEqual(actual, expected)
+        self.assertSequenceEqual(actual.py_values, expected)
 
 # ======================================================================
 # Quantifiers
@@ -117,7 +117,7 @@ class TestAll(unittest.TestCase):
                 (signal.above(),"A", "LIMIT1"),
                 (signal.below(),"A", "LIMIT2"),
             ))
-        self.assertSequenceEqual(actual, expected)
+        self.assertSequenceEqual(actual.py_values, expected)
 
 class TestAny(unittest.TestCase):
     def test_data(self):
@@ -134,5 +134,5 @@ class TestAny(unittest.TestCase):
                 (signal.below(),"A", "LIMIT1"),
                 (signal.above(),"A", "LIMIT2"),
             ))
-        self.assertSequenceEqual(actual, expected)
+        self.assertSequenceEqual(actual.py_values, expected)
 

@@ -9,7 +9,7 @@ tests: compile
 examples: compile
 	for f in $$(find examples -name "*.py"); do \
 	  echo "$$f"; \
-	  PYTHONPATH="$$PWD" python3 "$$f" > /dev/null || exit 1; \
+	  PYTHONPATH="$$PWD" python3 "$$f" || exit 1; \
 	done
 
 tests-all: compile

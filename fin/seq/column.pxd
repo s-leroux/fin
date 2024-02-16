@@ -1,12 +1,11 @@
 from cpython cimport array
-from fin.mathx cimport NaN
-
 import array
 
 # ======================================================================
 # Utilities
 # ======================================================================
-cpdef FColumn as_fcolumn(sequence)
+cpdef str get_column_name(obj)
+cpdef Column as_column(sequence)
 
 # ======================================================================
 # Column class
@@ -23,3 +22,13 @@ cdef class FColumn(AnyColumn):
     cdef readonly double[::1]    values
     cdef readonly str name
 
+cdef class Column:
+    """
+    A column.
+    """
+    cdef str            _name
+    cdef tuple          _py_values
+    cdef array.array    _f_values
+
+    cdef tuple          get_py_values(self)
+    cdef array.array    get_f_values(self)

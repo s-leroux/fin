@@ -21,7 +21,7 @@ def above():
             except TypeError:
                 pass
 
-        return Column(None, result)
+        return Column.from_sequence(None, result)
 
     return _above
 
@@ -46,7 +46,7 @@ def almost_equal():
             except TypeError:
                 pass
 
-        return Column(None, result)
+        return Column.from_sequence(None, result)
 
     return _almost_equal
 
@@ -67,7 +67,7 @@ def increase(p=1):
             except (IndexError, TypeError) as e:
                 pass
 
-        return Column(None, result)
+        return Column.from_sequence(None, result)
 
     return _increase
 
@@ -98,7 +98,7 @@ def pattern(*events):
 
             result[i] = sig
 
-        return Column(None, result)
+        return Column.from_sequence(None, result)
 
     return (_pattern, *events)
 
@@ -112,7 +112,7 @@ def when():
         for i, (vt, va, vb) in enumerate(zip(test, a, b)):
             result[i] = va if vt else vb
 
-        return Column(None, result)
+        return Column.from_sequence(None, result)
 
     return _when
 
@@ -134,7 +134,7 @@ def all(*signals):
                     break
             result[i] = r
 
-        return Column(None, result)
+        return Column.from_sequence(None, result)
 
     return (_all, *signals)
 
@@ -153,6 +153,6 @@ def any(*signals):
                     break
             result[i] = r
 
-        return Column(None, result)
+        return Column.from_sequence(None, result)
 
     return (_any, *signals)

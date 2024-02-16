@@ -30,7 +30,7 @@ def by_row(fct):
                 pass
             i += 1
 
-        return Column(None,result)
+        return Column.from_sequence(None,result)
 
     return _by_row
 
@@ -39,7 +39,7 @@ def by_row(fct):
 # ======================================================================
 def constants(*values):
     def _constants(rowcount):
-        return [Column(None, [value]*rowcount) for value in values]
+        return [Column.from_sequence(None, [value]*rowcount) for value in values]
 
     return _constants
 
@@ -62,7 +62,7 @@ def acc(value, neg=False, pos=True):
 
             result[i] = a
 
-        return result
+        return Column.from_sequence(None, result)
 
     return (_acc, value, neg, pos)
 
@@ -88,7 +88,7 @@ def acc2(value, buy, sell):
 
             result[i] = share*v+cash
 
-        return result
+        return Column.from_sequence(None, result)
 
     return (_acc, value, buy, sell)
 
@@ -103,7 +103,7 @@ def window(fct, n):
             result[i] = fct(i-n+1, i+1, *cols)
             i += 1
 
-        return Column(None, result)
+        return Column.from_sequence(None, result)
 
     return _window
 
@@ -184,7 +184,7 @@ def basic_sharpe_ratio(n):
             except TypeError:
                 push(None)
 
-        return Column(f"BSHARPE({n}), {get_column_name(values)}", result)
+        return Column.from_sequence(f"BSHARPE({n}), {get_column_name(values)}", result)
 
 
     return _basic_sharpe_ratio
@@ -220,7 +220,7 @@ def best_fit(rowcount, col_x, col_y):
         except TypeError:
             pass
 
-    return Column(f"BESTFIT, {get_column_name(col_y)}:{get_column_name(col_x)}", result)
+    return Column.from_sequence(f"BESTFIT, {get_column_name(col_y)}:{get_column_name(col_x)}", result)
 
 
 # ======================================================================
@@ -253,7 +253,7 @@ def delta(n=1):
             except TypeError:
                 store(None)
 
-        return result
+        return Column.from_sequence(None, result)
 
     return _delta
 
@@ -334,7 +334,7 @@ def basing_point_bull(low, high):
 
             push(current)
 
-        return result
+        return Column.from_sequence(None, result)
 
     return _basing_point_bull, low, high
 
@@ -379,7 +379,7 @@ def basing_point_bear(low, high):
 
             push(current)
 
-        return result
+        return Column.from_sequence(None, result)
 
     return _basing_point_bear, low, high
 
@@ -391,7 +391,7 @@ def constantly(value):
     Evaluates to a list made of contant values.
     """
     def _constantly(rowcount):
-        return [value]*rowcount
+        return Column.from_sequence(None, [value]*rowcount)
 
     return _constantly
 
@@ -403,9 +403,9 @@ def shift(n):
     """
     def _shift(rowcount, values):
         if n > 0:
-            return values[n:] + [None]*n
+            return Column.from_sequence(None, values[n:] + [None]*n)
         else:
-            return [None]*-n + values[:n]
+            return Column.from_sequence(None, [None]*-n + values[:n])
 
     return _shift
 
@@ -438,7 +438,7 @@ def min(n):
             else:
                 store(queue[0])
 
-        return result
+        return Column.from_sequence(None, result)
 
     return _min
 
@@ -471,7 +471,7 @@ def max(n):
             else:
                 store(queue[0])
 
-        return result
+        return Column.from_sequence(None, result)
 
     return _max
 
@@ -492,7 +492,7 @@ def ratio_old(rowcount, a, b):
             # b_i is 0.0
             result[idx] = float("inf") if a_i > 0 else float("-inf") if a_i < 0 else None
 
-    return Column(f"{get_column_name(a)}/{get_column_name(b)}", result)
+    return Column.from_sequence(f"{get_column_name(a)}/{get_column_name(b)}", result)
 
 # ======================================================================
 # Compound functions
@@ -518,7 +518,7 @@ def map(fct):
     Formally, y_i = f(u_i)
     """
     def _map(rowcount, values):
-        return Column(None, [fct(x) if x is not None else None for x in values])
+        return Column.from_sequence(None, [fct(x) if x is not None else None for x in values])
 
     return _map
 
@@ -535,7 +535,7 @@ def mapn(fct):
             except TypeError:
                 push(None)
 
-        return result
+        return Column.from_sequence(None, result)
 
     return _mapn
 
@@ -553,7 +553,7 @@ def map_change(fct):
 
             prev = x
 
-        return result
+        return Column.from_sequence(None, result)
 
     return _map
 
@@ -592,14 +592,13 @@ def line(x1, x2):
         for i in range(rowcount):
             push(a+b*i)
 
-        return result
+        return Column.from_sequence(None, result)
 
     return _line
 
 # ======================================================================
 # Calendar functions
 # ======================================================================
-import fin.seq.table
 from fin import datetime
 
 
@@ -623,7 +622,7 @@ def shift_date(delta):
                 console.warn(f"Can't apply {inspect.currentframe().f_code.co_name} to {date}")
                 console.info(str(e))
 
-        return fin.seq.table.Column(name,result)
+        return Column.from_sequence(name,result)
 
     return _shift_date
 
@@ -641,7 +640,7 @@ def hist2(f, n, interval):
                 result[i] = [value] + result[i-interval][:n]
 
         result = builtins.map(f, result)
-        return result
+        return Column.from_sequence(None, result)
 
     return _hist
 
@@ -687,6 +686,6 @@ def hist(f, n, years=0, months=0, days=0):
             result[i] = f(v)
             print()
 
-        return result
+        return Column.from_sequence(None, result)
 
     return _hist

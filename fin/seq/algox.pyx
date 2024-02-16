@@ -11,8 +11,10 @@ from __future__ import print_function
 # See: https://stackoverflow.com/questions/19185338/cython-error-compiling-with-print-function-parameters
 
 from libc.math cimport sqrt
+import array
+from cpython cimport array
 
-from fin.mathx cimport alloc, isnan, NaN
+from fin.mathx cimport alloc, aalloc, isnan, NaN
 from fin.seq cimport column
 from fin.seq import column
 
@@ -35,15 +37,17 @@ cdef class Functor1:
     cdef make_name(self, col):
         return f"{repr(self)}, {column.get_column_name(col)}"
 
-    def __call__(self, rowcount, sequence):
-        cdef column.FColumn fcolumn = column.as_fcolumn(sequence)
-        cdef double[::1] values = fcolumn.values
-        cdef unsigned l = len(values)
-        cdef double[::1] result = alloc(l)
+    def __call__(self, rowcount, sequence1):
+        cdef unsigned l = rowcount
+        cdef column.Column src1 = column.as_column(sequence1)
+        cdef array.array dst1 = aalloc(l)
 
-        self.eval(l, &result[0], &values[0])
+        self.eval(l,
+                &dst1.data.as_doubles[0],
+                &src1.get_f_values().data.as_doubles[0]
+                )
 
-        return column.FColumn(self.make_name(sequence), result)
+        return column.Column.from_float_array(self.make_name(sequence1), dst1)
 
 cdef class Functor1_3:
     """
@@ -65,22 +69,25 @@ cdef class Functor1_3:
                 ]
 
     def __call__(self, rowcount, sequence1):
-        cdef column.FColumn fcolumn1 = column.as_fcolumn(sequence1)
-        cdef const double *src1 = &fcolumn1.values[0]
-        cdef unsigned l = len(fcolumn1)
+        cdef unsigned l = rowcount
+        cdef column.Column src1 = column.as_column(sequence1)
+        cdef array.array dst1 = aalloc(l)
+        cdef array.array dst2 = aalloc(l)
+        cdef array.array dst3 = aalloc(l)
 
-        assert len(fcolumn1) == l
+        self.eval(l,
+                &dst1.data.as_doubles[0],
+                &dst2.data.as_doubles[0],
+                &dst3.data.as_doubles[0],
+                &src1.get_f_values().data.as_doubles[0]
+                )
 
-        cdef double[::1] dst1 = alloc(l)
-        cdef double[::1] dst2 = alloc(l)
-        cdef double[::1] dst3 = alloc(l)
-        self.eval(l, &dst1[0], &dst2[0], &dst3[0], src1)
         names = self.make_names(sequence1);
 
         return [
-                column.FColumn(names[0], dst1),
-                column.FColumn(names[1], dst2),
-                column.FColumn(names[2], dst3),
+                column.Column.from_float_array(names[0], dst1),
+                column.Column.from_float_array(names[1], dst2),
+                column.Column.from_float_array(names[2], dst3),
                 ]
 
 cdef class Functor2:
@@ -97,18 +104,18 @@ cdef class Functor2:
         return f"{repr(self)}, {column.get_column_name(col1)}, {column.get_column_name(col2)}"
 
     def __call__(self, rowcount, sequence1, sequence2):
-        cdef column.FColumn fcolumn1 = column.as_fcolumn(sequence1)
-        cdef column.FColumn fcolumn2 = column.as_fcolumn(sequence2)
-        cdef const double *src1 = &fcolumn1.values[0]
-        cdef const double *src2 = &fcolumn2.values[0]
-        cdef unsigned l = len(fcolumn1)
+        cdef unsigned l = rowcount
+        cdef column.Column src1 = column.as_column(sequence1)
+        cdef column.Column src2 = column.as_column(sequence2)
+        cdef array.array dst1 = aalloc(l)
 
-        assert len(fcolumn1) == l
+        self.eval(l,
+                &dst1.data.as_doubles[0],
+                &src1.get_f_values().data.as_doubles[0],
+                &src2.get_f_values().data.as_doubles[0],
+                )
 
-        cdef double[::1] result = alloc(l)
-        self.eval(l, &result[0], src1, src2)
-
-        return column.FColumn(self.make_name(sequence1, sequence2), result)
+        return column.Column.from_float_array(self.make_name(sequence1, sequence2), dst1)
 
 cdef class Functor2_3:
     """
@@ -130,24 +137,27 @@ cdef class Functor2_3:
                 ]
 
     def __call__(self, rowcount, sequence1, sequence2):
-        cdef column.FColumn fcolumn1 = column.as_fcolumn(sequence1)
-        cdef column.FColumn fcolumn2 = column.as_fcolumn(sequence2)
-        cdef const double *src1 = &fcolumn1.values[0]
-        cdef const double *src2 = &fcolumn2.values[0]
-        cdef unsigned l = len(fcolumn1)
+        cdef unsigned l = rowcount
+        cdef column.Column src1 = column.as_column(sequence1)
+        cdef column.Column src2 = column.as_column(sequence2)
+        cdef array.array dst1 = aalloc(l)
+        cdef array.array dst2 = aalloc(l)
+        cdef array.array dst3 = aalloc(l)
 
-        assert len(fcolumn1) == l
+        self.eval(l,
+                &dst1.data.as_doubles[0],
+                &dst2.data.as_doubles[0],
+                &dst3.data.as_doubles[0],
+                &src1.get_f_values().data.as_doubles[0],
+                &src2.get_f_values().data.as_doubles[0],
+                )
 
-        cdef double[::1] dst1 = alloc(l)
-        cdef double[::1] dst2 = alloc(l)
-        cdef double[::1] dst3 = alloc(l)
-        self.eval(l, &dst1[0], &dst2[0], &dst3[0], src1, src2)
         names = self.make_names(sequence1, sequence2);
 
         return [
-                column.FColumn(names[0], dst1),
-                column.FColumn(names[1], dst2),
-                column.FColumn(names[2], dst3),
+                column.Column.from_float_array(names[0], dst1),
+                column.Column.from_float_array(names[1], dst2),
+                column.Column.from_float_array(names[2], dst3),
                 ]
 
 cdef class Functor3:
@@ -164,20 +174,20 @@ cdef class Functor3:
         return f"{repr(self)}, {column.get_column_name(col1)}, {column.get_column_name(col2)}, {column.get_column_name(col3)}"
 
     def __call__(self, rowcount, sequence1, sequence2, sequence3):
-        cdef column.FColumn fcolumn1 = column.as_fcolumn(sequence1)
-        cdef column.FColumn fcolumn2 = column.as_fcolumn(sequence2)
-        cdef column.FColumn fcolumn3 = column.as_fcolumn(sequence3)
-        cdef const double *src1 = &fcolumn1.values[0]
-        cdef const double *src2 = &fcolumn2.values[0]
-        cdef const double *src3 = &fcolumn3.values[0]
-        cdef unsigned l = len(fcolumn1)
+        cdef unsigned l = rowcount
+        cdef column.Column src1 = column.as_column(sequence1)
+        cdef column.Column src2 = column.as_column(sequence2)
+        cdef column.Column src3 = column.as_column(sequence3)
+        cdef array.array dst1 = aalloc(l)
 
-        assert len(fcolumn1) == l
+        self.eval(l,
+                &dst1.data.as_doubles[0],
+                &src1.get_f_values().data.as_doubles[0],
+                &src2.get_f_values().data.as_doubles[0],
+                &src3.get_f_values().data.as_doubles[0],
+                )
 
-        cdef double[::1] result = alloc(l)
-        self.eval(l, &result[0], src1, src2, src3)
-
-        return column.FColumn(self.make_name(sequence1, sequence2, sequence3), result)
+        return column.Column.from_float_array(self.make_name(sequence1, sequence2, sequence3), dst1)
 
 cdef class FunctorN:
     """
@@ -193,21 +203,21 @@ cdef class FunctorN:
         return f"{repr(self)}"
 
     def __call__(self, rowcount, *sequences):
-        cdef list seqs = [column.as_fcolumn(s) for s in sequences]
+        cdef list seqs = [column.as_column(s) for s in sequences]
         cdef unsigned m = len(seqs)
         cdef const double** v= <const double**>alloca(m*sizeof(double*))
 
         cdef unsigned i
         for i in range(m):
-            ci = <column.FColumn>seqs[i]
+            ci = <column.Column>seqs[i]
             assert len(ci) == rowcount
-            v[i] = &ci.values[0]
+            v[i] = &ci.get_f_values().data.as_doubles[0]
         cdef unsigned l = rowcount
-        cdef double[::1] result = alloc(l)
+        cdef array.array dst1 = aalloc(l)
 
-        self.eval(l, &result[0], m, v)
+        self.eval(l, &dst1.data.as_doubles[0], m, v)
 
-        return column.FColumn(self.make_name(sequences), result)
+        return column.Column.from_float_array(self.make_name(sequences), dst1)
 
 cdef class RowFunctor1(Functor1):
     """

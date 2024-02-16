@@ -20,11 +20,11 @@ class TestTable(unittest.TestCase):
         TO=100
         t = table.Table(TO-FROM)
 
-        t.add_column(table.Column("X", range(FROM, TO)))
+        t.add_column(column.Column.from_sequence("X", range(FROM, TO)))
 
         self.assertEqual(t.rows(), TO-FROM)
         self.assertEqual(t.columns(), 1)
-        self.assertSequenceEqual(t["X"], range(FROM, TO))
+        self.assertSequenceEqual(t["X"].py_values, range(FROM, TO))
 
     def test_add_column_from_value(self):
         LEN=99
@@ -35,7 +35,7 @@ class TestTable(unittest.TestCase):
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1)
-        self.assertSequenceEqual(t["X"], [VALUE]*LEN)
+        self.assertSequenceEqual(t["X"].py_values, [VALUE]*LEN)
 
     def test_add_column_from_function_zero_param(self):
         LEN=99
@@ -46,7 +46,7 @@ class TestTable(unittest.TestCase):
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 1)
-        self.assertSequenceEqual(t["X"], [VALUE]*LEN)
+        self.assertSequenceEqual(t["X"].py_values, [VALUE]*LEN)
 
     def test_add_column_from_function_one_param(self):
         LEN=99
@@ -58,7 +58,7 @@ class TestTable(unittest.TestCase):
 
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 2)
-        self.assertSequenceEqual(t["Y"], [x+1 for x in range(LEN)])
+        self.assertSequenceEqual(t["Y"].py_values, [x+1 for x in range(LEN)])
 
     def test_add_column_from_other_table(self):
         LEN=99
@@ -80,7 +80,7 @@ class TestTable(unittest.TestCase):
             B=expr.ramp(300),
             C=(algo.by_row(f), "A", "B"),
             ))
-        self.assertSequenceEqual(t["C"], [f(a,b) for a,b in zip(t["A"],t["B"])])
+        self.assertSequenceEqual(t["C"].py_values, [f(a,b) for a,b in zip(t["A"],t["B"])])
 
     def test_add_column_reject_duplicate(self):
         """ add_column() should reject duplicate names.
@@ -103,8 +103,8 @@ class TestTable(unittest.TestCase):
                 )
 
         self.assertEqual(t.columns(), 2)
-        self.assertSequenceEqual(t["X"], [*range(LEN)])
-        self.assertSequenceEqual(t["Y"], [2]*LEN)
+        self.assertSequenceEqual(t["X"].py_values, [*range(LEN)])
+        self.assertSequenceEqual(t["Y"].py_values, [2]*LEN)
 
     def test_add_columns_column(self):
         """
@@ -130,9 +130,9 @@ class TestTable(unittest.TestCase):
         A=list(range(10, 10+LEN))
 
         t = table.Table(LEN)
-        t.add_column(table.Column("A", A))
+        t.add_column(column.Column.from_sequence("A", A))
         t.add_column("B", (algo.naive_window(sum, 2), "A"))
-        self.assertSequenceEqual(t["B"], [None, 21, 23, 25, 27, 29, 31, 33, 35, 37])
+        self.assertSequenceEqual(t["B"].py_values, [None, 21, 23, 25, 27, 29, 31, 33, 35, 37])
 
     def test_get_column(self):
         LEN=5
@@ -141,14 +141,14 @@ class TestTable(unittest.TestCase):
         C=(3,)*LEN
         t = table.Table(LEN)
 
-        t.add_column(table.Column("A", A))
-        t.add_column(table.Column("B", B))
-        t.add_column(table.Column("C", C))
+        t.add_column(column.Column.from_sequence("A", A))
+        t.add_column(column.Column.from_sequence("B", B))
+        t.add_column(column.Column.from_sequence("C", C))
 
         # Column 0 is used for rows numbering
-        self.assertEqual(t[0].values, A)
-        self.assertEqual(t[1].values, B)
-        self.assertEqual(t[2].values, C)
+        self.assertEqual(t[0].py_values, A)
+        self.assertEqual(t[1].py_values, B)
+        self.assertEqual(t[2].py_values, C)
         self.assertEqual(t[0].name, "A")
         self.assertEqual(t[1].name, "B")
         self.assertEqual(t[2].name, "C")
@@ -161,10 +161,10 @@ class TestTable(unittest.TestCase):
         t = table.Table(99)
 
         with self.assertRaises(table.InvalidError):
-            t.add_column(table.Column("X", [0.0]*100))
+            t.add_column(column.Column.from_sequence("X", [0.0]*100))
 
         with self.assertRaises(table.InvalidError):
-            t.add_column(table.Column("X", [0.0]*98))
+            t.add_column(column.Column.from_sequence("X", [0.0]*98))
 
     def test_rename(self):
         t = table.Table(10)
@@ -258,9 +258,9 @@ class TestTable(unittest.TestCase):
         self.assertIsNot(t2, t1)
         self.assertEqual(t2.columns(), t1.columns())
         self.assertEqual(t2.rows(), t1.rows()-LIMIT)
-        self.assertSequenceEqual(t2["X"].values, [*range(LIMIT, LEN)])
-        self.assertSequenceEqual(t2["Y"].values, [*range(LIMIT, LEN)])
-        self.assertSequenceEqual(t2["Z"].values, [*range(LIMIT, LEN)])
+        self.assertSequenceEqual(t2["X"].py_values, [*range(LIMIT, LEN)])
+        self.assertSequenceEqual(t2["Y"].py_values, [*range(LIMIT, LEN)])
+        self.assertSequenceEqual(t2["Z"].py_values, [*range(LIMIT, LEN)])
 
     def test_sort(self):
         LEN=10000
@@ -273,7 +273,7 @@ class TestTable(unittest.TestCase):
         self.assertIsNot(t2, t1)
         self.assertEqual(t2.columns(), t1.columns())
         self.assertEqual(t2.rows(), t1.rows())
-        self.assertSequenceEqual(t2["Y"].values, [*range(1, LEN+1, 1)])
+        self.assertSequenceEqual(t2["Y"].py_values, [*range(1, LEN+1, 1)])
 
     def test_group(self):
         LEN=40
@@ -292,10 +292,10 @@ class TestTable(unittest.TestCase):
             ))
         self.assertIsNot(t2, t1)
         self.assertEqual(t2.columns(), t1.columns())
-        self.assertSequenceEqual(t2["X"], [*range(LEN//5)])
-        self.assertSequenceEqual(t2["Y1"], [x*5 for x in range(LEN//5)])
-        self.assertSequenceEqual(t2["Y2"], [x*5+4 for x in range(LEN//5)])
-        self.assertSequenceEqual(t2["Y3"], [x*5*5+10 for x in range(LEN//5)])
+        self.assertSequenceEqual(t2["X"].py_values, [*range(LEN//5)])
+        self.assertSequenceEqual(t2["Y1"].py_values, [x*5 for x in range(LEN//5)])
+        self.assertSequenceEqual(t2["Y2"].py_values, [x*5+4 for x in range(LEN//5)])
+        self.assertSequenceEqual(t2["Y3"].py_values, [x*5*5+10 for x in range(LEN//5)])
 
 
 # ======================================================================
@@ -326,8 +326,8 @@ class TestTableExpressionEvaluation(unittest.TestCase):
         Constant (numeric) columns
         """
         # Individual column selection
-        self.assertEqual(self._table.reval(1), [ table.C([1]*self._table.rows()) ])
-        self.assertEqual(self._table.reval(2.50), [ table.C([2.50]*self._table.rows()) ])
+        self.assertEqual(self._table.reval(1), [ column.Column.from_sequence("", [1]*self._table.rows()) ])
+        self.assertEqual(self._table.reval(2.50), [ column.Column.from_sequence("", [2.50]*self._table.rows()) ])
 
     def test_reval_column_name(self):
         """
@@ -375,19 +375,20 @@ class TestTableExpressionEvaluation(unittest.TestCase):
         expected = [*g()]
         [actual] = self._table.reval(expr.iterable(g()))
 
-        self.assertSequenceEqual(actual, expected)
+        self.assertSequenceEqual(actual.py_values, expected)
 
     def test_reval_dictionary(self):
         """
         Dictionary
         """
         NAME="Test"
-        expected = table.Column(NAME, [ a+b for a,b in zip(self._A, self._B)])
+        expected = column.Column.from_sequence(NAME, [ a+b for a,b in zip(self._A, self._B)])
         fct = lambda rowcount, col_a, col_b : [ a+b for a,b in zip(col_a, col_b) ]
 
         actual, = self._table.reval({"name": NAME, "expr": (expr.apply(fct), "A", "B")})
 
-        self.assertEqual(actual, expected)
+        self.assertEqual(actual.py_values, expected.py_values)
+        self.assertEqual(actual.name, NAME)
 
 # ======================================================================
 # Row iterator
@@ -436,41 +437,52 @@ class TestTableRowIterator(unittest.TestCase):
 # Table join
 # ======================================================================
 class TestTableJoin(unittest.TestCase):
-    def setUp(self):
-        rng = expr.ramp
+    def build_tables(self, *args):
+        LEN=10
+        def rng(start):
+            return list(range(start, start+LEN))
 
-        tableA = self._tableA = table.Table(10)
-        self._tableA.add_columns(
-            ("A", rng(100)),
-            ("B", rng(200)),
-            ("C", rng(300)),
-        )
-        tableB = self._tableB = table.Table(10)
-        self._tableB.add_columns(
-            ("U", rng(100)),
-            ("V", rng(600)),
-            ("W", rng(700)),
+        data = dict(
+            A=rng(100),
+            B=rng(200),
+            C=rng(300),
+            U=rng(100),
+            V=rng(600),
+            W=rng(700),
         )
 
-        for col in (*tableA, *tableB):
-            # Replace tuple by list so we can hack the values for testing purposes
-            col.values = list(col.values)
+        while args:
+            col, idx, val, *args = args
+            data[col][idx] = val
 
-        self._cols = dict(
-                [(name, tableA[name]) for name in tableA.names()] +
-                [(name, tableB[name]) for name in tableB.names()]
-                )
+        cols = { name: column.Column.from_sequence(name, data[name]) for name in "ABCUVW" }
+        tableA = table.Table(10)
+        tableA.add_columns(
+            ("A", cols["A"]),
+            ("B", cols["B"]),
+            ("C", cols["C"]),
+        )
+        tableB = table.Table(10)
+        tableB.add_columns(
+            ("U", cols["U"]),
+            ("V", cols["V"]),
+            ("W", cols["W"]),
+        )
+
+        return cols, tableA, tableB
 
     def test_join_0(self):
         """
         Both the inner- and outer-join should produce the same result when key columns match.
         """
-        expected = list(tuple(self._cols[k].values) for k in "AUBCVW")
+        cols, tableA, tableB = self.build_tables()
+
+        expected = [ cols[k].py_values for k in "AUBCVW" ]
         with self.subTest(join="inner join"):
-            t = table.join(self._tableA, self._tableB, "A", "U")
+            t = table.join(tableA, tableB, "A", "U")
             self.assertSequenceEqual(t.data(), expected)
         with self.subTest(join="outer join"):
-            t = table.outer_join(self._tableA, self._tableB, "A", "U")
+            t = table.outer_join(tableA, tableB, "A", "U")
             self.assertSequenceEqual(t.data(), expected)
 
     def test_join_1(self):
@@ -478,8 +490,10 @@ class TestTableJoin(unittest.TestCase):
         When a key is missing in only one table, the inner join should discard the row
         but the outer join should keep it.
         """
-        self._tableA["A"].values[2] = None
-        self._tableB["U"].values[5] = None
+        cols, tableA, tableB = self.build_tables(
+                "A", 2, None,
+                "U", 5, None,
+                )
 
         with self.subTest(join="inner join"):
             expected = [
@@ -492,7 +506,7 @@ class TestTableJoin(unittest.TestCase):
                 (108,  108,  208,  308,  608,  708),
                 (109,  109,  209,  309,  609,  709)
              ]
-            t = table.join(self._tableA, self._tableB, "A", "U")
+            t = table.join(tableA, tableB, "A", "U")
             self.assertSequenceEqual([*t.row_iterator()], expected)
         with self.subTest(join="outer join"):
             expected = [
@@ -507,7 +521,7 @@ class TestTableJoin(unittest.TestCase):
                 (108,  108,  208,  308,  608,  708),
                 (109,  109,  209,  309,  609,  709)
              ]
-            t = table.outer_join(self._tableA, self._tableB, "A", "U")
+            t = table.outer_join(tableA, tableB, "A", "U")
             self.assertSequenceEqual([*t.row_iterator()], expected)
         with self.subTest(join="outer join w/propagate"):
             expected = [
@@ -522,7 +536,7 @@ class TestTableJoin(unittest.TestCase):
                 (108,  108,  208,  308,  608,  708),
                 (109,  109,  209,  309,  609,  709)
              ]
-            t = table.outer_join(self._tableA, self._tableB, "A", "U", propagate=True)
+            t = table.outer_join(tableA, tableB, "A", "U", propagate=True)
             self.assertSequenceEqual([*t.row_iterator()], expected)
 
     def test_join_2(self):
@@ -530,9 +544,14 @@ class TestTableJoin(unittest.TestCase):
         When a key is None in both tables, it should be discarded.
         """
         self.maxDiff = None
-        self._tableA["A"].values[4] = None
-        self._tableA["A"].values[7:9] = [None]*2
-        self._tableB["U"].values[3:6] = [None]*3
+        cols, tableA, tableB = self.build_tables(
+                "A", 4, None,
+                "A", 7, None,
+                "A", 8, None,
+                "U", 3, None,
+                "U", 4, None,
+                "U", 5, None,
+                )
 
         with self.subTest(join="inner join"):
             expected = [
@@ -542,7 +561,7 @@ class TestTableJoin(unittest.TestCase):
                 (106,  106,  206,  306,  606,  706),
                 (109,  109,  209,  309,  609,  709)
              ]
-            t = table.join(self._tableA, self._tableB, "A", "U")
+            t = table.join(tableA, tableB, "A", "U")
             self.assertSequenceEqual([*t.row_iterator()], expected)
         with self.subTest(join="outer join"):
             expected = [
@@ -556,7 +575,7 @@ class TestTableJoin(unittest.TestCase):
                 (None, 108, None, None,  608,  708),
                 (109,  109,  209,  309,  609,  709)
              ]
-            t = table.outer_join(self._tableA, self._tableB, "A", "U")
+            t = table.outer_join(tableA, tableB, "A", "U")
             self.assertSequenceEqual([*t.row_iterator()], expected)
         with self.subTest(join="outer join w/propagate"):
             expected = [
@@ -570,7 +589,7 @@ class TestTableJoin(unittest.TestCase):
                 (None, 108,  206,  306,  608,  708),
                 (109,  109,  209,  309,  609,  709)
              ]
-            t = table.outer_join(self._tableA, self._tableB, "A", "U", propagate=True)
+            t = table.outer_join(tableA, tableB, "A", "U", propagate=True)
             self.assertSequenceEqual([*t.row_iterator()], expected)
 
     def test_join_at_end(self):
@@ -578,9 +597,17 @@ class TestTableJoin(unittest.TestCase):
         Check that joining disjoint tables produces the expected result.
         """
         self.maxDiff = None
+        cols, tableA, tableB = self.build_tables(
+                "A", 4, None,
+                "A", 7, None,
+                "A", 8, None,
+                "U", 3, None,
+                "U", 4, None,
+                "U", 5, None,
+                )
 
-        ta = self._tableA.select("B", "C")
-        tb = self._tableB.select("V", "W")
+        ta = tableA.select("B", "C")
+        tb = tableB.select("V", "W")
 
         with self.subTest(join="inner join"):
             expected = [
@@ -752,24 +779,32 @@ class TestTableJoin(unittest.TestCase):
         When the source tables are named, the column in the result table
         are renamed accordingly.
         """
-        self._tableA._name="TA"
-        self._tableB._name="TB"
+        cols, tableA, tableB = self.build_tables(
+                "A", 4, None,
+                "A", 7, None,
+                "A", 8, None,
+                "U", 3, None,
+                "U", 4, None,
+                "U", 5, None,
+                )
+        tableA._name="TA"
+        tableB._name="TB"
 
         for fct in (table.join, table.outer_join):
             with self.subTest(join="join no rename", fct=fct):
                 expected = ["A","U","B","C","V","W"]
-                t = fct(self._tableA, self._tableB, "A", "U", rename=False)
+                t = fct(tableA, tableB, "A", "U", rename=False)
                 self.assertSequenceEqual(t.names(), expected)
 
             with self.subTest(join="join w/rename", fct=fct):
                 expected = ["TA:A","TB:U","TA:B","TA:C","TB:V","TB:W"]
-                t = fct(self._tableA, self._tableB, "A", "U")
+                t = fct(tableA, tableB, "A", "U")
                 self.assertSequenceEqual(t.names(), expected)
 
-            tableC = self._tableA.copy(name="TC")
+            tableC = tableA.copy(name="TC")
             with self.subTest(join="join w/rename using common column", fct=fct):
                 expected = ["A","TA:B","TA:C","TC:B","TC:C"]
-                t = fct(self._tableA, tableC, "A")
+                t = fct(tableA, tableC, "A")
                 self.assertSequenceEqual(t.names(), expected)
 
 # ======================================================================
@@ -788,7 +823,7 @@ class TestFromDict(unittest.TestCase):
         self.assertEqual(t.rows(), LEN)
         self.assertEqual(t.columns(), 2)
         [S] = t.reval(algo.by_row(lambda a, b: a+b), "A", "B")
-        self.assertSequenceEqual(S, [a+1.0 for a in A])
+        self.assertSequenceEqual(S.py_values, [a+1.0 for a in A])
 
 class TestAsTable(unittest.TestCase):
     def test_from_something(self):

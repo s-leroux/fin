@@ -1,10 +1,12 @@
 import unittest
+from testing.assertions import ExtraTests
 
 import random
 from fin.seq import algo
 
+from fin.seq import column
 ROUNDING=8
-def eval(fct, *cols):
+def eval(self, fct, *cols):
     try:
         nrows = len(cols[0])
     except IndexError:
@@ -12,18 +14,20 @@ def eval(fct, *cols):
         nrows = 10
 
     result = fct(nrows, *cols)
+    self.assertIsInstance(result, column.Column)
+
     return [round(x, ROUNDING) if type(x) is float else x for x in result]
 
 class TestWindow(unittest.TestCase):
     def test_one_column(self):
-        actual = eval(
+        actual = eval(self,
             algo.naive_window(sum, 2),
             list(range(10, 20)),
         )
 
         self.assertSequenceEqual(actual, [ None, 21, 23, 25, 27, 29, 31, 33, 35, 37 ])
 
-class TestByRow(unittest.TestCase):
+class TestByRow(unittest.TestCase, ExtraTests):
     def test_by_row(self):
         LEN=10
         A=list(range(100,100+LEN))
@@ -33,12 +37,12 @@ class TestByRow(unittest.TestCase):
         fct = algo.by_row(lambda a,b: a+b)
         actual = fct(LEN, A, B)
 
-        self.assertSequenceEqual(actual, list(range(300, 300+2*LEN, 2)))
+        self.assertIterableEqual(actual, list(range(300, 300+2*LEN, 2)))
 
 class Test_Sum(unittest.TestCase):
     def test__sum(self):
         from fin.seq.algox import _Sum
-        actual = eval(
+        actual = eval(self,
             _Sum(4),
             list(range(10, 20)),
         )
@@ -47,7 +51,7 @@ class Test_Sum(unittest.TestCase):
 
 class TestMul(unittest.TestCase):
     def test_mul(self):
-        actual = eval(
+        actual = eval(self,
             algo.mul(),
             [*range(0,10)],
             [*range(10,20)],
@@ -69,14 +73,14 @@ class TestMul(unittest.TestCase):
 
     def test_mul_one_columns(self):
         lst = [*range(0,10)]
-        actual = eval(
+        actual = eval(self,
             algo.mul(),
             lst,
         )
         self.assertSequenceEqual(actual, lst)
 
     def test_mul_zero_columns(self):
-        actual = eval(
+        actual = eval(self,
             algo.mul(),
         )
         self.assertSequenceEqual(actual, [1.0]*10)
@@ -87,7 +91,7 @@ class TestDiv(unittest.TestCase):
         a = [*range(0,10)]
         b = [*range(10,20)]
         c = [*range(100,110)]
-        actual = eval(
+        actual = eval(self,
             algo.div(),
             [x*y*z for x,y,z in zip(a,b,c)],
             b,
@@ -98,21 +102,21 @@ class TestDiv(unittest.TestCase):
 
     def test_div_one_columns(self):
         lst = [*range(0,10)]
-        actual = eval(
+        actual = eval(self,
             algo.div(),
             lst,
         )
         self.assertSequenceEqual(actual, [float("inf"), *(round(1/x,8) for x in lst[1:])])
 
     def test_div_zero_columns(self):
-        actual = eval(
+        actual = eval(self,
             algo.div(),
         )
         self.assertSequenceEqual(actual, [None]*10)
 
 class TestSub(unittest.TestCase):
     def test_sub(self):
-        actual = eval(
+        actual = eval(self,
             algo.sub(),
             [*range(100,110)],
             [*range(10,20)],
@@ -123,7 +127,7 @@ class TestSub(unittest.TestCase):
 
     def test_sub_one_columns(self):
         lst = [*range(0,10)]
-        actual = eval(
+        actual = eval(self,
             algo.sub(),
             lst,
         )
@@ -131,7 +135,7 @@ class TestSub(unittest.TestCase):
 
 
     def test_sub_zero_columns(self):
-        actual = eval(
+        actual = eval(self,
             algo.sub(),
         )
         self.assertSequenceEqual(actual, [0.0]*10)
@@ -139,7 +143,7 @@ class TestSub(unittest.TestCase):
 
 class TestSub(unittest.TestCase):
     def test_sub(self):
-        actual = eval(
+        actual = eval(self,
             algo.sub(),
             [*range(100,110)],
             [*range(10,20)],
@@ -150,7 +154,7 @@ class TestSub(unittest.TestCase):
 
     def test_sub_one_columns(self):
         lst = [*range(0,10)]
-        actual = eval(
+        actual = eval(self,
             algo.sub(),
             lst,
         )
@@ -158,14 +162,14 @@ class TestSub(unittest.TestCase):
 
 
     def test_sub_zero_columns(self):
-        actual = eval(
+        actual = eval(self,
             algo.sub(),
         )
         self.assertSequenceEqual(actual, [0.0]*10)
 
 class TestSimpleMovingAverage(unittest.TestCase):
     def test_sma(self):
-        actual = eval(
+        actual = eval(self,
             algo.sma(2),
             list(range(10, 20)),
         )
@@ -426,7 +430,7 @@ class TestIndicators(unittest.TestCase):
 
 class TestStandardDeviation(unittest.TestCase):
     def test_standard_deviation(self):
-        actual = eval(
+        actual = eval(self,
             algo.standard_deviation(3),
             [x**2 for x in range(10, 20)],
         )
@@ -445,7 +449,7 @@ class TestStandardDeviation(unittest.TestCase):
         ])
 
     def test_variance(self):
-        actual = eval(
+        actual = eval(self,
             algo.variance(5),
             [x**2 for x in range(10, 20)],
         )
@@ -468,7 +472,7 @@ class TestStandardDeviation(unittest.TestCase):
         data[5] = None
         data[6] = None
 
-        actual = eval(
+        actual = eval(self,
             algo.standard_deviation(3),
             data,
         )
@@ -494,7 +498,7 @@ class TestCorrelation(unittest.TestCase):
         EXPECTED = [None]*5 + [1.0]
         LEN = len(EXPECTED)
         INPUT = random.sample([*range(LEN)], LEN)
-        actual = eval(
+        actual = eval(self,
             algo.correlation(LEN),
             INPUT,
             INPUT
@@ -509,7 +513,7 @@ class TestCorrelation(unittest.TestCase):
         X = [ 4.0, 2.0, 3.0, 1.0 ]
         Y = [x*-10 for x in X]
         EXPECTED = [None, -1.0, -1.0, -1.0]
-        actual = eval(
+        actual = eval(self,
             algo.correlation(2),
             X,
             Y
@@ -546,13 +550,13 @@ class TestVolatility(unittest.TestCase):
         WINDOW=len(INPUT)-1
         OUTPUT = [*[None]*WINDOW, 0.19302342]
 
-        actual = eval(algo.volatility(WINDOW), INPUT)
+        actual = eval(self, algo.volatility(WINDOW), INPUT)
 
         self.assertSequenceEqual(actual, OUTPUT)
 
 class TestBestFit(unittest.TestCase):
     def test_best_fit(self):
-        actual = eval(
+        actual = eval(self,
                 algo.best_fit,
                 [*range(5)],
                 [
@@ -579,7 +583,7 @@ class TestBeta(unittest.TestCase):
         COL_X = COL_Y = [*range(LEN)]
         EXPECTED = [None]*(WINDOW-1) + [1.0]*(LEN-WINDOW+1)
 
-        actual = eval(algo.beta(WINDOW), COL_X, COL_Y)
+        actual = eval(self, algo.beta(WINDOW), COL_X, COL_Y)
 
         self.assertSequenceEqual(actual, EXPECTED)
 
@@ -590,7 +594,7 @@ class TestBeta(unittest.TestCase):
         COL_Y = [x*10 for x in COL_X]
         EXPECTED = [None]*(WINDOW-1) + [10.0]*(LEN-WINDOW+1)
 
-        actual = eval(algo.beta(WINDOW), COL_X, COL_Y)
+        actual = eval(self, algo.beta(WINDOW), COL_X, COL_Y)
 
         self.assertSequenceEqual(actual, EXPECTED)
 
@@ -601,7 +605,7 @@ class TestBeta(unittest.TestCase):
         COL_Y = [-x for x in COL_X]
         EXPECTED = [None]*(WINDOW-1) + [-1.0]*(LEN-WINDOW+1)
 
-        actual = eval(algo.beta(WINDOW), COL_X, COL_Y)
+        actual = eval(self, algo.beta(WINDOW), COL_X, COL_Y)
 
         self.assertSequenceEqual(actual, EXPECTED)
 
@@ -610,7 +614,7 @@ class TestMapChange(unittest.TestCase):
         INPUT=list(range(1,10))
         OUTPUT = [None, *range(3, 19, 2)]
 
-        actual = eval(algo.map_change(lambda a,b: a+b), INPUT)
+        actual = eval(self, algo.map_change(lambda a,b: a+b), INPUT)
 
         self.assertSequenceEqual(actual, OUTPUT)
 
@@ -621,7 +625,7 @@ class TestMapN(unittest.TestCase):
         B = list(range(1, LEN+1))
         F=lambda a,b: a+b
         EXPECTED = list(range(1, 2*LEN+1, 2))
-        actual = eval(algo.mapn(F), A, B)
+        actual = eval(self, algo.mapn(F), A, B)
 
         self.assertSequenceEqual(actual, EXPECTED)
 
@@ -635,7 +639,7 @@ class TestLine(unittest.TestCase):
             for b in range(LEN):
                 if a != b:
                     with self.subTest(locals=locals()):
-                        actual = eval(algo.line(a,b), X, Y)
+                        actual = eval(self, algo.line(a,b), X, Y)
                         self.assertSequenceEqual(actual, EXPECTED)
 
 # ======================================================================
@@ -649,14 +653,14 @@ class TestShift(unittest.TestCase):
     def test_shift_neg(self):
         DELTA=3
         EXPECTED = [None]*DELTA + self._list[:-DELTA]
-        actual = eval(algo.shift(-DELTA), self._list)
+        actual = eval(self, algo.shift(-DELTA), self._list)
 
         self.assertSequenceEqual(actual, EXPECTED)
 
     def test_shift_pos(self):
         DELTA=3
         EXPECTED = self._list[DELTA:] + [None]*DELTA
-        actual = eval(algo.shift(DELTA), self._list)
+        actual = eval(self, algo.shift(DELTA), self._list)
 
         self.assertSequenceEqual(actual, EXPECTED)
 
@@ -664,14 +668,14 @@ class TestMax(unittest.TestCase):
     def test_max(self):
         l = [1, 3, 3, 2, 4, 5, 3, 1, 1, 1, 1]
         expected = [None, None, 3, 3, 4, 5, 5, 5, 3, 1, 1]
-        actual = eval(algo.max(3), l)
+        actual = eval(self, algo.max(3), l)
 
         self.assertSequenceEqual(actual, expected)
 
     def test_max_none(self):
         l = [1, 3, 3, 2, 4, 5, None, 1, 1, 1, 1]
         expected = [None, None, 3, 3, 4, 5, None, None, None, 1, 1]
-        actual = eval(algo.max(3), l)
+        actual = eval(self, algo.max(3), l)
 
         self.assertSequenceEqual(actual, expected)
 
@@ -679,14 +683,14 @@ class TestMin(unittest.TestCase):
     def test_min(self):
         l = [1, 3, 3, 2, 4, 5, 3, 1, 1, 1, 1]
         expected = [None, None, 1, 2, 2, 2, 3, 1, 1, 1, 1]
-        actual = eval(algo.min(3), l)
+        actual = eval(self, algo.min(3), l)
 
         self.assertSequenceEqual(actual, expected)
 
     def test_min(self):
         l = [1, 3, 3, 2, 4, 5, None, 1, 1, 1, 1]
         expected = [None, None, 1, 2, 2, 2, None, None, None, 1, 1]
-        actual = eval(algo.min(3), l)
+        actual = eval(self, algo.min(3), l)
 
         self.assertSequenceEqual(actual, expected)
 
@@ -697,7 +701,7 @@ class TestRatio(unittest.TestCase):
         colB = list(range(1,2*L+2))
 
         expected = [round(a_i/b_i, ROUNDING) for a_i, b_i in zip(colA, colB)]
-        actual = eval(algo.ratio, colA, colB)
+        actual = eval(self, algo.ratio, colA, colB)
 
         self.assertSequenceEqual(actual, expected)
 
@@ -707,7 +711,7 @@ class TestRatio(unittest.TestCase):
         colB = [0.0]*(2*L+1)
 
         expected = [float("-inf")]*L + [None] + [float("inf")]*L
-        actual = eval(algo.ratio, colA, colB)
+        actual = eval(self, algo.ratio, colA, colB)
 
         self.assertSequenceEqual(actual, expected)
 
@@ -717,7 +721,7 @@ class TestDelta(unittest.TestCase):
         col = [*range(LEN)]
 
         expected = [None] + [1]*(LEN-1)
-        actual = eval(algo.delta(), col)
+        actual = eval(self, algo.delta(), col)
 
         self.assertSequenceEqual(actual, expected)
 
@@ -730,7 +734,7 @@ class TestDelta(unittest.TestCase):
         expected = [None] + [1]*(LEN-1)
         expected[IDX] = None
         expected[IDX+1] = None
-        actual = eval(algo.delta(), col)
+        actual = eval(self, algo.delta(), col)
 
         self.assertSequenceEqual(actual, expected)
 
@@ -744,8 +748,8 @@ class TestMap(unittest.TestCase):
         col = [*range(LEN)]
         fct = lambda x : x*2
 
-        map_result = eval(algo.map(fct), col)
-        mapn_result = eval(algo.mapn(fct), col)
+        map_result = eval(self, algo.map(fct), col)
+        mapn_result = eval(self, algo.mapn(fct), col)
 
         self.assertSequenceEqual(map_result, mapn_result)
 
