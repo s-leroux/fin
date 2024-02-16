@@ -667,6 +667,11 @@ cdef class band(Functor2_3):
     """
     Compute a band arround a middle value.
     """
+    cdef double _width
+
+    def __init__(self, width):
+        self._width = width
+
     cdef make_names(self, col1, col2):
         basename = col1.name
         return [
@@ -678,35 +683,36 @@ cdef class band(Functor2_3):
     cdef void eval(self, unsigned l,
             double* dst1, double* dst2, double* dst3,
             const double* src1, const double* src2):
+        cdef double width = self._width
         cdef unsigned i
         for i in range(l):
-            dst1[i] = src1[i]-src2[i]
+            dst1[i] = src1[i]-width*src2[i]
             dst2[i] = src1[i]
-            dst3[i] = src1[i]+src2[i]
+            dst3[i] = src1[i]+width*src2[i]
 
 cdef class bband(Functor1_3):
     """
     Compute the Bollinger's band.
-
-    *Dummy implementation*
     """
     cdef sma _sma
     cdef standard_deviation _stdev
     cdef band _band
-    cdef unsigned n
+    cdef unsigned _n
 
-    def __init__(self, n):
+    def __init__(self, n, w=2):
         self._sma = sma(n)
         self._stdev = standard_deviation(n)
-        self._band = band()
-        self.n = n
+        self._band = band(2)
+        self._n = n
 
     cdef make_names(self, col1):
+        n = self._n
+        width = self._band._width
         basename = col1.name
         return [
-                f"{basename}:B",
-                f"{basename}:M",
-                f"{basename}:A",
+                f"BBANDB({n},{width}) {basename}",
+                f"{self._sma.make_name(col1)}",
+                f"BBANDT({n},{width}) {basename}",
                 ]
 
     cdef void eval(self, unsigned l,
