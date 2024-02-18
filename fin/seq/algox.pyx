@@ -749,7 +749,10 @@ cdef class bband(Functor1_3):
 
     def __init__(self, n, w=2):
         self._sma = sma(n)
-        self._stdev = stdev.s(n)
+        self._stdev = stdev.p(n)
+        # Above:
+        # in "Bollinger on Bollinger's Bands" p52 John Bollinger uses the population 
+        # formula for standard deviation.
         self._band = band(2)
         self._n = n
 
