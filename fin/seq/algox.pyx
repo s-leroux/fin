@@ -388,23 +388,25 @@ ratio = Ratio()
 # ======================================================================
 # Math and stats
 # ======================================================================
-cdef class variance(Functor1):
+cdef class _var(Functor1):
     """
     Compute the Variance over a n-period window.
 
     This is an implementation of the naive algorithm which is not numerically
     stable in the general case, but this should be sufficient for financial data.
 
-    We use the Bessel's correction since we use sampled data.
+    This general implmentation allows for a correction parameter.
     """
     cdef double a
     cdef double b
     cdef unsigned n
+    cdef double correction
 
-    def __init__(self, unsigned n):
-        self.a = 1.0/(n-1.0)
+    def __init__(self, unsigned n, double correction):
+        self.a = 1.0/(n+correction)
         self.b = self.a/n
         self.n = n
+        self.correction = correction
 
     cdef make_name(self, col):
         return f"{repr(self)}, {column.get_column_name(col)}"
@@ -452,6 +454,15 @@ cdef class variance(Functor1):
                 sigma_ui2 -= v*v
             else:
                 nones -= 1
+
+cdef class variance(_var):
+    """
+    Unbiased sample variance.
+
+    We use the Bessel's correction for sampled data.
+    """
+    def __init__(self, unsigned n):
+        super().__init__(n, -1)
 
 cdef class standard_deviation(Functor1):
     """
