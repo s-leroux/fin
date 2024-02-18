@@ -429,9 +429,9 @@ class TestIndicators(unittest.TestCase):
                 self.assertSequenceEqual(actual, expected)
 
 class TestStandardDeviation(unittest.TestCase):
-    def test_standard_deviation(self):
+    def test_stdev_s(self):
         actual = eval(self,
-            algo.standard_deviation(3),
+            algo.stdev.s(3),
             [x**2 for x in range(10, 20)],
         )
 
@@ -450,7 +450,7 @@ class TestStandardDeviation(unittest.TestCase):
 
     def test_variance(self):
         actual = eval(self,
-            algo.variance(5),
+            algo.var.s(5),
             [x**2 for x in range(10, 20)],
         )
 
@@ -473,7 +473,7 @@ class TestStandardDeviation(unittest.TestCase):
         data[6] = None
 
         actual = eval(self,
-            algo.standard_deviation(3),
+            algo.stdev.s(3),
             data,
         )
 

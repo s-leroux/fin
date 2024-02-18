@@ -146,7 +146,7 @@ def volatility(n, tau=1/252):
             (corresponding to the number of trading days in one month)
         tau: inverse of the number of periods in one year
     """
-    stddev = standard_deviation(n)
+    stddev = stdev.s(n)
     log = math.log
     k = math.sqrt(1/tau)
     vol = lambda stddev : stddev*k
@@ -165,7 +165,7 @@ def basic_sharpe_ratio(n):
     """
     Compute the Sharpe Ratio ignoring risk free return over a n-period window.
     """
-    stddev = standard_deviation(n)
+    stddev = stdev.s(n)
 
     def _basic_sharpe_ratio(rowcount, values):
         s = iter(stddev(rowcount, values))

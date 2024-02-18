@@ -388,7 +388,7 @@ ratio = Ratio()
 # ======================================================================
 # Math and stats
 # ======================================================================
-cdef class _var(Functor1):
+cdef class var(Functor1):
     """
     Compute the Variance over a n-period window.
 
@@ -402,11 +402,34 @@ cdef class _var(Functor1):
     cdef unsigned n
     cdef double correction
 
-    def __init__(self, unsigned n, double correction):
+    def __init__(self, *args, **wargs):
+        raise NotImplementedError("Use a factory method, not a constructor")
+
+    cdef init(self, unsigned n, double correction):
         self.a = 1.0/(n+correction)
         self.b = self.a/n
         self.n = n
         self.correction = correction
+
+    @staticmethod
+    def s(unsigned n):
+        """
+        Instanciate a functor to compute the unbiased sample variance.
+        """
+        res = var.__new__(var)
+        var.init(res, n, -1)
+
+        return res
+
+    @staticmethod
+    def p(unsigned n):
+        """
+        Instanciate a functor to compute the population variance.
+        """
+        res = var.__new__(var)
+        var.init(res, n, -1)
+
+        return res
 
     cdef make_name(self, col):
         return f"{repr(self)}, {column.get_column_name(col)}"
@@ -455,26 +478,40 @@ cdef class _var(Functor1):
             else:
                 nones -= 1
 
-cdef class variance(_var):
-    """
-    Unbiased sample variance.
-
-    We use the Bessel's correction for sampled data.
-    """
-    def __init__(self, unsigned n):
-        super().__init__(n, -1)
-
-cdef class standard_deviation(Functor1):
+cdef class stdev(Functor1):
     """
     Compute the Standard Deviation over a n-period window.
 
     The standard deviation is defined as the square root of the variance
     as implemented here.
     """
-    cdef variance delegate
+    cdef var delegate
 
-    def __init__(self, unsigned n):
-        self.delegate = variance(n)
+    def __init__(self, *args, **wargs):
+        raise NotImplementedError("Use a factory method, not a constructor")
+
+    cdef init(self, unsigned n, var v):
+        self.delegate = v
+
+    @staticmethod
+    def s(unsigned n):
+        """
+        Instanciate a functor to compute the unbiased sample standard deviation.
+        """
+        cdef stdev res = stdev.__new__(stdev)
+        res.init(n, var.s(n))
+
+        return res
+
+    @staticmethod
+    def p(unsigned n):
+        """
+        Instanciate a functor to compute the population standard deviation.
+        """
+        cdef stdev res = stdev.__new__(stdev)
+        res.init(n, var.p(n))
+
+        return res
 
     cdef make_name(self, col):
         return f"STDDEV({self.delegate.n}), {column.get_column_name(col)}"
@@ -706,13 +743,13 @@ cdef class bband(Functor1_3):
     Compute the Bollinger's band.
     """
     cdef sma _sma
-    cdef standard_deviation _stdev
+    cdef stdev _stdev
     cdef band _band
     cdef unsigned _n
 
     def __init__(self, n, w=2):
         self._sma = sma(n)
-        self._stdev = standard_deviation(n)
+        self._stdev = stdev.s(n)
         self._band = band(2)
         self._n = n
 
