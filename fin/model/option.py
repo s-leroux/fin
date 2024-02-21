@@ -4,7 +4,7 @@ import math
 import fin.math
 
 
-def call(k, t, s_0, sigma_0, r_0, c_0, *, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
+def call(k, t, s_0, sigma_0, r_0, f_0, *, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
     """
     Model function using the Black-Scholes formula to price call options.
 
@@ -14,7 +14,7 @@ def call(k, t, s_0, sigma_0, r_0, c_0, *, sqrt=math.sqrt, log=math.log, exp=math
     - s_0: Underlying asset price on the valuation date
     - sigma_0: Underlying asset volatility on the valuation date
     - r_0: Continuously compounded risk-free interest rate on the valuation date
-    - c_0: Long call value
+    - f_0: Long call value
     """
     v = sigma_0*sqrt(t)
     d1 = (log(s_0/k)+(r_0+sigma_0*sigma_0/2)*t)
@@ -24,9 +24,9 @@ def call(k, t, s_0, sigma_0, r_0, c_0, *, sqrt=math.sqrt, log=math.log, exp=math
         d1 *= float("inf")
     d2 = d1 - v
 
-    return c_0-(s_0*cdf(d1)-k*exp(-r_0*t)*cdf(d2))
+    return f_0-(s_0*cdf(d1)-k*exp(-r_0*t)*cdf(d2))
 
-def put(k, t, s_0, sigma_0, r_0, p_0, *, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
+def put(k, t, s_0, sigma_0, r_0, f_0, *, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
     """
     Model function using the Black-Scholes formula to price put options.
 
@@ -36,7 +36,7 @@ def put(k, t, s_0, sigma_0, r_0, p_0, *, sqrt=math.sqrt, log=math.log, exp=math.
     - s_0: Underlying asset price on the valuation date
     - sigma_0: Underlying asset volatility on the valuation date
     - r_0: Continuously compounded risk-free interest rate on the valuation date
-    - p_0: Long put value
+    - f_0: Long put value
     """
     v = sigma_0*sqrt(t)
     d1 = (log(s_0/k)+(r_0+sigma_0*sigma_0/2)*t)
@@ -46,7 +46,7 @@ def put(k, t, s_0, sigma_0, r_0, p_0, *, sqrt=math.sqrt, log=math.log, exp=math.
         d1 *= float("inf")
     d2 = d1 - v
 
-    return p_0+(s_0*cdf(-d1)-k*exp(-r_0*t)*cdf(-d2))
+    return f_0+(s_0*cdf(-d1)-k*exp(-r_0*t)*cdf(-d2))
 
 def simple_binomial_tree_call(k, t, s_0, s_u, s_d, r_0, f_n, *, exp=math.exp):
     """
