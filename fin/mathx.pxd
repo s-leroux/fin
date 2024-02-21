@@ -5,6 +5,8 @@ from cpython cimport array
 # ======================================================================
 cdef double NaN
 
+cpdef cdf(double x, double mu=*, double sigma=*)
+
 cdef double[::1] alloc(unsigned n, double init_value=*)
 cdef array.array aalloc(unsigned n, double init_value=*)
 
