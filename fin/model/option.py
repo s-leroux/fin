@@ -16,15 +16,7 @@ def call(k, t, s_0, sigma_0, r_0, f_0, *, sqrt=math.sqrt, log=math.log, exp=math
     - r_0: Continuously compounded risk-free interest rate on the valuation date
     - f_0: Long call value
     """
-    v = sigma_0*sqrt(t)
-    d1 = (log(s_0/k)+(r_0+sigma_0*sigma_0/2)*t)
-    try:
-        d1 /= v
-    except ZeroDivisionError:
-        d1 *= float("inf")
-    d2 = d1 - v
-
-    return f_0-(s_0*cdf(d1)-k*exp(-r_0*t)*cdf(d2))
+    return f_0-fin.math.bsm_call(s_0, k, t, r_0, sigma_0)
 
 def put(k, t, s_0, sigma_0, r_0, f_0, *, sqrt=math.sqrt, log=math.log, exp=math.exp, cdf=fin.math.cdf):
     """
@@ -38,15 +30,7 @@ def put(k, t, s_0, sigma_0, r_0, f_0, *, sqrt=math.sqrt, log=math.log, exp=math.
     - r_0: Continuously compounded risk-free interest rate on the valuation date
     - f_0: Long put value
     """
-    v = sigma_0*sqrt(t)
-    d1 = (log(s_0/k)+(r_0+sigma_0*sigma_0/2)*t)
-    try:
-        d1 /= v
-    except ZeroDivisionError:
-        d1 *= float("inf")
-    d2 = d1 - v
-
-    return f_0+(s_0*cdf(-d1)-k*exp(-r_0*t)*cdf(-d2))
+    return f_0-fin.math.bsm_put(s_0, k, t, r_0, sigma_0)
 
 def simple_binomial_tree_call(k, t, s_0, s_u, s_d, r_0, f_n, *, exp=math.exp):
     """

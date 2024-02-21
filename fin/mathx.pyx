@@ -1,5 +1,8 @@
+# cython: boundscheck=False
+# cython: cdivision=True
+
 from cpython cimport array
-from libc.math cimport erf, sqrt
+from libc.math cimport erf, sqrt, exp, log
 
 from fin.mathx cimport NaN
 
@@ -9,9 +12,84 @@ from fin.mathx cimport NaN
 cdef double NaN = float("NaN")
 
 # ======================================================================
+# Financial functions
+# ======================================================================
+cpdef double bsm_call(
+    double s_0,
+    double k,
+    double t,
+    double r_0,
+    double sigma_0):
+    """
+    The Black-Scholes formula to price call options.
+
+    This function evaluates the price at time 0 of a European call option on
+    non-dividend pying stck assuming constant volatility and interest rates.
+    - k: Strike price
+    - s_0: Underlying asset price at the valuation date
+    - r_0: Continuously compounded risk-free interest rate at the valuation date
+    - t: Time until expiration
+    - sigma_0: Underlying asset volatility on the valuation date
+    """
+    v = sigma_0*sqrt(t)
+    d1 = (log(s_0/k)+(r_0+sigma_0*sigma_0/2)*t)
+    d1 /= v
+    d2 = d1 - v
+
+    return s_0*cdf(d1)-k*exp(-r_0*t)*cdf(d2)
+
+cpdef double bsm_put(
+    double s_0,
+    double k,
+    double t,
+    double r_0,
+    double sigma_0):
+    """
+    The Black-Scholes formula to price put options.
+
+    This function evaluates the price at time 0 of a European put option on
+    non-dividend pying stck assuming constant volatility and interest rates.
+    - k: Strike price
+    - s_0: Underlying asset price at the valuation date
+    - r_0: Continuously compounded risk-free interest rate at the valuation date
+    - t: Time until expiration
+    - sigma_0: Underlying asset volatility on the valuation date
+    """
+    v = sigma_0*sqrt(t)
+    d1 = (log(s_0/k)+(r_0+sigma_0*sigma_0/2)*t)
+    d1 /= v
+    d2 = d1 - v
+
+    return -s_0*cdf(-d1)+k*exp(-r_0*t)*cdf(-d2)
+
+cpdef double bsm_call_parity(
+    double s_0,
+    double k,
+    double t,
+    double r_0,
+    double sigma_0,
+    double parity):
+    """
+    The Black-Scholes formula to price call options with non-1:1 parity..
+    """
+    return bsm_call(s_0/parity, k/parity, t, r_0, sigma_0)
+
+cpdef double bsm_put_parity(
+    double s_0,
+    double k,
+    double t,
+    double r_0,
+    double sigma_0,
+    double parity):
+    """
+    The Black-Scholes formula to price put options with non-1:1 parity..
+    """
+    return bsm_put(s_0/parity, k/parity, t, r_0, sigma_0)
+
+# ======================================================================
 # Statistical functions
 # ======================================================================
-cpdef cdf(double x, double mu=0.0, double sigma=1.0):
+cpdef double cdf(double x, double mu=0.0, double sigma=1.0):
     """ Cumulative distribution function for x normal distributions.
     """
     x = (x-mu)/sigma

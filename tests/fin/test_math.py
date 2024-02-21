@@ -120,3 +120,61 @@ class TestMathRoot(unittest.TestCase):
 
         actual = fin.math.solve(f, 'x', 0, +10)
         self.assertAlmostEqual(actual, 3, delta=fin.math.EPSILON)
+
+# ======================================================================
+# Black-Scholes model
+# ======================================================================
+class TestBlackScholesModel(unittest.TestCase):
+    def test_bsm(self):
+        """ Test option pricing using the Black-Scholes model
+        """
+        test_cases = [
+            """
+            "Derivatives Essentials: An Introduction to Forwards, Futures, Options, and Swaps"
+            by Aron Gottesman, p96.
+            """,
+            fin.math.bsm_call,
+            254.13,
+            1000.0, 800.0, 1, 0.05, 0.25,
+
+            """
+            "Derivatives Essentials: An Introduction to Forwards, Futures, Options, and Swaps"
+            by Aron Gottesman, p98
+            """,
+            fin.math.bsm_put,
+            16.96,
+            85.0, 95, 0.25, 0.02, 0.65,
+
+            """
+            "Options, Futures and Other Derivatives, 5th edition"
+            by John C. Hull, p239
+            Ex 12.4, correction by the author.
+            """,
+            fin.math.bsm_put,
+            2.38, # author saids 2.37 but there is some rounding error
+            50, 50, 0.25, 0.1, 0.3,
+
+            """
+            "Options, Futures and Other Derivatives, 5th edition"
+            by John C. Hull, p239
+            Ex 12.13, correction by the author.
+            """,
+            fin.math.bsm_call,
+            5.06,
+            52, 50, 3/12, 0.12, 0.3,
+        ]
+
+        while test_cases:
+            (
+                desc, fct,
+                expected,
+                asset_price, strike,
+                maturity, risk_free_rate,
+                asset_volatility,
+                *test_cases
+            ) = test_cases
+
+            with self.subTest(fct=fct, desc=desc):
+                price = fct(asset_price, strike, maturity, risk_free_rate, asset_volatility)
+                self.assertAlmostEqual(price, expected, places=2)
+
