@@ -114,29 +114,29 @@ class TestDiv(unittest.TestCase):
         )
         self.assertSequenceEqual(actual, [None]*10)
 
-class TestSub(unittest.TestCase):
-    def test_sub(self):
+class TestAdd(unittest.TestCase):
+    def test_add(self):
         actual = eval(self,
-            algo.sub(),
+            algo.add(),
             [*range(100,110)],
             [*range(10,20)],
             [*range(0,10)],
         )
 
-        self.assertSequenceEqual(actual, [90.0, 89.0, 88.0, 87.0, 86.0, 85.0, 84.0, 83.0, 82.0, 81.0])
+        self.assertSequenceEqual(actual, [110.0, 113.0, 116.0, 119.0, 122.0, 125.0, 128.0, 131.0, 134.0, 137.0])
 
-    def test_sub_one_columns(self):
+    def test_add_one_columns(self):
         lst = [*range(0,10)]
         actual = eval(self,
-            algo.sub(),
+            algo.add(),
             lst,
         )
-        self.assertSequenceEqual(actual, [-x for x in lst])
+        self.assertSequenceEqual(actual, [x for x in lst])
 
 
-    def test_sub_zero_columns(self):
+    def test_add_zero_columns(self):
         actual = eval(self,
-            algo.sub(),
+            algo.add(),
         )
         self.assertSequenceEqual(actual, [0.0]*10)
 
