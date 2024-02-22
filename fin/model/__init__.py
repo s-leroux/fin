@@ -50,6 +50,22 @@ def Model(eq, params={}):
 
             return self.clone(new_values)
 
+        def find(self, unknown, *params):
+            """
+            Return a new function that evaluates to the `unknownm` parameter value
+            on the given conditions.
+
+            See examples/fin/model/warrant_price_change.py 
+            """
+            # XXX Test me!
+            def _find(*vals):
+                condition = { k: v for k, v in zip(params, vals) }
+                new_model = self.adjust(unknown, condition)
+
+                return new_model[unknown]
+
+            return _find
+
         def clone(self, new_values):
             return type(self)(new_values)
 

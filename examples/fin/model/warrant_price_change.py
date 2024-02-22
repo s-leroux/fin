@@ -29,25 +29,16 @@ DE000SU71PW8 = dict(
 )
 CALL_QTY=240
 
-present_state_put = option.Warrant.put(NLBNPFR1Y883)
-present_state_call = option.Warrant.call(DE000SU71PW8)
-print(f"Implied volatility is {present_state_put['sigma_0']}")
-print(f"Implied volatility is {present_state_call['sigma_0']}")
+model_put = option.Warrant.put(NLBNPFR1Y883)
+model_call = option.Warrant.call(DE000SU71PW8)
+print(f"Implied volatility is {model_put['sigma_0']}")
+print(f"Implied volatility is {model_call['sigma_0']}")
 
-def put_price(price):
-    future_state_put = \
-            present_state_put.adjust('f_0', dict(s_0=price))
-    return future_state_put['f_0']
-
-def call_price(price):
-    future_state_call = \
-            present_state_call.adjust('f_0', dict(s_0=price))
-    return future_state_call['f_0']
 
 tbl = table.table_from_column("PC", [-120, -100, -70, -30, 0, +30, +70, +100, +120])
-tbl.add_column("PRICE", (algo.add(), present_state_put['s_0'], "PC"))
-tbl.add_column("PUT", (expr.map(put_price), "PRICE"))
-tbl.add_column("CALL", (expr.map(call_price), "PRICE"))
+tbl.add_column("PRICE", (algo.add(), model_put['s_0'], "PC"))
+tbl.add_column("PUT", (expr.map(model_put.find('f_0', 's_0')), "PRICE"))
+tbl.add_column("CALL", (expr.map(model_call.find('f_0', 's_0')), "PRICE"))
 tbl.add_column("PUT VALUE", (algo.mul(), "PUT", PUT_QTY))
 tbl.add_column("CALL VALUE", (algo.mul(), "CALL", CALL_QTY))
 tbl.add_column("TOTAL", (algo.add(), "PUT VALUE", "CALL VALUE"))
