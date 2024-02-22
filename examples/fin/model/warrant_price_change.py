@@ -6,6 +6,8 @@ Usage:
     PYTHONPATH="$PWD" python3 examples/fin/model/warrant_price_change.py
 """
 from fin.model import option
+from fin.seq import table
+from fin.seq import algo, expr
 
 NLBNPFR1Y883 = dict(
     s_0=674.186,
@@ -15,6 +17,7 @@ NLBNPFR1Y883 = dict(
     parity=10,
     f_0=5.37,
 )
+PUT_QTY=75
 
 DE000SU71PW8 = dict(
     s_0=674.186,
@@ -24,18 +27,28 @@ DE000SU71PW8 = dict(
     parity=50,
     f_0=0.390,
 )
+CALL_QTY=240
 
 present_state_put = option.Warrant.put(NLBNPFR1Y883)
 present_state_call = option.Warrant.call(DE000SU71PW8)
 print(f"Implied volatility is {present_state_put['sigma_0']}")
 print(f"Implied volatility is {present_state_call['sigma_0']}")
 
-for PRICE_CHANGE in (-70, -30, 0, +30, +70):
+def put_price(price):
+    future_state_put = \
+            present_state_put.adjust('f_0', dict(s_0=price))
+    return future_state_put['f_0']
 
-    future_state_put = present_state_put.adjust('f_0', dict(s_0=NLBNPFR1Y883['s_0']+PRICE_CHANGE))
-    future_state_call = present_state_call.adjust('f_0', dict(s_0=NLBNPFR1Y883['s_0']+PRICE_CHANGE))
+def call_price(price):
+    future_state_call = \
+            present_state_call.adjust('f_0', dict(s_0=price))
+    return future_state_call['f_0']
 
-    print(f"If price change by {PRICE_CHANGE} over a short period of time")
-    print(f"The put option price will go from {present_state_put['f_0']} to {future_state_put['f_0']}")
-    print(f"The call option price will go from {present_state_call['f_0']} to {future_state_call['f_0']}")
-    print("----")
+tbl = table.table_from_column("PC", [-120, -100, -70, -30, 0, +30, +70, +100, +120])
+tbl.add_column("PRICE", (algo.add(), present_state_put['s_0'], "PC"))
+tbl.add_column("PUT", (expr.map(put_price), "PRICE"))
+tbl.add_column("CALL", (expr.map(call_price), "PRICE"))
+tbl.add_column("PUT VALUE", (algo.mul(), "PUT", PUT_QTY))
+tbl.add_column("CALL VALUE", (algo.mul(), "CALL", CALL_QTY))
+tbl.add_column("TOTAL", (algo.add(), "PUT VALUE", "CALL VALUE"))
+print(tbl)

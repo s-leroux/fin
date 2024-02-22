@@ -5,7 +5,7 @@ import array
 # Utilities
 # ======================================================================
 cpdef str get_column_name(obj)
-cpdef Column as_column(sequence)
+cpdef Column as_column(sequence, name=*)
 
 # ======================================================================
 # Column class

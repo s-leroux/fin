@@ -19,11 +19,11 @@ cdef from_sequence(sequence):
 cdef to_sequence(double[::1] view):
     return [ None if isnan(x) else x for x in view]
 
-cpdef Column as_column(obj):
+cpdef Column as_column(obj, name=None):
     try:
         return <Column?>obj
     except TypeError:
-        return Column.from_sequence(get_column_name(obj), obj)
+        return Column.from_sequence(get_column_name(obj) if name is None else name, obj)
 
 # ======================================================================
 # Column class

@@ -373,6 +373,22 @@ def table_from_data(data, headings, *, name=""):
 def table_from_rows(rows, headings, *, name=""):
     return table_from_data([*zip(*rows)], headings, name=name)
 
+def table_from_column(column_or_name, column=None):
+    """
+    Create a table from a single column.
+    """
+    if column is None:
+        column = as_column(column_or_name)
+    else:
+        column = as_column(column, column_or_name)
+
+    name = column_or_name
+
+    result = Table(len(column))
+    result.add_column(name, column)
+
+    return result
+
 def table_from_dict(d, *, name=""):
     """
     Create a new table from existing data (*not* columns) presented
