@@ -1,3 +1,5 @@
+import sys
+
 """
 Rudimentary terminal capabilities.
 
@@ -16,6 +18,17 @@ class TermCap:
 
     def green(self, s):
         return s
+
+    @staticmethod
+    def for_stream(ostream):
+        if ostream.isatty():
+            return ANSITerminalTermCap()
+        else:
+            return TermCap()
+
+    @staticmethod
+    def for_stdout():
+        return TermCap.for_stream(sys.stdout)
 
 CSI = "\033["
 

@@ -10,10 +10,7 @@ from fin.utils import termcap
 class Logging:
     def __init__(self, ostream, *, tc=None, log_level=None):
         if tc is None:
-            if ostream.isatty():
-                self._termcap = termcap.ANSITerminalTermCap()
-            else:
-                self._termcap = termcap.TermCap()
+            self._termcap = termcap.TermCap.for_stream(ostream)
         else:
             self._termcap = tc
 
