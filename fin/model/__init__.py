@@ -1,6 +1,6 @@
 import fin.math
 from fin.model.report import Report
-from fin.utils.formatters import FloatFormatter, StringLeftFormatter
+from fin.utils.formatters import FloatFormatter, StringLeftFormatter, Gray
 
 # ======================================================================
 # Exceptions
@@ -68,11 +68,11 @@ def Model(eq, **params):
 
             return _find
 
-        def report(self):
+        def report(self, context):
             """
             Return a Report instance for this model.
             """
-            r = Report()
+            r = Report(context)
             for key in model:
                 param = params.get(key, {})
                 r.add_field(
@@ -84,7 +84,7 @@ def Model(eq, **params):
             t = r.for_dict(self)
             t.add_row(
                 "(error)", eq(**self._values),
-                formatters=(StringLeftFormatter(), FloatFormatter(precision=6))
+                formatters=(StringLeftFormatter() + Gray(), FloatFormatter(precision=6) + Gray())
             )
             return t.to_string()
 

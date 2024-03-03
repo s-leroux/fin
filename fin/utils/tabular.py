@@ -1,6 +1,5 @@
 from itertools import zip_longest
 
-from fin.utils import termcap
 from fin.utils import formatters
 
 _str_formatter = formatters.StringRightFormatter()
@@ -13,10 +12,11 @@ class Tabular :
     This class is responsible for properly sizing the columns so formatted
     data can be nicely displayed.
     """
-    def __init__(self, ncols):
+    def __init__(self, ncols, context):
         self._ncols = ncols
         self._cols = [(0,0)]*ncols
         self._rows = []
+        self._context = context
 
     def add_row(self, *data, formatters=None):
         """
@@ -25,8 +25,9 @@ class Tabular :
         If `formatters` is None, `data` are asumed to be formatted,
         otherwise, data are formatter accordingly.
         """
+        context = self._context
         if formatters:
-            data = [f(d) for f,d in zip(formatters, data)]
+            data = [f(context, d) for f,d in zip(formatters, data)]
 
         if len(data) != self._ncols:
             raise ValueError(f"Wrong row size {len(data)}. Expected {self._ncols}")
@@ -41,7 +42,7 @@ class Tabular :
             if cell_length_after > max_after:
                 max_after = cell_length_after
 
-            row.append((text_before, sep, text_after))
+            row.append(item)
             self._cols[n] = (max_before, max_after)
 
         self._rows.append(row)
@@ -54,12 +55,13 @@ class Tabular :
         cols = self._cols
 
         result = []
+        nul=""
         for row in self._rows:
             curr = []
             result.append(curr)
 
-            for (left_size, right_size), (left_text, sep, right_text) in zip(cols, row):
-                curr.append(f"{left_text:>{left_size}}{sep}{right_text:<{right_size}}")
+            for (left_size, right_size), (ltext, sep, rtext, llen, rlen) in zip(cols, row):
+                curr.append(f"{nul:>{left_size-llen}}{ltext}{sep}{rtext}{nul:<{right_size-rlen}}")
 
         return result
 

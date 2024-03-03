@@ -1,53 +1,82 @@
-from itertools import zip_longest
-
 from fin.utils import termcap
 
-class FloatFormatter:
-    def __init__(self, *, digits=8, precision=2):
-        self._digits = digits
-        self._precision = precision
+class Context(dict):
+    def __init__(self, **kwargs):
+        self['termcap'] = kwargs.get('termcap') or termcap.TermCap()
 
-    def __call__(self, number):
-        number = float(number)
-        left, right = f"{number:{self._digits}.{self._precision}f}".split(".")
-        return (left, ".", right, len(left), len(right))
+def compose(parent, child):
+    def _format(context, obj):
+        return child(context, obj, parent)
 
-class PercentFormatter(FloatFormatter):
-    def __call__(self, number):
-        left, sep, right, llen, rlen = FloatFormatter.__call__(self, number*100.0)
-        return (left, sep, right+"%", llen, rlen+1)
+    return _format
 
-class ColorFloatFormatter(FloatFormatter):
-    def __init__(self, *args, tc=None, **kwargs):
-        super().__init__(*args, **kwargs)
+class ComposableFormatter:
+    def __add__(self, child):
+        return compose(self, child)
 
-        self._termcap = tc
+class ColorFormatter(ComposableFormatter):
+    def __init__(self, color):
+        self._color = color
 
-    def __call__(self, number):
-        number = float(number)
-        left, sep, right, llen, rlen = FloatFormatter.__call__(self, number)
+    def __call__(self, context, obj, parent):
+        tc = context['termcap']
 
-        if number < 0:
-            color = self._termcap.red
-        elif number > 0:
-            color = self._termcap.green
+        left, sep, right, llen, rlen = parent(context, obj)
+
+        if tc is not None:
+            color = getattr(tc, self._color)
         else:
             color = lambda x : x
 
         return (color(left), color(sep), color(right), llen, rlen)
 
-class StringLeftFormatter:
-    def __call__(self, string):
-        """
-        The default formatter.
-        """
+def Red():
+    return ColorFormatter('red')
+
+def Yellow():
+    return ColorFormatter('yellow')
+
+def Green():
+    return ColorFormatter('green')
+
+def Gray():
+    return ColorFormatter('gray')
+
+class FloatFormatter(ComposableFormatter):
+    def __init__(self, *, precision=2):
+        self._precision = precision
+
+    def __call__(self, context, number):
+        number = float(number)
+        left, right = f"{number:.{self._precision}f}".split(".")
+        return (left, ".", right, len(left), len(right))
+
+class PercentFormatter(FloatFormatter):
+    def __call__(self, context, number):
+        left, sep, right, llen, rlen = FloatFormatter.__call__(self, context, number*100.0)
+        return (left, sep, right+"%", llen, rlen+1)
+
+class ColorFloatFormatter(FloatFormatter):
+    def __call__(self, context, number):
+        number = float(number)
+        left, sep, right, llen, rlen = FloatFormatter.__call__(self, context, number)
+
+        tc = context['termcap']
+        if number < 0:
+            color = tc.red
+        elif number > 0:
+            color = tc.green
+        else:
+            color = lambda x : x
+
+        return (color(left), color(sep), color(right), llen, rlen)
+
+class StringLeftFormatter(ComposableFormatter):
+    def __call__(self, context, string):
         result = str(string)
         return ("", "", result, 0, len(result))
 
-class StringRightFormatter:
-    def __call__(self, string):
-        """
-        The default formatter.
-        """
+class StringRightFormatter(ComposableFormatter):
+    def __call__(self, context, string):
         result = str(string)
         return (result,  "", "", len(result), 0)

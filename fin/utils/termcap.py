@@ -19,6 +19,12 @@ class TermCap:
     def green(self, s):
         return s
 
+    def green(self, s):
+        return s
+
+    def gray(self, s):
+        return s
+
     @staticmethod
     def for_stream(ostream):
         if ostream.isatty():
@@ -46,6 +52,7 @@ ANSI_3BIT_COLORS = dict(
         cyan=36,
         white=37,
         bright_black=30,
+        gray=30,
         bright_red=31,
         bright_green=32,
         bright_yellow=33,
@@ -64,6 +71,9 @@ class ANSITerminalTermCap(TermCap):
 
     def green(self, s):
         return self.sgr(bold=True, fgcolor="green") + s + self.sgr(reset=True)
+
+    def gray(self, s):
+        return self.sgr(bold=True, fgcolor="gray") + s + self.sgr(reset=True)
 
     def sgr(self, **attrs):
         s = []
