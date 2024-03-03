@@ -60,12 +60,12 @@ def put_parity(s_0, k, t, r_0, sigma_0, parity, f_0):
     return f_0 - fin.math.bsm_put_parity(s_0, k, t, r_0, sigma_0, parity)
 
 class SimpleBinomialTree:
-    call = fin.model.Model(simple_binomial_tree_call, ())
+    call = fin.model.Model(simple_binomial_tree_call)
 
 class Warrant:
-    call = fin.model.Model(call_parity, ())
-    put = fin.model.Model(put_parity, ())
+    call = fin.model.Model(call_parity)
+    put = fin.model.Model(put_parity)
 
 
-Call = fin.model.Model(call, ())
-Put = fin.model.Model(put, ())
+Call = fin.model.Model(call)
+Put = fin.model.Model(put)

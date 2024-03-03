@@ -45,7 +45,7 @@ class TestInterestRates(unittest.TestCase):
         "Options, Futures and Other Derivatives, 5th ed", p44
         """
         YEARLY_RATE=0.0808 # 10% par annum interest rates
-        FREQUENCY=4      # Semiannual compounding
+        FREQUENCY=4      # Quarterly compounding
         CONTINUOUS_RATE=0.08
         
         model = rates.Rates(dict(rc=CONTINUOUS_RATE, rm=YEARLY_RATE))

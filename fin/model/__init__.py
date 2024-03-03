@@ -1,4 +1,6 @@
 import fin.math
+from fin.model.report import Report
+from fin.utils.tabular import FloatFormatter, StringLeftFormatter
 
 # ======================================================================
 # Exceptions
@@ -16,7 +18,7 @@ class Underdefined(Exception):
 # ======================================================================
 from inspect import signature, Parameter
 
-def Model(eq, params={}):
+def Model(eq, **params):
     """
     A mathematical model whose parameters are interdependant.
 
@@ -66,6 +68,26 @@ def Model(eq, params={}):
 
             return _find
 
+        def report(self):
+            """
+            Return a Report instance for this model.
+            """
+            r = Report()
+            for key in model:
+                param = params.get(key, {})
+                r.add_field(
+                        key,
+                        param.get('description') or f"Description for {key}",
+                        param.get('formatter') or FloatFormatter()
+                )
+
+            t = r.for_dict(self)
+            t.add_row(
+                "(error)", eq(**self._values),
+                formatters=(StringLeftFormatter(), FloatFormatter(precision=6))
+            )
+            return t.to_string()
+
         def clone(self, new_values):
             return type(self)(new_values)
 
@@ -104,12 +126,17 @@ def Model(eq, params={}):
 
     # For compatibility with previous implementations
     if type(params) == tuple:
+        raise NotImplementedError()
+        # Obsolete code
         params = {k: None for k in params}
 
     pnames = [ k for k, v in signature(eq).parameters.items() if v.kind == Parameter.POSITIONAL_OR_KEYWORD ]
     model = {}
     for k in pnames:
         param = params.get(k)
+        if param is not None:
+            param = param.get('value')
+
         # it is either a callable, None or a 2uple
         if param is None:
             param = solver(k)

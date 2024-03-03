@@ -20,21 +20,21 @@ class TestModelExceptions(unittest.TestCase):
 class TestModel(unittest.TestCase):
     def test_raises_undefined(self):
         eq = lambda a, b, c: a + b + c
-        params = { 'c': lambda a, b : a + b }
+        params = { 'c': { 'value': lambda a, b : a + b } }
         values = { "a": 1 }
 
         with self.assertRaises(fin.model.Underdefined):
-            m = model.Model(eq, params)(values)
+            m = model.Model(eq, **params)(values)
 
     def test_generic_solver(self):
         """
         The generic solver should try to infer missing values
         """
         eq = lambda a, b, c: a + b + c
-        params = { 'c': lambda a, b : a + b }
+        params = { 'c': { 'value': lambda a, b : a + b } }
         values = { "a": 1, "c": 3 }
 
-        m = model.Model(eq, params)(values)
+        m = model.Model(eq, **params)(values)
 
         self.assertEqual(m["a"], values["a"])
         self.assertEqual(m["c"], values["c"])
@@ -52,11 +52,11 @@ class TestModel(unittest.TestCase):
             return -a-c
 
         eq = lambda a, b, c: a + b + c
-        params = { 'c': lambda a, b : a + b }
-        params["b"] = solve_for_b
+        params = { 'c': { 'value': lambda a, b : a + b } }
+        params["b"] = { 'value': solve_for_b }
         values = { "a": 1, "c": 3 }
 
-        m = model.Model(eq, params)(values)
+        m = model.Model(eq, **params)(values)
 
         self.assertEqual(m["a"], values["a"])
         self.assertEqual(m["c"], values["c"])
@@ -69,10 +69,10 @@ class TestModel(unittest.TestCase):
         """
         eq = lambda x, y: (math.fabs(x)-3) - y
         for interval, expected in ((0,100), 7.00),((0, -100), -7):
-            params = { 'x': interval }
+            params = { 'x': { 'value': interval } }
             values = { "y": 4 }
 
-            m = model.Model(eq, params)(values)
+            m = model.Model(eq, **params)(values)
 
             self.assertEqual(m["y"], values["y"])
             self.assertAlmostEqual(m["x"], expected, delta=fin.math.EPSILON)

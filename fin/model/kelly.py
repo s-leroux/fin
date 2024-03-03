@@ -8,6 +8,9 @@ from fin.model.kellyx import kelly_criterion
 # ======================================================================
 # Kelly Criterion
 # ======================================================================
-KellyCriterion = fin.model.Model(kelly_criterion, dict(
-        p=(0.0, 1.0),
-    ))
+KellyCriterion = fin.model.Model(
+    kelly_criterion, 
+    p=dict(
+        value=(0.0, 1.0),
+    )
+)

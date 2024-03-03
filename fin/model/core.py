@@ -26,31 +26,35 @@ def MSFees(amount):
 
     return 0.00
 
-def _breakeven_eq(qty, s0, s1, _fees):
-    """
-    Model a simple buy/sell process involving some fees.
+def Breakeven(fees_fct):
+    def _eq(qty, s0, s1):
+        """
+        Model a simple buy/sell process involving some fees.
 
-    This function evaluates to 0 if the model is at equilibrium given:
-    - s0: Underlying asset price when buying
-    - s1: Underlying asset price when selling
-    - qty: purchase quantity
-    """
-    debit = s0*qty
-    debit += _fees(debit)
-    credit = s1*qty
-    credit -= _fees(credit)
+        This function evaluates to 0 if the model is at equilibrium given:
+        - s0: Underlying asset price when buying
+        - s1: Underlying asset price when selling
+        - qty: purchase quantity
+        """
+        debit = s0*qty
+        debit += fees_fct(debit)
+        credit = s1*qty
+        credit -= fees_fct(credit)
 
-    return credit-debit
+        return credit-debit
 
-class Breakeven(fin.model.Model(_breakeven_eq, ())):
-    def __init__(self, fees_fct, values):
-        values = values.copy()
-        self._fees_fct = values['_fees'] = fees_fct
-
-        super().__init__(values)
-
-    def clone(self, new_values):
-        return type(self)(self._fees_fct, new_values)
+    return fin.model.Model(
+        _eq,
+        qty=dict(
+            description="Quantity",
+        ),
+        s0=dict(
+            description="Entry price",
+        ),
+        s1=dict(
+            description="Exit price",
+        ),
+    )
 
 def _profit_loss_eq(qty, s0, s1, pl, _fees):
     """
@@ -69,7 +73,7 @@ def _profit_loss_eq(qty, s0, s1, pl, _fees):
 
     return credit-debit-pl
 
-class ProfitLoss(fin.model.Model(_profit_loss_eq, ())):
+class ProfitLoss(fin.model.Model(_profit_loss_eq)):
     def __init__(self, fees_fct, params):
         values = values.copy()
         self._fees_fct = values['_fees'] = fees_fct

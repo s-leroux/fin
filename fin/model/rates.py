@@ -1,4 +1,5 @@
-import fin.model
+from fin.model import Model
+from fin.utils import tabular
 
 import math
 import fin.math
@@ -32,16 +33,30 @@ def discrete_compounding(rc, m=1, exp=math.exp, *, infinity=float("inf")):
     except (ZeroDivisionError, OverflowError):
         return infinity
 
-Rates = fin.model.Model(lambda rc, rm, m : continuous_compounding(rm, m) - rc, dict(
-        rc=continuous_compounding,
-        rm=discrete_compounding,
-        m=(.001, 1000),
-    ))
+Rates = fin.model.Model(
+    lambda rc, rm, m : continuous_compounding(rm, m) - rc,
+    rc = dict(
+        value=continuous_compounding,
+        description="Continuous compounding rate per period",
+        formatter=tabular.PercentFormatter(),
+    ),
+    rm = dict(
+        value=discrete_compounding,
+        description="Discrete compounding rate per period",
+        formatter=tabular.PercentFormatter(),
+    ),
+    m = dict(
+        value=(.001, 1000),
+        description="Coupons per period",
+    ),
+)
 
 ExpectedReturn = fin.model.Model(
     lambda amount, expected, rate, duration, m : (amount*(1+rate/m)**(m*duration)) - expected,
-    dict(
-        m=(.001, 1000),
-        rate=(0.00, 1000),
+    m = dict(
+        value=(.001, 1000),
+    ),
+    rate = dict(
+        value=(0.00, 1000),
     )
 )
