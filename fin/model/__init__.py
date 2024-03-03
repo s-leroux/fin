@@ -1,6 +1,6 @@
 import fin.math
 from fin.model.report import Report
-from fin.utils.tabular import FloatFormatter, StringLeftFormatter
+from fin.utils.formatters import FloatFormatter, StringLeftFormatter
 
 # ======================================================================
 # Exceptions

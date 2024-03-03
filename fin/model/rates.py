@@ -1,5 +1,5 @@
 from fin.model import Model
-from fin.utils import tabular
+from fin.utils import formatters
 
 import math
 import fin.math
@@ -38,12 +38,12 @@ Rates = fin.model.Model(
     rc = dict(
         value=continuous_compounding,
         description="Continuous compounding rate per period",
-        formatter=tabular.PercentFormatter(),
+        formatter=formatters.PercentFormatter(),
     ),
     rm = dict(
         value=discrete_compounding,
         description="Discrete compounding rate per period",
-        formatter=tabular.PercentFormatter(),
+        formatter=formatters.PercentFormatter(),
     ),
     m = dict(
         value=(.001, 1000),
