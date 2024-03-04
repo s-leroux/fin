@@ -30,3 +30,12 @@ def iterable(it, *, name=None):
 def ramp(start=0, end=None, *, name=None):
     return ( lambda rowcount : Column.from_sequence(name, range(start, end if end is not None else start+rowcount)) ,)
 
+def serie(v0, fct, *, name=None):
+    def g(rowcount, v0):
+        while rowcount:
+            yield v0
+            v0 = fct(v0)
+
+            rowcount -= 1
+
+    return lambda rowcount : Column.from_sequence(name, g(rowcount, v0))
