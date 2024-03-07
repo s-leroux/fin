@@ -4,6 +4,12 @@ class Context(dict):
     def __init__(self, **kwargs):
         self['termcap'] = kwargs.get('termcap') or termcap.TermCap()
 
+    @staticmethod
+    def for_stdout():
+        return Context(
+            termcap=termcap.TermCap.for_stdout(),
+        )
+
 def compose(parent, child):
     def _format(context, obj):
         return child(context, obj, parent)
