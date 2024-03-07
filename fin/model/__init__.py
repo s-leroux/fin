@@ -92,9 +92,8 @@ def Model(eq, **params):
             return type(self)(new_values)
 
         def __getitem__(self, name):
-            sentinel = object()
-            value = self._values.get(name, sentinel)
-            if value is sentinel:
+            value = self._values.get(name)
+            if value is None:
                 # Not found!
                 value = self._values[name] = model[name](**self._values)
 
