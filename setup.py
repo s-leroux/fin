@@ -7,5 +7,7 @@ setup(
         "fin/model/kellyx.pyx",
         "fin/seq/algox.pyx",
         "fin/seq/column.pyx",
+        "fin/seq2/column.pyx",
+        "fin/seq2/sequence.pyx",
         ], annotate=True)
 )
