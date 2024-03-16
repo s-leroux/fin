@@ -10,18 +10,6 @@ cpdef Column as_column(sequence, name=*)
 # ======================================================================
 # Column class
 # ======================================================================
-cdef class AnyColumn:
-    pass
-
-cdef class FColumn(AnyColumn):
-    """
-    A Fast float column.
-
-    This is an intermediate representation of a column used to speedup calculations.
-    """
-    cdef readonly double[::1]    values
-    cdef readonly str name
-
 cdef class Column:
     """
     A column.
@@ -32,3 +20,5 @@ cdef class Column:
 
     cdef tuple          get_py_values(self)
     cdef array.array    get_f_values(self)
+
+    cdef Column         c_remap(self, unsigned len, const unsigned* mapping)

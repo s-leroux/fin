@@ -28,15 +28,6 @@ cpdef Column as_column(obj, name=None):
 # ======================================================================
 # Column class
 # ======================================================================
-cpdef FColumn fcolumn_from_slice(name, double[::1] slice):
-    return FColumn(name, slice)
-
-cpdef FColumn fcolumn_from_sequence(name, sequence):
-    lst = [x if x is not None else NaN for x in sequence]
-    cdef array.array arr = array.array("d", lst)
-    cdef double[::1] values = arr[::1]
-    return FColumn(name or get_column_name(sequence), values)
-
 cdef array.array _double_array_template = array.array("d")
 
 cpdef array.array f_values_from_py_values(tuple sequence):
@@ -61,11 +52,44 @@ cpdef tuple py_values_from_f_values(array.array arr):
 
     return tuple(lst) # Enforce immutability
 
+cdef array.array remap_from_f_values(double* values, unsigned count, const unsigned* mapping):
+    """
+    Remap an array of double using the indices provided in `mapping`.
+
+    The result array is newly allocated here and returned as a Cython `array.array`.
+
+    Low-level function.
+    """
+    cdef array.array result = array.clone(_double_array_template, count, zero=False)
+    cdef unsigned i
+
+    for i in range(count):
+        result.data.as_doubles[i] = values[mapping[i]]
+
+    return result
+
+cdef tuple remap_from_py_values(tuple values, unsigned count, const unsigned* mapping):
+    """
+    Remap an array of Python objects using the indices provided in `mapping`.
+
+    The result tuple is newly allocated here and returned as a Python object.
+
+    Low-level function.
+    """
+    cdef list  result = [None,]*count
+    cdef unsigned i
+
+    for i in range(count):
+        result[i] = values[mapping[i]]
+
+    return tuple(result)
+    
+
 cdef class Column:
     """
     A column.
 
-    Column are immutable ojects (or at least the should be treated that way).
+    Columns are immutable ojects (or at least the should be treated that way).
     A column may have several representations, for example as a tuple of Python objects,
     and as an array of floats.
 
@@ -94,7 +118,7 @@ cdef class Column:
         You MUST treat the original array's content as an immutable object.
         """
         cdef Column column = Column(name)
-        column._f_values = arr
+        column._f_values = arr # type checking is implicitly done here
 
         return column
 
@@ -198,6 +222,25 @@ cdef class Column:
         EXPERIMENTAL.
         """
         return iter(self.py_values)
+
+    cdef Column c_remap(self, unsigned count, const unsigned* mapping):
+        """
+        Create a copy of the column with values picked from the index specificed in `mapping`.
+        """
+        cdef Column result = Column("remapped")
+        if self._f_values is not None:
+            result._f_values = remap_from_f_values(self._f_values.data.as_doubles, count, mapping)
+        elif self._py_values is not None:
+            result._py_values = remap_from_py_values(self._py_values, count, mapping)
+        else:
+            raise NotImplementedError()
+
+        return result
+
+    def remap(self, mapping):
+        cdef array.array arr = array.array("i", mapping)
+
+        return self.c_remap(len(mapping), arr.data.as_uints)
 
     def named(self, name):
         """
