@@ -31,26 +31,14 @@ class TestSequence(unittest.TestCase):
 
 
 class TestJoin(unittest.TestCase):
-    def test_index_join(self):
-        indexA = tuple("ABCFG")
-        indexB = tuple("ABDEFXYZ")
-        #               01234
-
-        index, ma, mb = serie.index_join(indexA, indexB)
-        self.assertSequenceEqual(ma, [0, 1, 3])
-        self.assertSequenceEqual(mb, [0, 1, 4])
-        self.assertEqual(index, tuple("ABF"))
-
     def test_serie_join(self):
-        ser0 = serie.Serie("ABCDF", [10, 11, 12, 13, 14])
+        ser0 = serie.Serie("ABCDFG", [10, 11, 12, 13, 14, 15])
         ser1 = serie.Serie("ABCEF", [20, 21, 22, 23, 24])
 
-        join = serie.join(ser0, ser1)
-        print(join)
+        index, (left,), (right,) = serie.join(ser0, ser1)
 
-        self.assertSequenceEqual(join.index.py_values, "ABCF")
+        self.assertSequenceEqual(index.py_values, "ABCF")
 
-        c0, c1 = join.columns
-        self.assertSequenceEqual(c0.py_values, [10, 11, 12, 14])
-        self.assertSequenceEqual(c1.py_values, [20, 21, 22, 24])
+        self.assertSequenceEqual(left.py_values, [10, 11, 12, 14])
+        self.assertSequenceEqual(right.py_values, [20, 21, 22, 24])
 

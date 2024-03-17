@@ -52,13 +52,9 @@ cdef class Serie:
         return Serie(self._index, *new)
 
     cdef Serie c_add_serie(self, Serie other):
-        cdef Join join = c_index_join(self._index.get_py_values(), other._index.get_py_values())
-        cdef unsigned count = len(join.index)
+        cdef Join join = c_join(self, other)
         cdef Column a, b
-        cdef list new = [
-            a.c_remap(count, &join.mappingA[0]) + b.c_remap(count, &join.mappingB[0])
-                for a in self._columns for b in other._columns
-        ]
+        cdef list new = [ a + b for a in join.left for b in join.right ]
 
         return Serie(join.index, *new)
 
@@ -67,16 +63,16 @@ cdef class Serie:
 # Join
 # ======================================================================
 cdef class Join:
-    cdef tuple index
-    cdef unsigned[::1] mappingA
-    cdef unsigned[::1] mappingB
+    cdef Column index
+    cdef tuple left
+    cdef tuple right
 
     @staticmethod
-    cdef Join create(tuple index, unsigned[::1] mappingA, unsigned[::1] mappingB):
+    cdef Join create(Column index, tuple left, tuple right):
         cdef Join join = Join.__new__(Join)
         join.index = index
-        join.mappingA = mappingA
-        join.mappingB = mappingB
+        join.left = left
+        join.right = right
 
         return join
 
@@ -86,39 +82,18 @@ cdef class Join:
 
         For testing purposes.
         """
-        return (self.index, self.mappingA, self.mappingB)
+        return (self.index, self.left, self.right)
 
 def join(serA, serB):
-    return c_join(serA, serB)
+    return c_join(serA, serB).as_tuple()
 
-
-cdef Serie c_join(Serie serA, Serie serB):
+cdef Join c_join(Serie serA, Serie serB):
+    """
+    Create a join from two series.
+    """
     cdef tuple indexA = serA._index.get_py_values()
     cdef tuple indexB = serB._index.get_py_values()
 
-    cdef Join join = c_index_join(indexA, indexB)
-    cdef list columns = []
-    cdef Column column
-
-    for column in serA._columns:
-        columns.append(column.c_remap(len(join.mappingA), &join.mappingA[0]))
-    for column in serB._columns:
-        columns.append(column.c_remap(len(join.mappingB), &join.mappingB[0]))
-
-    return Serie(join.index, *columns)
-
-def index_join(indexA, indexB):
-    """
-    Python wrapper around `c_index_join`.
-
-    For testing purposes.
-    """
-    return c_index_join(indexA, indexB).as_tuple()
-
-cdef Join c_index_join(tuple indexA, tuple indexB):
-    """
-    Create a join from two indices.
-    """
     cdef unsigned lenA = len(indexA)
     cdef unsigned lenB = len(indexB)
 
@@ -166,5 +141,14 @@ cdef Join c_index_join(tuple indexA, tuple indexB):
     # Build the index
     cdef unsigned i
     cdef list joinIndex = [indexA[mappingA[i]] for i in range(n)]
+    cdef Column column
 
-    return Join.create(tuple(joinIndex), mappingA[::1], mappingB[::1])
+    # Build the left and right series
+    cdef list leftColumns = [
+            column.c_remap(len(mappingA), mappingA.data.as_uints) for column in serA._columns
+    ]
+    cdef list rightColumns = [
+            column.c_remap(len(mappingB), mappingB.data.as_uints) for column in serB._columns
+    ]
+
+    return Join.create(Column.from_sequence(joinIndex), tuple(leftColumns), tuple(rightColumns))
