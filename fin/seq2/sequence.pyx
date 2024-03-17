@@ -7,6 +7,7 @@ from fin.seq2.column cimport Column
 # Globals
 # ======================================================================
 cdef array.array    int_array       = array.array("i", [])
+cdef array.array    unsigned_array  = array.array("I", [])
 cdef array.array    double_array    = array.array("d", [])
 
 # ======================================================================
@@ -29,19 +30,51 @@ cdef class Sequence:
 # ======================================================================
 # Join
 # ======================================================================
-cdef join(Column seqA, Column seqB, name=None):
+cdef class Join:
+    cdef tuple index
+    cdef unsigned[::1] mappingA
+    cdef unsigned[::1] mappingB
+
+    @staticmethod
+    cdef Join create(tuple index, unsigned[::1] mappingA, unsigned[::1] mappingB):
+        cdef Join join = Join.__new__(Join)
+        join.index = index
+        join.mappingA = mappingA
+        join.mappingB = mappingB
+
+        return join
+
+    cdef tuple as_tuple(self):
+        """
+        Convert a Join structure to a tuple.
+
+        For testing purposes.
+        """
+        return (self.index, self.mappingA, self.mappingB)
+
+def join(seqA, seqB, name=None):
+    return c_join(seqA, seqB, name)
+
+cdef c_join(Sequence seqA, Sequence seqB, name=None):
     if name is None:
         name = f"{seqA.name()} ∩ {seqB.name()}"
 
-    cdef tuple indexA = seqA.get_py_values()
-    cdef tuple indexB = seqB.get_py_values()
+    cdef tuple indexA = seqA._index.get_py_values()
+    cdef tuple indexB = seqB._index.get_py_values()
 
-    mapping = index_join(indexA, indexB)
+    cdef Join join = c_index_join(indexA, indexB)
+
+
 
 def index_join(indexA, indexB):
-    return c_index_join(indexA, indexB)
+    """
+    Python wrapper around `c_index_join`.
 
-cdef c_index_join(tuple indexA, tuple indexB):
+    For testing purposes.
+    """
+    return c_index_join(indexA, indexB).as_tuple()
+
+cdef Join c_index_join(tuple indexA, tuple indexB):
     """
     Join seqA and seqB using their index.
     """
@@ -50,10 +83,10 @@ cdef c_index_join(tuple indexA, tuple indexB):
 
     # At worst, we will have min(lenA, lenB) rows in the inner join
     cdef unsigned lenMapping = lenA if lenA < lenB else lenB
-    cdef array.array mappingA = array.clone(int_array, lenMapping, zero=False)
-    cdef array.array mappingB = array.clone(int_array, lenMapping, zero=False)
+    cdef array.array mappingA = array.clone(unsigned_array, lenMapping, zero=False)
+    cdef array.array mappingB = array.clone(unsigned_array, lenMapping, zero=False)
 
-    cdef unsigned i = 0
+    cdef unsigned n = 0
     cdef unsigned posA = 0
     cdef unsigned posB = 0
 
@@ -77,16 +110,20 @@ cdef c_index_join(tuple indexA, tuple indexB):
             if posB == lenB:
                 break
         else:
-            mappingA.data.as_uints[i] = posA
-            mappingB.data.as_uints[i] = posB
-            i += 1
+            mappingA.data.as_uints[n] = posA
+            mappingB.data.as_uints[n] = posB
+            n += 1
             posA += 1
             posB += 1
             if posA == lenA or posB == lenB:
                 break
 
     # shrink array to their correct length:
-    array.resize(mappingA, i)
-    array.resize(mappingB, i)
+    array.resize(mappingA, n)
+    array.resize(mappingB, n)
 
-    return (mappingA, mappingB)
+    # Build the index
+    cdef unsigned i
+    cdef list joinIndex = [indexA[mappingA[i]] for i in range(n)]
+
+    return Join.create(tuple(joinIndex), mappingA[::1], mappingB[::1])

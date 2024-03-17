@@ -8,6 +8,7 @@ class TestJoin(unittest.TestCase):
         indexB = tuple("ABDEF")
         #               01234
 
-        ma, mb = sequence.index_join(indexA, indexB)
+        index, ma, mb = sequence.index_join(indexA, indexB)
         self.assertSequenceEqual(ma, [0, 1, 3])
         self.assertSequenceEqual(mb, [0, 1, 4])
+        self.assertEqual(index, tuple("ABF"))
