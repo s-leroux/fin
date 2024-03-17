@@ -4,4 +4,4 @@ cdef class Serie:
     cdef Column  _index
     cdef tuple   _columns
 
-    cdef Serie c_add_with_integral(self, double other)
+    cdef Serie c_add_scalar(self, double other)

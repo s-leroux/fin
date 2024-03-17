@@ -5,6 +5,13 @@ from fin.mathx cimport NaN, isnan
 import array
 
 # ======================================================================
+# Errors
+# ======================================================================
+class ColumnSizeMismatchError(ValueError):
+    def __init__(self, colA, colB):
+        super().__init__(f"Column size mismatch ({len(colA)} and {len(colB)})")
+
+# ======================================================================
 # Utilities
 # ======================================================================
 cdef from_sequence(sequence):
@@ -46,12 +53,21 @@ cpdef tuple py_values_from_f_values(array.array arr):
 
     return tuple(lst) # Enforce immutability
 
-cdef array.array add_integral_to_f_values(unsigned count, const double* values, double other):
+cdef array.array add_scalar(unsigned count, const double* values, double other):
     cdef array.array arr = array.clone(_double_array_template, count, zero=False)
     cdef unsigned i
 
     for i in range(count):
         arr.data.as_doubles[i] = values[i] + other
+
+    return arr
+
+cdef array.array add_vector(unsigned count, const double* a, const double* b):
+    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+    cdef unsigned i
+
+    for i in range(count):
+        arr.data.as_doubles[i] = a[i] + b[i]
 
     return arr
 
@@ -238,14 +254,23 @@ cdef class Column:
 
     def __add__(self, other):
         if isinstance(other, (int, float)):
-            return (<Column>self).c_add_integral(other) # Cast required here. Bug with Cython 0.26 ?
+            return (<Column>self).c_add_scalar(other) # Cast required here. Bug with Cython 0.26 ?
+        elif isinstance(other, Column):
+            return (<Column>self).c_add_vector(other)
         else:
             return NotImplemented
 
-    cdef Column c_add_integral(self, double value):
+    cdef Column c_add_scalar(self, double value):
+        """
+        Column to scalar addition.
+
+        This method performs an implicit conversion to float values.
+
+        TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+        """
         cdef Column result = Column()
         if self._f_values is not None:
-            result._f_values = add_integral_to_f_values(
+            result._f_values = add_scalar(
                     len(self._f_values),
                     self._f_values.data.as_doubles,
                     value
@@ -254,6 +279,32 @@ cdef class Column:
             raise NotImplementedError()
 
         return result
+
+    cdef Column c_add_vector(self, Column value):
+        """
+        Column to column addition.
+
+        This method performs an implicit conversion to float values.
+
+        TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+        """
+        cdef array.array arrA = self.get_f_values()
+        cdef array.array arrB = value.get_f_values()
+        cdef unsigned lenA = len(arrA)
+        cdef unsigned lenB = len(arrB)
+
+        if lenB != lenA:
+            raise ColumnSizeMismatchError(self, value)
+
+        cdef Column result = Column()
+        result._f_values = add_vector(
+                lenA,
+                arrA.data.as_doubles,
+                arrB.data.as_doubles
+        )
+
+        return result
+
 
     def remap(self, mapping):
         cdef array.array arr = array.array("I", mapping)

@@ -40,6 +40,15 @@ class TestColumnOperators(unittest.TestCase):
 
         self.assertSequenceEqual(c1.f_values, (13, 23, 33, 43, 53, 63))
 
+    def test_add_column(self):
+        arr0 = array.array("d", (10, 20, 30, 40, 50, 60))
+        arr1 = array.array("d", (11, 21, 31, 41, 51, 61))
+        c0 = Column.from_float_array(arr0)
+        c1 = Column.from_float_array(arr1)
+        c2 = c0 + c1
+
+        self.assertSequenceEqual(c2.f_values, [i+j for i,j in zip(arr0, arr1)])
+
 
 class TestColumn(unittest.TestCase, assertions.ExtraTests):
     def test_create_from_sequence(self):

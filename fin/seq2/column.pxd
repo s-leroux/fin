@@ -21,4 +21,5 @@ cdef class Column:
 
     cdef Column         c_remap(self, unsigned len, const unsigned* mapping)
 
-    cdef Column         c_add_integral(self, double value)
+    cdef Column         c_add_scalar(self, double value)
+    cdef Column         c_add_vector(self, Column value)
