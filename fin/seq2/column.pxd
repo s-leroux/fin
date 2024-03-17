@@ -4,8 +4,7 @@ import array
 # ======================================================================
 # Utilities
 # ======================================================================
-cpdef str get_column_name(obj)
-cpdef Column as_column(sequence, name=*)
+cpdef Column as_column(sequence)
 
 # ======================================================================
 # Column class
@@ -14,7 +13,6 @@ cdef class Column:
     """
     A column.
     """
-    cdef str            _name
     cdef tuple          _py_values
     cdef array.array    _f_values
 

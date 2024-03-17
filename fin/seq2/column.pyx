@@ -7,23 +7,17 @@ import array
 # ======================================================================
 # Utilities
 # ======================================================================
-cpdef str get_column_name(col):
-    try:
-        return col.name
-    except AttributeError:
-        return None
-
 cdef from_sequence(sequence):
     return (x if x is not None else NaN for x in sequence)
 
 cdef to_sequence(double[::1] view):
     return [ None if isnan(x) else x for x in view]
 
-cpdef Column as_column(obj, name=None):
+cpdef Column as_column(obj):
     try:
         return <Column?>obj
     except TypeError:
-        return Column.from_sequence(get_column_name(obj) if name is None else name, obj)
+        return Column.from_sequence(obj)
 
 # ======================================================================
 # Column class
@@ -96,35 +90,31 @@ cdef class Column:
     This is this class responsability to ensure the different representations are consistent
     and created on demand.
     """
-    def __init__(self, name):
-        self._name = name
+    def __init__(self):
+        pass
 
     @staticmethod
-    def from_sequence(name, sequence):
+    def from_sequence(sequence):
         """
         Create a Column from a sequence of Python ojects.
         """
-        cdef Column column = Column(name)
+        cdef Column column = Column()
         column._py_values = tuple(sequence)
 
         return column
 
     @staticmethod
-    def from_float_array(name, arr):
+    def from_float_array(arr):
         """
         Create a Column from an array of floats.
 
         This is an efficient "zero-copy" operation.
         You MUST treat the original array's content as an immutable object.
         """
-        cdef Column column = Column(name)
+        cdef Column column = Column()
         column._f_values = arr # type checking is implicitly done here
 
         return column
-
-    @property
-    def name(self):
-        return self._name
 
     @property
     def py_values(self):
@@ -185,7 +175,7 @@ cdef class Column:
         raise NotImplementedError()
 
     def __repr__(self):
-        return f"Column({self.name!r}, {self.py_values!r})"
+        return f"Column({self.py_values!r})"
 
     def __len__(self):
         if self._f_values:
@@ -197,7 +187,7 @@ cdef class Column:
 
     def __getitem__(self, x):
         if type(x) is slice:
-            column = Column(self.name)
+            column = Column()
             # XXX Do we really need to slice all representations?
             if self._f_values is not None:
                 column._f_values = self._f_values[x]
@@ -227,7 +217,7 @@ cdef class Column:
         """
         Create a copy of the column with values picked from the index specificed in `mapping`.
         """
-        cdef Column result = Column("remapped")
+        cdef Column result = Column()
         if self._f_values is not None:
             result._f_values = remap_from_f_values(self._f_values.data.as_doubles, count, mapping)
         elif self._py_values is not None:
@@ -238,16 +228,6 @@ cdef class Column:
         return result
 
     def remap(self, mapping):
-        cdef array.array arr = array.array("i", mapping)
+        cdef array.array arr = array.array("I", mapping)
 
         return self.c_remap(len(mapping), arr.data.as_uints)
-
-    def named(self, name):
-        """
-        Return a copy of the column with a different name.
-        """
-        column = Column(name)
-        column._py_values = self._py_values
-        column._f_values = self._f_values
-
-        return column

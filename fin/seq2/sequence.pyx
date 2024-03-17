@@ -20,12 +20,21 @@ cdef class Sequence:
     The index is assumed to be sorted in ascending order (strictly?).
     """
     def __init__(self, index, *columns):
-        self._name= "Sequence"
+        if not isinstance(index, Column):
+            index = Column.from_sequence(index)
+
+        columns = tuple([c if isinstance(c, Column) else Column.from_sequence(c) for c in columns])
+
         self._index = index
         self._columns = columns
 
-    def name(self):
-        return self._name
+    @property
+    def index(self):
+        return self._index
+
+    @property
+    def columns(self):
+        return self._columns
 
 # ======================================================================
 # Join
@@ -52,19 +61,24 @@ cdef class Join:
         """
         return (self.index, self.mappingA, self.mappingB)
 
-def join(seqA, seqB, name=None):
-    return c_join(seqA, seqB, name)
+def join(seqA, seqB):
+    return c_join(seqA, seqB)
 
-cdef c_join(Sequence seqA, Sequence seqB, name=None):
-    if name is None:
-        name = f"{seqA.name()} ∩ {seqB.name()}"
 
+cdef Sequence c_join(Sequence seqA, Sequence seqB):
     cdef tuple indexA = seqA._index.get_py_values()
     cdef tuple indexB = seqB._index.get_py_values()
 
     cdef Join join = c_index_join(indexA, indexB)
+    cdef list columns = []
+    cdef Column column
 
+    for column in seqA._columns:
+        columns.append(column.c_remap(len(join.mappingA), &join.mappingA[0]))
+    for column in seqB._columns:
+        columns.append(column.c_remap(len(join.mappingB), &join.mappingB[0]))
 
+    return Sequence(join.index, *columns)
 
 def index_join(indexA, indexB):
     """
