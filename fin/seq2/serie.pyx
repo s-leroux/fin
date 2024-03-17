@@ -11,11 +11,11 @@ cdef array.array    unsigned_array  = array.array("I", [])
 cdef array.array    double_array    = array.array("d", [])
 
 # ======================================================================
-# Sequence
+# Serie
 # ======================================================================
-cdef class Sequence:
+cdef class Serie:
     """
-    A Sequence is an index and a list of columns, all of same length.
+    A Serie is an index and a list of columns, all of same length.
 
     The index is assumed to be sorted in ascending order (strictly?).
     """
@@ -61,24 +61,24 @@ cdef class Join:
         """
         return (self.index, self.mappingA, self.mappingB)
 
-def join(seqA, seqB):
-    return c_join(seqA, seqB)
+def join(serA, serB):
+    return c_join(serA, serB)
 
 
-cdef Sequence c_join(Sequence seqA, Sequence seqB):
-    cdef tuple indexA = seqA._index.get_py_values()
-    cdef tuple indexB = seqB._index.get_py_values()
+cdef Serie c_join(Serie serA, Serie serB):
+    cdef tuple indexA = serA._index.get_py_values()
+    cdef tuple indexB = serB._index.get_py_values()
 
     cdef Join join = c_index_join(indexA, indexB)
     cdef list columns = []
     cdef Column column
 
-    for column in seqA._columns:
+    for column in serA._columns:
         columns.append(column.c_remap(len(join.mappingA), &join.mappingA[0]))
-    for column in seqB._columns:
+    for column in serB._columns:
         columns.append(column.c_remap(len(join.mappingB), &join.mappingB[0]))
 
-    return Sequence(join.index, *columns)
+    return Serie(join.index, *columns)
 
 def index_join(indexA, indexB):
     """
@@ -90,7 +90,7 @@ def index_join(indexA, indexB):
 
 cdef Join c_index_join(tuple indexA, tuple indexB):
     """
-    Join seqA and seqB using their index.
+    Create a join from two indices.
     """
     cdef unsigned lenA = len(indexA)
     cdef unsigned lenB = len(indexB)

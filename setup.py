@@ -8,6 +8,6 @@ setup(
         "fin/seq/algox.pyx",
         "fin/seq/column.pyx",
         "fin/seq2/column.pyx",
-        "fin/seq2/sequence.pyx",
+        "fin/seq2/serie.pyx",
         ], annotate=True)
 )
