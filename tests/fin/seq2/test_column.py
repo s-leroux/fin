@@ -56,6 +56,8 @@ def BinOp(name, fct):
 
 TestAddition = BinOp("Addition", lambda x,y: x+y)
 TestSutraction = BinOp("Subtraction", lambda x,y: x-y)
+TestMultiplication = BinOp("Multiplication", lambda x,y: x*y)
+TestDivision = BinOp("Division", lambda x,y: x/y)
 
 class TestColumn(unittest.TestCase, assertions.ExtraTests):
     def test_create_from_sequence(self):

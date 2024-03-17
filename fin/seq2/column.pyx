@@ -59,7 +59,50 @@ cpdef tuple py_values_from_f_values(array.array arr):
 # ----------------------------------------------------------------------
 # Addition
 # ----------------------------------------------------------------------
-cdef array.array add_scalar(unsigned count, const double* values, double other):
+cdef Column add_column_scalar(Column column, double scalar):
+    """
+    Column to scalar addition.
+
+    This method performs an implicit conversion to float values.
+
+    TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+    """
+    cdef Column result = Column()
+    cdef array.array values = column.get_f_values()
+    result._f_values = add_vector_scalar(
+            len(values),
+            values.data.as_doubles,
+            scalar
+    )
+
+    return result
+
+cdef Column add_column_column(Column a, Column b):
+    """
+    Column to column addition.
+
+    This method performs an implicit conversion to float values.
+
+    TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+    """
+    cdef array.array arrA = a.get_f_values()
+    cdef array.array arrB = b.get_f_values()
+    cdef unsigned lenA = len(arrA)
+    cdef unsigned lenB = len(arrB)
+
+    if lenB != lenA:
+        raise ColumnSizeMismatchError(a, b)
+
+    cdef Column result = Column()
+    result._f_values = add_vector_vector(
+            lenA,
+            arrA.data.as_doubles,
+            arrB.data.as_doubles
+    )
+
+    return result
+
+cdef array.array add_vector_scalar(unsigned count, const double* values, double other):
     cdef array.array arr = array.clone(_double_array_template, count, zero=False)
     cdef unsigned i
 
@@ -68,12 +111,140 @@ cdef array.array add_scalar(unsigned count, const double* values, double other):
 
     return arr
 
-cdef array.array add_vector(unsigned count, const double* a, const double* b):
+cdef array.array add_vector_vector(unsigned count, const double* a, const double* b):
     cdef array.array arr = array.clone(_double_array_template, count, zero=False)
     cdef unsigned i
 
     for i in range(count):
         arr.data.as_doubles[i] = a[i] + b[i]
+
+    return arr
+
+# ----------------------------------------------------------------------
+# Multiplication
+# ----------------------------------------------------------------------
+cdef Column mul_column_scalar(Column column, double scalar):
+    """
+    Column to scalar multiplication.
+
+    This method performs an implicit conversion to float values.
+
+    TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+    """
+    cdef Column result = Column()
+    cdef array.array values = column.get_f_values()
+    result._f_values = mul_vector_scalar(
+            len(values),
+            values.data.as_doubles,
+            scalar
+    )
+
+    return result
+
+cdef Column mul_column_column(Column a, Column b):
+    """
+    Column to column multiplication.
+
+    This method performs an implicit conversion to float values.
+
+    TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+    """
+    cdef array.array arrA = a.get_f_values()
+    cdef array.array arrB = b.get_f_values()
+    cdef unsigned lenA = len(arrA)
+    cdef unsigned lenB = len(arrB)
+
+    if lenB != lenA:
+        raise ColumnSizeMismatchError(a, b)
+
+    cdef Column result = Column()
+    result._f_values = mul_vector_vector(
+            lenA,
+            arrA.data.as_doubles,
+            arrB.data.as_doubles
+    )
+
+    return result
+
+cdef array.array mul_vector_scalar(unsigned count, const double* values, double other):
+    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+    cdef unsigned i
+
+    for i in range(count):
+        arr.data.as_doubles[i] = values[i] * other
+
+    return arr
+
+cdef array.array mul_vector_vector(unsigned count, const double* a, const double* b):
+    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+    cdef unsigned i
+
+    for i in range(count):
+        arr.data.as_doubles[i] = a[i] * b[i]
+
+    return arr
+
+# ----------------------------------------------------------------------
+# Division
+# ----------------------------------------------------------------------
+cdef Column div_column_scalar(Column column, double scalar):
+    """
+    Column to scalar division.
+
+    This method performs an implicit conversion to float values.
+
+    TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+    """
+    cdef Column result = Column()
+    cdef array.array values = column.get_f_values()
+    result._f_values = div_vector_scalar(
+            len(values),
+            values.data.as_doubles,
+            scalar
+    )
+
+    return result
+
+cdef Column div_column_column(Column a, Column b):
+    """
+    Column to column multiplication.
+
+    This method performs an implicit conversion to float values.
+
+    TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+    """
+    cdef array.array arrA = a.get_f_values()
+    cdef array.array arrB = b.get_f_values()
+    cdef unsigned lenA = len(arrA)
+    cdef unsigned lenB = len(arrB)
+
+    if lenB != lenA:
+        raise ColumnSizeMismatchError(a, b)
+
+    cdef Column result = Column()
+    result._f_values = div_vector_vector(
+            lenA,
+            arrA.data.as_doubles,
+            arrB.data.as_doubles
+    )
+
+    return result
+
+cdef array.array div_vector_scalar(unsigned count, const double* values, double other):
+    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+    cdef unsigned i
+
+    for i in range(count):
+        arr.data.as_doubles[i] = values[i] / other
+
+    return arr
+
+cdef array.array div_vector_vector(unsigned count, const double* a, const double* b):
+    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+    cdef unsigned i
+
+    for i in range(count):
+        arr.data.as_doubles[i] = a[i] / b[i]
 
     return arr
 
@@ -281,60 +452,51 @@ cdef class Column:
     # ------------------------------------------------------------------
     def __add__(self, other):
         if isinstance(other, (int, float)):
-            return (<Column>self).c_add_scalar(other) # Cast required here. Bug with Cython 0.26 ?
+            return add_column_scalar(self, other)
         elif isinstance(other, Column):
-            return (<Column>self).c_add_column(other)
+            return add_column_column(self, other)
         else:
             return NotImplemented
 
     cdef Column c_add_scalar(self, double scalar):
-        """
-        Column to scalar addition.
-
-        This method performs an implicit conversion to float values.
-
-        TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
-        """
-        cdef Column result = Column()
-        cdef array.array values = self.get_f_values()
-        result._f_values = add_scalar(
-                len(values),
-                values.data.as_doubles,
-                scalar
-        )
-
-        return result
-
-    cdef Column c_add_column(self, Column value):
-        """
-        Column to column addition.
-
-        This method performs an implicit conversion to float values.
-
-        TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
-        """
-        cdef array.array arrA = self.get_f_values()
-        cdef array.array arrB = value.get_f_values()
-        cdef unsigned lenA = len(arrA)
-        cdef unsigned lenB = len(arrB)
-
-        if lenB != lenA:
-            raise ColumnSizeMismatchError(self, value)
-
-        cdef Column result = Column()
-        result._f_values = add_vector(
-                lenA,
-                arrA.data.as_doubles,
-                arrB.data.as_doubles
-        )
-
-        return result
+        return add_column_scalar(self, scalar)
 
     # ------------------------------------------------------------------
     # Subtraction
     # ------------------------------------------------------------------
     def __sub__(self, other):
         return self + -other
+
+    cdef Column c_sub_scalar(self, double scalar):
+        return add_column_scalar(self, -scalar)
+
+    # ------------------------------------------------------------------
+    # Multiplication
+    # ------------------------------------------------------------------
+    def __mul__(self, other):
+        if isinstance(other, (int, float)):
+            return mul_column_scalar(self, other)
+        elif isinstance(other, Column):
+            return mul_column_column(self, other)
+        else:
+            return NotImplemented
+
+    cdef Column c_mul_scalar(self, double scalar):
+        return mul_column_scalar(self, scalar)
+
+    # ------------------------------------------------------------------
+    # Division
+    # ------------------------------------------------------------------
+    def __truediv__(self, other):
+        if isinstance(other, (int, float)):
+            return div_column_scalar(self, other)
+        elif isinstance(other, Column):
+            return div_column_column(self, other)
+        else:
+            return NotImplemented
+
+    cdef Column c_div_scalar(self, double scalar):
+        return div_column_scalar(self, scalar)
 
     # ------------------------------------------------------------------
     # Unary negation
