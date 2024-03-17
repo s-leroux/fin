@@ -17,7 +17,20 @@ class TestSequence(unittest.TestCase):
         self.assertIsInstance(c0, column.Column)
         self.assertSequenceEqual(c0.py_values, [10, 20, 30])
 
-    def test_add_sequences(self):
+    def test_add_scalar(self):
+        """
+        You can add a scalar to a serie.
+        """
+        seqA = [10, 20, 30, 40, 50]
+        serA = serie.Serie("ABCDF", seqA)
+        scalar = 3
+
+        serB = serA + scalar
+        self.assertSequenceEqual(serB.index.py_values, "ABCDF")
+        self.assertEqual(len(serB.columns), 1)
+        self.assertSequenceEqual(serB.columns[0].f_values, [x+scalar for x in seqA])
+
+    def test_add_series(self):
         """
         Adding two sequences performs an implicit join.
         """

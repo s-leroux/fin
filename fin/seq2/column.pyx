@@ -256,11 +256,11 @@ cdef class Column:
         if isinstance(other, (int, float)):
             return (<Column>self).c_add_scalar(other) # Cast required here. Bug with Cython 0.26 ?
         elif isinstance(other, Column):
-            return (<Column>self).c_add_vector(other)
+            return (<Column>self).c_add_column(other)
         else:
             return NotImplemented
 
-    cdef Column c_add_scalar(self, double value):
+    cdef Column c_add_scalar(self, double scalar):
         """
         Column to scalar addition.
 
@@ -269,18 +269,16 @@ cdef class Column:
         TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
         """
         cdef Column result = Column()
-        if self._f_values is not None:
-            result._f_values = add_scalar(
-                    len(self._f_values),
-                    self._f_values.data.as_doubles,
-                    value
-            )
-        else:
-            raise NotImplementedError()
+        cdef array.array values = self.get_f_values()
+        result._f_values = add_scalar(
+                len(values),
+                values.data.as_doubles,
+                scalar
+        )
 
         return result
 
-    cdef Column c_add_vector(self, Column value):
+    cdef Column c_add_column(self, Column value):
         """
         Column to column addition.
 

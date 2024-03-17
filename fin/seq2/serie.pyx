@@ -41,13 +41,14 @@ cdef class Serie:
         Addition.
         """
         if isinstance(other, (int, float)):
-            return self.c_add_scalar(other)
+            return (<Serie>self).c_add_scalar(other)
         elif isinstance(other, Serie):
             return (<Serie>self).c_add_serie(other)
         else:
             return NotImplemented
 
     cdef Serie c_add_scalar(self, double other):
+        cdef Column column
         new = [column.c_add_scalar(other) for column in self._columns]
         return Serie(self._index, *new)
 
