@@ -14,12 +14,6 @@ class ColumnSizeMismatchError(ValueError):
 # ======================================================================
 # Utilities
 # ======================================================================
-cdef from_sequence(sequence):
-    return (x if x is not None else NaN for x in sequence)
-
-cdef to_sequence(double[::1] view):
-    return [ None if isnan(x) else x for x in view]
-
 cpdef Column as_column(obj):
     try:
         return <Column?>obj
