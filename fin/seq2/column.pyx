@@ -46,6 +46,15 @@ cpdef tuple py_values_from_f_values(array.array arr):
 
     return tuple(lst) # Enforce immutability
 
+cdef array.array add_integral_to_f_values(unsigned count, const double* values, double other):
+    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+    cdef unsigned i
+
+    for i in range(count):
+        arr.data.as_doubles[i] = values[i] + other
+
+    return arr
+
 cdef array.array remap_from_f_values(double* values, unsigned count, const unsigned* mapping):
     """
     Remap an array of double using the indices provided in `mapping`.
@@ -222,6 +231,25 @@ cdef class Column:
             result._f_values = remap_from_f_values(self._f_values.data.as_doubles, count, mapping)
         elif self._py_values is not None:
             result._py_values = remap_from_py_values(self._py_values, count, mapping)
+        else:
+            raise NotImplementedError()
+
+        return result
+
+    def __add__(self, other):
+        if isinstance(other, (int, float)):
+            return (<Column>self).c_add_integral(other) # Cast required here. Bug with Cython 0.26 ?
+        else:
+            return NotImplemented
+
+    cdef Column c_add_integral(self, double value):
+        cdef Column result = Column()
+        if self._f_values is not None:
+            result._f_values = add_integral_to_f_values(
+                    len(self._f_values),
+                    self._f_values.data.as_doubles,
+                    value
+            )
         else:
             raise NotImplementedError()
 

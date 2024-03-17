@@ -20,3 +20,5 @@ cdef class Column:
     cdef array.array    get_f_values(self)
 
     cdef Column         c_remap(self, unsigned len, const unsigned* mapping)
+
+    cdef Column         c_add_integral(self, double value)

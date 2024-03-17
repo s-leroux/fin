@@ -32,6 +32,15 @@ class TestColumnRemap(unittest.TestCase):
             40, 50, 10, 40, 20, 50, 50, 60
         ))
 
+class TestColumnOperators(unittest.TestCase):
+    def test_add_integral(self):
+        arr = array.array("d", (10, 20, 30, 40, 50, 60))
+        c0 = Column.from_float_array(arr)
+        c1 = c0 + 3
+
+        self.assertSequenceEqual(c1.f_values, (13, 23, 33, 43, 53, 63))
+
+
 class TestColumn(unittest.TestCase, assertions.ExtraTests):
     def test_create_from_sequence(self):
         """

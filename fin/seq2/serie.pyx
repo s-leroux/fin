@@ -36,6 +36,19 @@ cdef class Serie:
     def columns(self):
         return self._columns
 
+    def __add__(self, other):
+        """
+        Addition.
+        """
+        if isinstance(other, (int, float)):
+            return self.c_add_integral(other)
+        else:
+            return NotImplemented
+
+    cdef Serie c_add_with_integral(self, double other):
+        new = [column.c_add_integral(other) for column in self._columns]
+        return Serie(self._index, *new)
+
 # ======================================================================
 # Join
 # ======================================================================
