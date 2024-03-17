@@ -42,12 +42,26 @@ cdef class Serie:
         """
         if isinstance(other, (int, float)):
             return self.c_add_scalar(other)
+        elif isinstance(other, Serie):
+            return (<Serie>self).c_add_serie(other)
         else:
             return NotImplemented
 
     cdef Serie c_add_scalar(self, double other):
-        new = [column.c_scalar(other) for column in self._columns]
+        new = [column.c_add_scalar(other) for column in self._columns]
         return Serie(self._index, *new)
+
+    cdef Serie c_add_serie(self, Serie other):
+        cdef Join join = c_index_join(self._index.get_py_values(), other._index.get_py_values())
+        cdef unsigned count = len(join.index)
+        cdef Column a, b
+        cdef list new = [
+            a.c_remap(count, &join.mappingA[0]) + b.c_remap(count, &join.mappingB[0])
+                for a in self._columns for b in other._columns
+        ]
+
+        return Serie(join.index, *new)
+
 
 # ======================================================================
 # Join

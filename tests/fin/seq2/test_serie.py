@@ -17,6 +17,18 @@ class TestSequence(unittest.TestCase):
         self.assertIsInstance(c0, column.Column)
         self.assertSequenceEqual(c0.py_values, [10, 20, 30])
 
+    def test_add_sequences(self):
+        """
+        Adding two sequences performs an implicit join.
+        """
+        serA = serie.Serie("ABCDF", [10, 20, 30, 40, 50])
+        serB = serie.Serie("ABCEF", [11, 21, 31, 41, 51])
+
+        serC = serA + serB
+        self.assertSequenceEqual(serC.index.py_values, "ABCF")
+        self.assertEqual(len(serC.columns), 1)
+        self.assertSequenceEqual(serC.columns[0].f_values, (21.0, 41.0, 61.0, 101.0))
+
 
 class TestJoin(unittest.TestCase):
     def test_index_join(self):
