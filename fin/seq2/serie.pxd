@@ -1,5 +1,8 @@
 from fin.seq2.column cimport Column
 
+# ======================================================================
+# Serie class
+# ======================================================================
 cdef class Serie:
     cdef Column  _index
     cdef tuple   _columns
