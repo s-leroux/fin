@@ -27,10 +27,13 @@ cpdef Column as_column(obj):
         return Column.from_sequence(obj)
 
 # ======================================================================
-# Column class
+# Low-level operations
 # ======================================================================
 cdef array.array _double_array_template = array.array("d")
 
+# ----------------------------------------------------------------------
+# Conversion
+# ----------------------------------------------------------------------
 cpdef array.array f_values_from_py_values(tuple sequence):
     cdef unsigned n = len(sequence)
     cdef unsigned i
@@ -53,6 +56,9 @@ cpdef tuple py_values_from_f_values(array.array arr):
 
     return tuple(lst) # Enforce immutability
 
+# ----------------------------------------------------------------------
+# Addition
+# ----------------------------------------------------------------------
 cdef array.array add_scalar(unsigned count, const double* values, double other):
     cdef array.array arr = array.clone(_double_array_template, count, zero=False)
     cdef unsigned i
@@ -71,6 +77,21 @@ cdef array.array add_vector(unsigned count, const double* a, const double* b):
 
     return arr
 
+# ----------------------------------------------------------------------
+# Unary negation
+# ----------------------------------------------------------------------
+cdef array.array neg(unsigned count, const double* values):
+    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+    cdef unsigned i
+
+    for i in range(count):
+        arr.data.as_doubles[i] = -values[i]
+
+    return arr
+
+# ----------------------------------------------------------------------
+# Column remapping
+# ----------------------------------------------------------------------
 cdef array.array remap_from_f_values(double* values, unsigned count, const unsigned* mapping):
     """
     Remap an array of double using the indices provided in `mapping`.
@@ -104,6 +125,9 @@ cdef tuple remap_from_py_values(tuple values, unsigned count, const unsigned* ma
     return tuple(result)
     
 
+# ======================================================================
+# Column class
+# ======================================================================
 cdef class Column:
     """
     A column.
@@ -252,6 +276,9 @@ cdef class Column:
 
         return result
 
+    # ------------------------------------------------------------------
+    # Addition
+    # ------------------------------------------------------------------
     def __add__(self, other):
         if isinstance(other, (int, float)):
             return (<Column>self).c_add_scalar(other) # Cast required here. Bug with Cython 0.26 ?
@@ -300,6 +327,31 @@ cdef class Column:
                 arrA.data.as_doubles,
                 arrB.data.as_doubles
         )
+
+        return result
+
+    # ------------------------------------------------------------------
+    # Subtraction
+    # ------------------------------------------------------------------
+    def __sub__(self, other):
+        return self + -other
+
+    # ------------------------------------------------------------------
+    # Unary negation
+    # ------------------------------------------------------------------
+    def __neg__(self):
+        """
+        Unary negation.
+
+        This method performs an implicit conversion to float values.
+
+        TODO: If implicit conversion raise an error, fallback to cell-by-cell negation.
+        """
+        cdef array.array values = self.get_f_values()
+        cdef unsigned count = len(values)
+
+        cdef Column result = Column()
+        result._f_values = neg(count, values.data.as_doubles)
 
         return result
 

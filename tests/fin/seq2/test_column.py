@@ -32,23 +32,30 @@ class TestColumnRemap(unittest.TestCase):
             40, 50, 10, 40, 20, 50, 50, 60
         ))
 
-class TestColumnOperators(unittest.TestCase):
-    def test_add_integral(self):
-        arr = array.array("d", (10, 20, 30, 40, 50, 60))
-        c0 = Column.from_float_array(arr)
-        c1 = c0 + 3
+def BinOp(name, fct):
+    class C(unittest.TestCase):
+        def test_scalar_op(self):
+            scalar = 3
+            arr = array.array("d", (10, 20, 30, 40, 50, 60))
+            c0 = Column.from_float_array(arr)
+            c1 = fct(c0, scalar)
 
-        self.assertSequenceEqual(c1.f_values, (13, 23, 33, 43, 53, 63))
+            self.assertSequenceEqual(c1.f_values, [fct(i, scalar) for i in arr])
 
-    def test_add_column(self):
-        arr0 = array.array("d", (10, 20, 30, 40, 50, 60))
-        arr1 = array.array("d", (11, 21, 31, 41, 51, 61))
-        c0 = Column.from_float_array(arr0)
-        c1 = Column.from_float_array(arr1)
-        c2 = c0 + c1
+        def test_column_op(self):
+            arr0 = array.array("d", (10, 20, 30, 40, 50, 60))
+            arr1 = array.array("d", (11, 21, 31, 41, 51, 61))
+            c0 = Column.from_float_array(arr0)
+            c1 = Column.from_float_array(arr1)
+            c2 = fct(c0, c1)
 
-        self.assertSequenceEqual(c2.f_values, [i+j for i,j in zip(arr0, arr1)])
+            self.assertSequenceEqual(c2.f_values, [fct(i, j) for i,j in zip(arr0, arr1)])
 
+    C.__name__ = C.__qualname__ = name
+    return C
+
+TestAddition = BinOp("Addition", lambda x,y: x+y)
+TestSutraction = BinOp("Subtraction", lambda x,y: x-y)
 
 class TestColumn(unittest.TestCase, assertions.ExtraTests):
     def test_create_from_sequence(self):
