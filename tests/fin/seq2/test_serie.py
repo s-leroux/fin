@@ -67,3 +67,14 @@ class TestJoin(unittest.TestCase):
         self.assertSequenceEqual(left.py_values, [10, 11, 12, 14])
         self.assertSequenceEqual(right.py_values, [20, 21, 22, 24])
 
+    def test_serie_join_operator(self):
+        serA = serie.Serie("ABCDFG", [10, 11, 12, 13, 14, 15])
+        serB = serie.Serie("ABCEF", [20, 21, 22, 23, 24])
+
+        join = serA & serB
+
+        self.assertSequenceEqual(join.index.py_values, "ABCF")
+
+        self.assertSequenceEqual(join.columns[0].py_values, [10, 11, 12, 14])
+        self.assertSequenceEqual(join.columns[1].py_values, [20, 21, 22, 24])
+

@@ -71,6 +71,17 @@ cdef class Serie:
 
         return Serie(join.index, *new)
 
+    def __and__(self, other):
+        """
+        Join operator.
+        """
+        cdef Join join
+
+        if isinstance(other, Serie):
+            join = c_join(self, other)
+            return Serie(join.index, *(join.left+join.right))
+        else:
+            return NotImplemented
 
 # ======================================================================
 # Join
