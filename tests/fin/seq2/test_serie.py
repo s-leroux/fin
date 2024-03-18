@@ -3,7 +3,7 @@ import unittest
 from fin.seq2 import serie
 from fin.seq2 import column
 
-class TestSequence(unittest.TestCase):
+class TestSerie(unittest.TestCase):
     def test_create_serie_from_lists(self):
         """
         You can create a serie from lists.
@@ -41,6 +41,18 @@ class TestSequence(unittest.TestCase):
         self.assertSequenceEqual(serC.index.py_values, "ABCF")
         self.assertEqual(len(serC.columns), 1)
         self.assertSequenceEqual(serC.columns[0].f_values, (21.0, 41.0, 61.0, 101.0))
+
+    def test_str_representation(self):
+        ser = serie.Serie("ABCDF", [10, 20, 30, 40, 50])
+        expected="\n".join((
+            "A, 10",
+            "B, 20",
+            "C, 30",
+            "D, 40",
+            "F, 50",
+        ))
+
+        self.assertEqual(str(ser), expected)
 
 
 class TestJoin(unittest.TestCase):

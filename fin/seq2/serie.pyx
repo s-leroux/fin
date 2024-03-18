@@ -2,6 +2,7 @@ from cpython cimport array
 import array
 
 from fin.seq2.column cimport Column
+from fin.seq2.table import Table
 
 # ======================================================================
 # Globals
@@ -35,6 +36,17 @@ cdef class Serie:
     @property
     def columns(self):
         return self._columns
+
+    def __str__(self):
+        """
+        Convert to string.
+
+        Rely on the serie formatting utility.
+        """
+        tbl = Table()
+        tbl.append(self)
+
+        return str(tbl)
 
     def __add__(self, other):
         """
