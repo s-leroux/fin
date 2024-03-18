@@ -10,6 +10,8 @@ DEFAULT_CONTEXT=formatters.Context()
 class Table:
     """
     A representation of a Serie.
+
+    XXX Possible rename this as "SerieFormatter".
     """
     def __init__(self):
         self._serie = None

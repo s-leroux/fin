@@ -42,19 +42,6 @@ class TestSerie(unittest.TestCase):
         self.assertEqual(len(serC.columns), 1)
         self.assertSequenceEqual(serC.columns[0].f_values, (21.0, 41.0, 61.0, 101.0))
 
-    def test_str_representation(self):
-        ser = serie.Serie("ABCDF", [10, 20, 30, 40, 50])
-        expected="\n".join((
-            "A, 10",
-            "B, 20",
-            "C, 30",
-            "D, 40",
-            "F, 50",
-        ))
-
-        self.assertEqual(str(ser), expected)
-
-
 class TestJoin(unittest.TestCase):
     def test_serie_join(self):
         ser0 = serie.Serie("ABCDFG", [10, 11, 12, 13, 14, 15])
@@ -77,4 +64,29 @@ class TestJoin(unittest.TestCase):
 
         self.assertSequenceEqual(join.columns[0].py_values, [10, 11, 12, 14])
         self.assertSequenceEqual(join.columns[1].py_values, [20, 21, 22, 24])
+
+class TestSerieToOtherFormatsConversion(unittest.TestCase):
+    def test_str_representation_1_column(self):
+        ser = serie.Serie("ABCDF", [10, 20, 30, 40, 50])
+        expected="\n".join((
+            "A, 10",
+            "B, 20",
+            "C, 30",
+            "D, 40",
+            "F, 50",
+        ))
+
+        self.assertEqual(str(ser), expected)
+
+    def test_str_representation_2_columns(self):
+        ser = serie.Serie("ABC", [10, 20, 30]) & serie.Serie("ABC", [11, 21, 31])
+        expected="\n".join((
+            "A, 10",
+            "B, 20",
+            "C, 30",
+            "D, 40",
+            "F, 50",
+        ))
+
+        self.assertEqual(str(ser), expected)
 
