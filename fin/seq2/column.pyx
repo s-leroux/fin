@@ -474,7 +474,7 @@ cdef class Column:
 
     def __getitem__(self, x):
         if type(x) is slice:
-            column = Column()
+            column = new_column_with_meta(self)
             # XXX Do we really need to slice all representations?
             if self._f_values is not None:
                 column._f_values = self._f_values[x]
@@ -507,7 +507,7 @@ cdef class Column:
         """
         Create a copy of the column with values picked from the index specificed in `mapping`.
         """
-        cdef Column result = Column()
+        cdef Column result = new_column_with_meta(self)
         if self._f_values is not None:
             result._f_values = remap_from_f_values(self._f_values.data.as_doubles, count, mapping)
         elif self._py_values is not None:
@@ -594,7 +594,8 @@ cdef class Column:
         cdef array.array values = self.get_f_values()
         cdef unsigned count = len(values)
 
-        cdef Column result = Column()
+        cdef Column result = new_column_with_meta(self)
+        result._name = f"-{self.get_name()}"
         result._f_values = neg(count, values.data.as_doubles)
 
         return result

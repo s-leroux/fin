@@ -51,9 +51,7 @@ def BinOp(name, op, fct):
             c2 = fct(c0, c1)
 
             self.assertSequenceEqual(c2.f_values, [fct(i, j) for i,j in zip(arr0, arr1)])
-            if op != "+-":
-                # Special case as "binary subtraction" is defined as "addition with unary negation"
-                self.assertEqual(c2.name, f"({c0.name}{op}{c1.name})")
+            self.assertEqual(c2.name, f"({c0.name}{op}{c1.name})")
 
     C.__name__ = C.__qualname__ = name
     return C
