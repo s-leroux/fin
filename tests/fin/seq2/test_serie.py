@@ -81,11 +81,9 @@ class TestSerieToOtherFormatsConversion(unittest.TestCase):
     def test_str_representation_2_columns(self):
         ser = serie.Serie("ABC", [10, 20, 30]) & serie.Serie("ABC", [11, 21, 31])
         expected="\n".join((
-            "A, 10",
-            "B, 20",
-            "C, 30",
-            "D, 40",
-            "F, 50",
+            "A, 10, 11",
+            "B, 20, 21",
+            "C, 30, 31",
         ))
 
         self.assertEqual(str(ser), expected)

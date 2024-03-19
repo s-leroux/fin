@@ -28,21 +28,17 @@ class Table:
         else:
             index, left, right = newSerie.index, (), newSerie.columns
 
-        # Check limitations
-        if len(right) != 1:
-            raise ValueError(f"Only 1-column series are supported ({len(right)} found)")
+        for c in right:
+            fmt = formatter if formatter is not None else c.formatter
+            if fmt is None:
+                fmt = DEFAULT_FORMATTER
 
-        if title is None:
-            title = ""
-
-        if formatter is None:
-            formatter = DEFAULT_FORMATTER
+            self._meta.append(dict(
+                title=title if title is not None else c.name,
+                formatter=fmt
+                ))
 
         self._serie = serie.Serie(index, *(left + right))
-        self._meta.append(dict(
-            title=title,
-            formatter=formatter,
-            ))
 
     def __str__(self, context=None):
         if self._serie is None:
