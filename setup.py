@@ -9,5 +9,8 @@ setup(
         "fin/seq/column.pyx",
         "fin/seq2/column.pyx",
         "fin/seq2/serie.pyx",
-        ], annotate=True)
+        ],
+        annotate=True,
+        compiler_directives={'language_level' : "3"},
+    )
 )

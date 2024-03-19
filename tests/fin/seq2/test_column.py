@@ -32,7 +32,7 @@ class TestColumnRemap(unittest.TestCase):
             40, 50, 10, 40, 20, 50, 50, 60
         ))
 
-def BinOp(name, fct):
+def BinOp(name, op, fct):
     class C(unittest.TestCase):
         def test_scalar_op(self):
             scalar = 3
@@ -41,6 +41,7 @@ def BinOp(name, fct):
             c1 = fct(c0, scalar)
 
             self.assertSequenceEqual(c1.f_values, [fct(i, scalar) for i in arr])
+            self.assertEqual(c1.name, f"({c0.name}{op}{scalar:.1f})")
 
         def test_column_op(self):
             arr0 = array.array("d", (10, 20, 30, 40, 50, 60))
@@ -50,14 +51,17 @@ def BinOp(name, fct):
             c2 = fct(c0, c1)
 
             self.assertSequenceEqual(c2.f_values, [fct(i, j) for i,j in zip(arr0, arr1)])
+            if op != "+-":
+                # Special case as "binary subtraction" is defined as "addition with unary negation"
+                self.assertEqual(c2.name, f"({c0.name}{op}{c1.name})")
 
     C.__name__ = C.__qualname__ = name
     return C
 
-TestAddition = BinOp("Addition", lambda x,y: x+y)
-TestSutraction = BinOp("Subtraction", lambda x,y: x-y)
-TestMultiplication = BinOp("Multiplication", lambda x,y: x*y)
-TestDivision = BinOp("Division", lambda x,y: x/y)
+TestAddition = BinOp("Addition", "+", lambda x,y: x+y)
+TestSutraction = BinOp("Subtraction", "+-", lambda x,y: x-y)
+TestMultiplication = BinOp("Multiplication", "*", lambda x,y: x*y)
+TestDivision = BinOp("Division", "/", lambda x,y: x/y)
 
 class TestColumn(unittest.TestCase, assertions.ExtraTests):
     def test_create_from_sequence(self):
@@ -175,6 +179,25 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
             with self.subTest(use_case=use_case, created="from float array"):
                 start, end = use_case
                 self.assertSequenceEqual(carr[start:end].f_values, carr.f_values[start:end])
+
+# ======================================================================
+# Column metadata
+# ======================================================================
+class TestColumnMetadata(unittest.TestCase):
+    def test_get_name(self):
+        """
+        By default a name is infered from the Column's id.
+        """
+        c = Column.from_sequence([1,2,3])
+        self.assertRegex(c.name, ":[0-9]{6}")
+
+    def test_get_formatter(self):
+        """
+        By default, the formatter is set to None.
+        """
+        c = Column.from_sequence([1,2,3])
+
+        self.assertIs(c.formatter, None)
 
 # ======================================================================
 # Utilities

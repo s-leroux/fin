@@ -5,6 +5,11 @@ from fin.mathx cimport NaN, isnan
 import array
 
 # ======================================================================
+# Globals
+# ======================================================================
+cdef unsigned   _id = 0
+
+# ======================================================================
 # Errors
 # ======================================================================
 class ColumnSizeMismatchError(ValueError):
@@ -19,6 +24,14 @@ cpdef Column as_column(obj):
         return <Column?>obj
     except TypeError:
         return Column.from_sequence(obj)
+
+cdef Column new_column_with_meta(Column other):
+    cdef Column result = Column()
+    # _id is filled by __cinit__
+    result._name = other._name
+    result._formatter = other._formatter
+
+    return result
 
 # ======================================================================
 # Low-level operations
@@ -61,7 +74,9 @@ cdef Column add_column_scalar(Column column, double scalar):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef Column result = Column()
+    cdef Column result = new_column_with_meta(column)
+    result._name = f"({column.get_name()}+{scalar})"
+
     cdef array.array values = column.get_f_values()
     result._f_values = add_vector_scalar(
             len(values),
@@ -87,7 +102,11 @@ cdef Column add_column_column(Column a, Column b):
     if lenB != lenA:
         raise ColumnSizeMismatchError(a, b)
 
-    cdef Column result = Column()
+    cdef Column result = new_column_with_meta(a)
+    result._name = f"({a.get_name()}+{b.get_name()})"
+    if result._formatter is None:
+        result._formatter = b._formatter
+
     result._f_values = add_vector_vector(
             lenA,
             arrA.data.as_doubles,
@@ -125,7 +144,9 @@ cdef Column mul_column_scalar(Column column, double scalar):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef Column result = Column()
+    cdef Column result = new_column_with_meta(column)
+    result._name = f"({column.get_name()}*{scalar})"
+
     cdef array.array values = column.get_f_values()
     result._f_values = mul_vector_scalar(
             len(values),
@@ -151,7 +172,11 @@ cdef Column mul_column_column(Column a, Column b):
     if lenB != lenA:
         raise ColumnSizeMismatchError(a, b)
 
-    cdef Column result = Column()
+    cdef Column result = new_column_with_meta(a)
+    result._name = f"({a.get_name()}*{b.get_name()})"
+    if result._formatter is None:
+        result._formatter = b._formatter
+
     result._f_values = mul_vector_vector(
             lenA,
             arrA.data.as_doubles,
@@ -189,7 +214,9 @@ cdef Column div_column_scalar(Column column, double scalar):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef Column result = Column()
+    cdef Column result = new_column_with_meta(column)
+    result._name = f"({column.get_name()}/{scalar})"
+
     cdef array.array values = column.get_f_values()
     result._f_values = div_vector_scalar(
             len(values),
@@ -215,7 +242,11 @@ cdef Column div_column_column(Column a, Column b):
     if lenB != lenA:
         raise ColumnSizeMismatchError(a, b)
 
-    cdef Column result = Column()
+    cdef Column result = new_column_with_meta(a)
+    result._name = f"({a.get_name()}/{b.get_name()})"
+    if result._formatter is None:
+        result._formatter = b._formatter
+
     result._f_values = div_vector_vector(
             lenA,
             arrA.data.as_doubles,
@@ -304,9 +335,15 @@ cdef class Column:
     This is this class responsability to ensure the different representations are consistent
     and created on demand.
     """
-    def __init__(self):
-        pass
+    def __cinit__(self):
+        global _id
 
+        self._id = _id
+        _id += 1
+
+    # ------------------------------------------------------------------
+    # Factiry methods
+    # ------------------------------------------------------------------
     @staticmethod
     def from_sequence(sequence):
         """
@@ -330,6 +367,9 @@ cdef class Column:
 
         return column
 
+    # ------------------------------------------------------------------
+    # Access to the polymorphic underlying representation
+    # ------------------------------------------------------------------
     @property
     def py_values(self):
         return self.get_py_values()
@@ -367,6 +407,39 @@ cdef class Column:
 
         # else
         raise NotImplementedError()
+
+    # ------------------------------------------------------------------
+    # Metadata
+    # ------------------------------------------------------------------
+    @property
+    def name(self):
+        return self.get_name()
+
+    cdef str get_name(self):
+        if self._name is None:
+            self._name = f":{self._id:06}"
+
+        return self._name
+
+    @property
+    def formatter(self):
+        return self.get_formatter()
+
+    cdef object get_formatter(self):
+        return self._formatter
+
+
+    def metadata(self, name, default=None):
+        if self._metadata is None:
+            return default
+
+        return self._metadata.get(name, default)
+
+    def set_metadata(self, **kwargs):
+        if self._metadata is None:
+            self._metadata = kwargs
+        else:
+            self._metadata.update(kwargs)
 
     def min_max(self):
         """
@@ -427,6 +500,9 @@ cdef class Column:
         """
         return iter(self.py_values)
 
+    # ------------------------------------------------------------------
+    # Copy
+    # ------------------------------------------------------------------
     cdef Column c_remap(self, unsigned count, const unsigned* mapping):
         """
         Create a copy of the column with values picked from the index specificed in `mapping`.
@@ -438,6 +514,18 @@ cdef class Column:
             result._py_values = remap_from_py_values(self._py_values, count, mapping)
         else:
             raise NotImplementedError()
+
+        return result
+
+    def rename(self, newName):
+        return self.c_rename(newName)
+
+    cdef Column c_rename(self, str newName):
+        cdef Column result = new_column_with_meta(self)
+        result._f_values = self._f_values
+        result._py_values = self._py_values
+
+        result._name = newName
 
         return result
 
