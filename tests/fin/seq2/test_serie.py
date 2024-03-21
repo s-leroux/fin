@@ -42,6 +42,77 @@ class TestSerie(unittest.TestCase):
         self.assertEqual(len(serC.columns), 1)
         self.assertSequenceEqual(serC.columns[0].f_values, (21.0, 41.0, 61.0, 101.0))
 
+    def test_get_by_index(self):
+        """
+        You can use the subscript notation to extract a sub-serie.
+        """
+        c1 = column.Column.from_sequence(range(10), name="a")
+        c2 = column.Column.from_callable(lambda x : x*10, c1, name="b")
+        c3 = column.Column.from_callable(lambda x : x*10, c2, name="c")
+        cols = (c1, c2, c3)
+
+        ser = serie.Serie(*cols)
+
+        for idx, col in enumerate(cols):
+            res = ser[idx]
+            self.assertIsInstance(res, serie.Serie)
+            self.assertEqual(res.index, c1)
+            self.assertEqual(len(res.columns), 1)
+            self.assertEqual(res.columns[0], col)
+
+    def test_get_by_negative_index(self):
+        """
+        You can use the subscript notation to extract a sub-serie.
+        """
+        c1 = column.Column.from_sequence(range(10), name="a")
+        c2 = column.Column.from_callable(lambda x : x*10, c1, name="b")
+        c3 = column.Column.from_callable(lambda x : x*10, c2, name="c")
+        cols = (c1, c2, c3)
+
+        ser = serie.Serie(*cols)
+        res = ser[-1]
+
+        self.assertIsInstance(res, serie.Serie)
+        self.assertEqual(res.index, c1)
+        self.assertEqual(res.columns[0], c3)
+
+    def test_get_by_name(self):
+        """
+        You can use the subscript notation to extract a sub-serie.
+        """
+        c1 = column.Column.from_sequence(range(10), name="a")
+        c2 = column.Column.from_callable(lambda x : x*10, c1, name="b")
+        c3 = column.Column.from_callable(lambda x : x*10, c2, name="c")
+        cols = (c1, c2, c3)
+
+        ser = serie.Serie(*cols)
+
+        for idx, col in enumerate(cols):
+            res = ser[col.name]
+            self.assertIsInstance(res, serie.Serie)
+            self.assertEqual(res.index, c1)
+            self.assertEqual(len(res.columns), 1)
+            self.assertEqual(res.columns[0], col)
+
+    def test_get_items(self):
+        """
+        You can use the subscript notation to extract a sub-serie.
+        """
+        c1 = column.Column.from_sequence(range(10), name="a")
+        c2 = column.Column.from_callable(lambda x : x*10, c1, name="b")
+        c3 = column.Column.from_callable(lambda x : x*10, c2, name="c")
+        cols = (c1, c2, c3)
+
+        ser = serie.Serie(*cols)
+        res = ser["a","c",1]
+
+        self.assertIsInstance(res, serie.Serie)
+        self.assertEqual(res.index, c1)
+        self.assertEqual(len(res.columns), 3)
+        self.assertEqual(res.columns[0], c1)
+        self.assertEqual(res.columns[1], c3)
+        self.assertEqual(res.columns[2], c2)
+
 class TestJoin(unittest.TestCase):
     def test_serie_join(self):
         ser0 = serie.Serie("ABCDFG", [10, 11, 12, 13, 14, 15])

@@ -348,12 +348,25 @@ cdef class Column:
             self._formatter = formatter
 
     # ------------------------------------------------------------------
-    # Factiry methods
+    # Factory methods
     # ------------------------------------------------------------------
+    @staticmethod
+    def from_constant(count, k, name=None,**kwargs):
+        """
+        Create a Column from a constant value.
+        """
+        if name is None:
+            name = str(k)
+
+        cdef Column column = Column(name=name, **kwargs)
+        column._py_values = tuple([k]*count)
+
+        return column
+
     @staticmethod
     def from_sequence(sequence, **kwargs):
         """
-        Create a Column from a sequence of Python ojects.
+        Create a Column from a sequence of Python objects.
         """
         cdef Column column = Column(**kwargs)
         column._py_values = tuple(sequence)
@@ -374,10 +387,7 @@ cdef class Column:
         return column
 
     @staticmethod
-    def from_callable(fct, *columns, **kwargs):
-        name = kwargs.get("name")
-        formatter = kwargs.get("formatter")
-
+    def from_callable(fct, *columns, name=None, formatter=None, **kwargs):
         if name is None:
             try:
                 params = [ column.name for column in columns ]
@@ -400,6 +410,7 @@ cdef class Column:
                 [fct(*row) for row in zip(*columns)],
                 name = name,
                 formatter = formatter,
+                **kwargs
         )
 
     # ------------------------------------------------------------------

@@ -12,6 +12,33 @@ cdef array.array    unsigned_array  = array.array("I", [])
 cdef array.array    double_array    = array.array("d", [])
 
 # ======================================================================
+# Low-level helpers
+# ======================================================================
+cdef inline Column serie_get_column_by_index(Serie self, int idx):
+    cdef int col_count
+    if idx < 0:
+        col_count = len(self._columns)
+        idx += col_count+1
+        if idx < 0:
+            raise IndexError("serie index out of range")
+
+    if idx == 0:
+        return self._index
+    else:
+        return self._columns[idx-1]
+
+cdef inline Column serie_get_column_by_name(Serie self, str name):
+    if name == self._index.name:
+        return self._index
+
+    cdef Column column
+    for column in self._columns:
+        if column.name == name:
+            return column
+
+    raise KeyError(name)
+
+# ======================================================================
 # Serie
 # ======================================================================
 cdef class Serie:
@@ -26,13 +53,16 @@ cdef class Serie:
 
         columns = tuple([
             c if isinstance(c, Column) else 
-            Column.from_callable(index, c) if callable(c) else
+            Column.from_callable(c, index) if callable(c) else
             Column.from_sequence(c) for c in columns
         ])
 
         self._index = index
         self._columns = columns
 
+    # ------------------------------------------------------------------
+    # Properties
+    # ------------------------------------------------------------------
     @property
     def index(self):
         return self._index
@@ -51,6 +81,47 @@ cdef class Serie:
 
         return pres(self)
 
+    # ------------------------------------------------------------------
+    # Subscript
+    # ------------------------------------------------------------------
+    def __getitem__(self, selector):
+        t = type(selector)
+        if t is tuple:
+            return self.c_get_items(selector)
+        elif t is int:
+            return self.c_get_item_by_index(selector)
+        elif t is str:
+            return self.c_get_item_by_name(selector)
+        else:
+            raise TypeError(f"serie indices cannot be {t}")
+
+    cdef Serie c_get_items(self, tuple seq):
+        # Should we implement this using a recursive-descend parser to allow nested tuples?
+        cdef list columns = []
+        cdef object i
+        cdef type t
+
+        for i in seq:
+            t = type(i)
+            if t is int:
+                columns.append(serie_get_column_by_index(self, i))
+            elif t is str:
+                columns.append(serie_get_column_by_name(self, i))
+            else:
+                raise TypeError(f"serie indices cannot be {t}")
+
+        return Serie(self._index, *columns)
+
+    cdef Serie c_get_item_by_index(self, int idx):
+        return Serie(self._index, serie_get_column_by_index(self, idx))
+
+    cdef Serie c_get_item_by_name(self, str name):
+        return Serie(self._index, serie_get_column_by_name(self, name))
+
+
+    # ------------------------------------------------------------------
+    # Arithmetic operators
+    # ------------------------------------------------------------------
     def __add__(self, other):
         """
         Addition.
@@ -74,15 +145,21 @@ cdef class Serie:
 
         return Serie(join.index, *new)
 
+    # ------------------------------------------------------------------
+    # Joins
+    # ------------------------------------------------------------------
     def __and__(self, other):
         """
         Join operator.
         """
         cdef Join join
+        cdef Serie that = self
 
         if isinstance(other, Serie):
-            join = c_join(self, other)
+            join = c_join(that, other)
             return Serie(join.index, *(join.left+join.right))
+        elif isinstance(other, (int, float)):
+            return Serie(that._index, *that._columns, Column.from_constant(len(that.index), other))
         else:
             return NotImplemented
 

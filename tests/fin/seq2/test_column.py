@@ -64,6 +64,16 @@ TestDivision = BinOp("Division", "/", lambda x,y: x/y)
 class TestColumn(unittest.TestCase, assertions.ExtraTests):
     def test_create_from_sequence(self):
         """
+        You can create a column from a constant
+        """
+        count = 42
+
+        for value in (float(3.14), int(10), str("Hello")):
+            c = Column.from_constant(count, value)
+            self.assertSequenceEqual(c.py_values, [value]*count)
+
+    def test_create_from_sequence(self):
+        """
         You can create a column from a sequence of Python objects.
         """
         seq = [1, 2, 3, None, 5, "abc"]

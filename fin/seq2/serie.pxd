@@ -7,5 +7,15 @@ cdef class Serie:
     cdef Column  _index
     cdef tuple   _columns
 
+    # ------------------------------------------------------------------
+    # Arithmetic operators
+    # ------------------------------------------------------------------
     cdef Serie c_add_scalar(self, double other)
     cdef Serie c_add_serie(self, Serie other)
+
+    # ------------------------------------------------------------------
+    # Subscript
+    # ------------------------------------------------------------------
+    cdef Serie c_get_items(self, tuple idx)
+    cdef Serie c_get_item_by_index(self, int idx)
+    cdef Serie c_get_item_by_name(self, str name)
