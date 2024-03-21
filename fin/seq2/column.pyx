@@ -341,31 +341,66 @@ cdef class Column:
         self._id = _id
         _id += 1
 
+    def __init__(self, *, name=None, formatter=None):
+        if name is not None:
+            self._name = str(name)
+        if formatter is not None:
+            self._formatter = formatter
+
     # ------------------------------------------------------------------
     # Factiry methods
     # ------------------------------------------------------------------
     @staticmethod
-    def from_sequence(sequence):
+    def from_sequence(sequence, **kwargs):
         """
         Create a Column from a sequence of Python ojects.
         """
-        cdef Column column = Column()
+        cdef Column column = Column(**kwargs)
         column._py_values = tuple(sequence)
 
         return column
 
     @staticmethod
-    def from_float_array(arr):
+    def from_float_array(arr, **kwargs):
         """
         Create a Column from an array of floats.
 
         This is an efficient "zero-copy" operation.
         You MUST treat the original array's content as an immutable object.
         """
-        cdef Column column = Column()
+        cdef Column column = Column(**kwargs)
         column._f_values = arr # type checking is implicitly done here
 
         return column
+
+    @staticmethod
+    def from_callable(fct, *columns, **kwargs):
+        name = kwargs.get("name")
+        formatter = kwargs.get("formatter")
+
+        if name is None:
+            try:
+                params = [ column.name for column in columns ]
+                name = f"{fct}({', '.join(params)})"
+            except AttributeError:
+                # A column is not an instance of Column!
+                name = "?"
+
+        if formatter is None:
+            for column in columns:
+                try:
+                    formatter = column.formatter
+                    if formatter is not None:
+                        break
+                except AttributeError:
+                    # A column is not an instance of Column!
+                    pass
+
+        return Column.from_sequence(
+                [fct(*row) for row in zip(*columns)],
+                name = name,
+                formatter = formatter,
+        )
 
     # ------------------------------------------------------------------
     # Access to the polymorphic underlying representation
@@ -462,7 +497,13 @@ cdef class Column:
         raise NotImplementedError()
 
     def __repr__(self):
-        return f"Column({self.py_values!r})"
+        parts = [ repr(self.py_values) ]
+        if self._name:
+            parts.append(f"name={self._name!r}")
+        if self._formatter:
+            parts.append(f"formatter={self._formatter!r}")
+
+        return f"Column({', '.join(parts)})"
 
     def __len__(self):
         if self._f_values:

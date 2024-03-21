@@ -2,7 +2,7 @@ from cpython cimport array
 import array
 
 from fin.seq2.column cimport Column
-from fin.seq2.table import Table
+from fin.seq2.presentation import Presentation
 
 # ======================================================================
 # Globals
@@ -24,7 +24,11 @@ cdef class Serie:
         if not isinstance(index, Column):
             index = Column.from_sequence(index)
 
-        columns = tuple([c if isinstance(c, Column) else Column.from_sequence(c) for c in columns])
+        columns = tuple([
+            c if isinstance(c, Column) else 
+            Column.from_callable(index, c) if callable(c) else
+            Column.from_sequence(c) for c in columns
+        ])
 
         self._index = index
         self._columns = columns
@@ -43,10 +47,9 @@ cdef class Serie:
 
         Rely on the serie formatting utility.
         """
-        tbl = Table(heading=False)
-        tbl.append(self)
+        pres = Presentation(heading=False)
 
-        return str(tbl)
+        return pres(self)
 
     def __add__(self, other):
         """
@@ -175,4 +178,8 @@ cdef Join c_join(Serie serA, Serie serB):
             column.c_remap(len(mappingB), mappingB.data.as_uints) for column in serB._columns
     ]
 
-    return Join.create(Column.from_sequence(joinIndex), tuple(leftColumns), tuple(rightColumns))
+    return Join.create(
+            Column.from_sequence(joinIndex, name=serA._index.name, formatter=serA._index.formatter),
+            tuple(leftColumns),
+            tuple(rightColumns)
+    )

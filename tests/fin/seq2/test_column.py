@@ -78,6 +78,29 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         c = Column.from_float_array(arr)
         self.assertFloatSequenceEqual(c.f_values, arr)
 
+    def test_create_from_callable_1(self):
+        """
+        You can create a column from a callable and a set of columns.
+        """
+        def fct(x):
+            return x+1
+
+        seq = [1, 2, 3, float("nan"), 5]
+        c = Column.from_callable(fct, seq)
+        self.assertFloatSequenceEqual(c.py_values, [fct(x) for x in seq])
+
+    def test_create_from_callable_2(self):
+        """
+        You can create a column from a callable and a set of columns.
+        """
+        def fct(x, y):
+            return 10*x+y
+
+        seq1 = [1, 2, 3, float("nan"), 5]
+        seq2 = [2, 3, float("nan"), 5, 6]
+        c = Column.from_callable(fct, seq1, seq2)
+        self.assertFloatSequenceEqual(c.py_values, [fct(x, y) for x, y in zip(seq1, seq2)])
+
     def test_sequence_to_float_conversion(self):
         """
         You can access the content of a column as an array of float.
@@ -182,20 +205,38 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
 # Column metadata
 # ======================================================================
 class TestColumnMetadata(unittest.TestCase):
-    def test_get_name(self):
+    def test_default_name(self):
         """
         By default a name is infered from the Column's id.
         """
         c = Column.from_sequence([1,2,3])
         self.assertRegex(c.name, ":[0-9]{6}")
 
-    def test_get_formatter(self):
+    def test_user_name(self):
+        """
+        You may specify a name at column's creation time.
+        """
+        c = Column.from_sequence([1,2,3], name="idx")
+        self.assertRegex(c.name, "idx")
+
+    def test_default_formatter(self):
         """
         By default, the formatter is set to None.
         """
         c = Column.from_sequence([1,2,3])
 
         self.assertIs(c.formatter, None)
+
+    def test_user_formatter(self):
+        """
+        You may specify a formatter at column's creation time.
+        """
+        def fct(*args):
+            pass
+
+        c = Column.from_sequence([1,2,3], formatter=fct)
+
+        self.assertIs(c.formatter, fct)
 
 # ======================================================================
 # Utilities
