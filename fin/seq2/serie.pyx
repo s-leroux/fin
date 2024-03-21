@@ -43,7 +43,7 @@ cdef class Serie:
 
         Rely on the serie formatting utility.
         """
-        tbl = Table()
+        tbl = Table(heading=False)
         tbl.append(self)
 
         return str(tbl)

@@ -13,15 +13,14 @@ class Table:
 
     XXX Possible rename this as "SerieFormatter".
     """
-    def __init__(self):
+    def __init__(self, **kwargs):
         self._serie = None
         self._meta = []
+        self._options = kwargs
 
-    def append(self, newSerie, *, formatter=None, title=None):
+    def append(self, newSerie, *, formatter=None, heading=None):
         """
         Register a new serie to be displayed as part of this table.
-
-        Only one-column series are currently supported.
         """
         if self._serie is not None:
             index, left, right = newSerie.join(self._serie, newSerie)
@@ -34,26 +33,37 @@ class Table:
                 fmt = DEFAULT_FORMATTER
 
             self._meta.append(dict(
-                title=title if title is not None else c.name,
+                heading=heading if heading is not None else c.name,
                 formatter=fmt
                 ))
 
         self._serie = serie.Serie(index, *(left + right))
 
-    def __str__(self, context=None):
+    def prepare(self, context=None):
+        """
+        Prepare table by calling the formatter on each cell.
+        """
         if self._serie is None:
-            return ""
+            return () # Zero columns
 
         if context is None:
             context = DEFAULT_CONTEXT
 
+        opt_heading = self._options.get("heading", True)
+
         columns = []
-        columns.append([DEFAULT_FORMATTER(context, cell) for cell in self._serie.index])
+        heading = [] if not opt_heading else [ DEFAULT_FORMATTER(context, self._serie.index.name) ]
+        columns.append(heading + [DEFAULT_FORMATTER(context, cell) for cell in self._serie.index])
         for column, meta in zip(self._serie.columns, self._meta):
-            columns.append([meta["formatter"](context, cell) for cell in column])
+            heading = [] if not opt_heading else [ DEFAULT_FORMATTER(context, meta["heading"]) ]
 
-        rows = []
-        for row in zip(*columns):
-            rows.append(", ".join([t[0]+t[1]+t[2] for t in row]))
+            columns.append(heading + [meta["formatter"](context, cell) for cell in column])
 
-        return "\n".join(rows)
+        return columns
+
+    def __str__(self, context=None):
+        lines = []
+        for row in zip(*self.prepare(context)):
+            lines.append(", ".join([t[0]+t[1]+t[2] for t in row]))
+
+        return "\n".join(lines)
