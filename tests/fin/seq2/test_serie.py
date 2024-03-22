@@ -113,6 +113,22 @@ class TestSerie(unittest.TestCase):
         self.assertEqual(res.columns[1], c3)
         self.assertEqual(res.columns[2], c2)
 
+    def test_clear(self):
+        """
+        You can use the clear() method to return a serie containing only the index.
+        """
+        c1 = column.Column.from_sequence(range(10), name="a")
+        c2 = column.Column.from_callable(lambda x : x*10, c1, name="b")
+        c3 = column.Column.from_callable(lambda x : x*10, c2, name="c")
+        cols = (c1, c2, c3)
+
+        ser = serie.Serie(*cols)
+        res = ser.clear()
+
+        self.assertIsInstance(res, serie.Serie)
+        self.assertEqual(res.index, c1)
+        self.assertEqual(len(res.columns), 0)
+
 class TestJoin(unittest.TestCase):
     def test_serie_join(self):
         ser0 = serie.Serie("ABCDFG", [10, 11, 12, 13, 14, 15])

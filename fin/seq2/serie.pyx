@@ -118,6 +118,13 @@ cdef class Serie:
     cdef Serie c_get_item_by_name(self, str name):
         return Serie(self._index, serie_get_column_by_name(self, name))
 
+    def clear(self):
+        """
+        Return a serie containing only the index.
+
+        EXPERIMENTAL. Change name?
+        """
+        return Serie(self.index)
 
     # ------------------------------------------------------------------
     # Arithmetic operators
