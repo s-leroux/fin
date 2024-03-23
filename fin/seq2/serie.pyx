@@ -14,6 +14,13 @@ cdef array.array    double_array    = array.array("d", [])
 # ======================================================================
 # Low-level helpers
 # ======================================================================
+cdef Serie serie_bind(Column index, tuple columns):
+    cdef Serie self = Serie.__new__(Serie)
+    self._index = index
+    self._columns = columns
+
+    return self
+
 cdef inline Column serie_get_column_by_index(Serie self, int idx):
     cdef int col_count
     if idx < 0:
@@ -38,6 +45,67 @@ cdef inline Column serie_get_column_by_name(Serie self, str name):
 
     raise KeyError(name)
 
+cdef inline tuple wrap_in_tuple(tuple_or_column):
+    if type(tuple_or_column) is tuple:
+        return tuple_or_column
+
+    return ( tuple_or_column, )
+
+cdef tuple serie_evaluate_item(Serie self, expr):
+    """
+    Evaluate a column expression in the context of the receiver.
+
+    The return type is either a Column object or a tuple of Column.
+
+    The rules:
+    Column -> noop
+    str -> context[name]
+    tuple -> tuple[0](*map(tuple[1:], serie_evaluate))
+    otherwise -> recursive evaluation (assume sequence)
+    """
+    cdef type t = type(expr)
+
+    if t is Column:
+        return ( expr, )
+    if t is str:
+        return ( serie_get_column_by_name(self, expr), )
+    if t is int or t is float:
+        raise SystemError(f"Did you mean fc.constant({t!r})?")
+    if callable(expr):
+        # Only nullary callable are allowed here
+        return wrap_in_tuple(expr(self))
+        
+    return serie_evaluate_expr(self, *expr) # implicit test for iter(expr)
+
+def serie_evaluate_expr(Serie self, head, *tail):
+    while True:
+        if callable(head):
+            if tail:
+                tail = serie_evaluate_expr(self, tail)
+                result = head(len(self._index), *tail)
+            else:
+                result = head(len(self._index))
+
+            t = type(result)
+            if t is Column:
+                head = result
+                tail = ()
+            elif t is tuple:
+                head = t[0]
+                tail = t[1:]
+            else:
+                raise TypeError(f"Column functions should return a Column or a tuple of Columns ({type(result)}) found)")
+        else:
+            # The first non-callable break the cycle of recursive evaluations
+            return serie_evaluate_items(self, (head, *tail))
+
+cdef inline tuple serie_evaluate_items(Serie self, tuple items):
+    cdef list result = [ ]
+    for item in items:
+        result += serie_evaluate_item(self, item)
+
+    return tuple(result)
+
 # ======================================================================
 # Serie
 # ======================================================================
@@ -47,18 +115,40 @@ cdef class Serie:
 
     The index is assumed to be sorted in ascending order (strictly?).
     """
-    def __init__(self, index, *columns):
-        if not isinstance(index, Column):
-            index = Column.from_sequence(index)
+    def __init__(self, *args, **kwargs):
+        raise NotImplementedError("You must use a factory method to create a Serie instance")
 
-        columns = tuple([
-            c if isinstance(c, Column) else 
-            Column.from_callable(c, index) if callable(c) else
-            Column.from_sequence(c) for c in columns
-        ])
+    # ------------------------------------------------------------------
+    # Factory methods
+    # ------------------------------------------------------------------
+    @staticmethod
+    def create(index, *columns):
+        cdef Serie self = Serie.__new__(Serie)
+        cdef tuple index_evaluation = serie_evaluate_item(self, index)
 
-        self._index = index
-        self._columns = columns
+        if len(index_evaluation) != 1:
+            raise ValueError(f"Index should evaluate to a single column (here {len(index_evaluation)})")
+        self._index = index_evaluation[0]
+
+        self._columns = ()
+        while columns:
+            head, *columns = columns
+            self._columns += serie_evaluate_item(self, head)
+
+        return self
+
+    @staticmethod
+    def bind(index, *columns):
+        return serie_bind(index, columns)
+
+    # ------------------------------------------------------------------
+    # Column expression evaluation
+    # ------------------------------------------------------------------
+    def evaluate(self, *expr):
+        """
+        Evaluate an expression as a column in the context of the receiver.
+        """
+        return serie_evaluate_expr(self, *expr)
 
     # ------------------------------------------------------------------
     # Properties
@@ -110,13 +200,13 @@ cdef class Serie:
             else:
                 raise TypeError(f"serie indices cannot be {t}")
 
-        return Serie(self._index, *columns)
+        return serie_bind(self._index, tuple(columns))
 
     cdef Serie c_get_item_by_index(self, int idx):
-        return Serie(self._index, serie_get_column_by_index(self, idx))
+        return serie_bind(self._index, (serie_get_column_by_index(self, idx),))
 
     cdef Serie c_get_item_by_name(self, str name):
-        return Serie(self._index, serie_get_column_by_name(self, name))
+        return serie_bind(self._index, (serie_get_column_by_name(self, name),))
 
     def clear(self):
         """
@@ -124,7 +214,7 @@ cdef class Serie:
 
         EXPERIMENTAL. Change name?
         """
-        return Serie(self.index)
+        return serie_bind(self.index, ())
 
     # ------------------------------------------------------------------
     # Arithmetic operators
@@ -143,14 +233,14 @@ cdef class Serie:
     cdef Serie c_add_scalar(self, double other):
         cdef Column column
         new = [column.c_add_scalar(other) for column in self._columns]
-        return Serie(self._index, *new)
+        return serie_bind(self._index, tuple(new))
 
     cdef Serie c_add_serie(self, Serie other):
         cdef Join join = c_join(self, other)
         cdef Column a, b
         cdef list new = [ a + b for a in join.left for b in join.right ]
 
-        return Serie(join.index, *new)
+        return serie_bind(join.index, tuple(new))
 
     # ------------------------------------------------------------------
     # Joins
@@ -164,9 +254,12 @@ cdef class Serie:
 
         if isinstance(other, Serie):
             join = c_join(that, other)
-            return Serie(join.index, *(join.left+join.right))
+            return serie_bind(join.index, (join.left+join.right))
         elif isinstance(other, (int, float)):
-            return Serie(that._index, *that._columns, Column.from_constant(len(that.index), other))
+            return serie_bind(
+                    that._index, 
+                    (*that._columns, Column.from_constant(len(that.index), other))
+            )
         else:
             return NotImplemented
 
