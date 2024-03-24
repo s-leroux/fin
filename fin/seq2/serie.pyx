@@ -63,6 +63,7 @@ cdef tuple serie_evaluate_item(Serie self, expr):
     tuple -> tuple[0](*map(tuple[1:], serie_evaluate))
     otherwise -> recursive evaluation (assume sequence)
     """
+    # print(f"serie_evaluate_item {expr!r}")
     cdef type t = type(expr)
 
     if t is Column:
@@ -78,13 +79,15 @@ cdef tuple serie_evaluate_item(Serie self, expr):
     return serie_evaluate_expr(self, *expr) # implicit test for iter(expr)
 
 def serie_evaluate_expr(Serie self, head, *tail):
+    # print(f"serie_evaluate_expr {head!r}, {tail!r}")
+
     while True:
         if callable(head):
             if tail:
                 tail = serie_evaluate_expr(self, tail)
-                result = head(len(self._index), *tail)
+                result = head(self, *tail)
             else:
-                result = head(len(self._index))
+                result = head(self)
 
             t = type(result)
             if t is Column:
@@ -100,6 +103,8 @@ def serie_evaluate_expr(Serie self, head, *tail):
             return serie_evaluate_items(self, (head, *tail))
 
 cdef inline tuple serie_evaluate_items(Serie self, tuple items):
+    # print(f"serie_evaluate_items {items!r}")
+
     cdef list result = [ ]
     for item in items:
         result += serie_evaluate_item(self, item)
@@ -126,9 +131,16 @@ cdef class Serie:
         cdef Serie self = Serie.__new__(Serie)
         cdef tuple index_evaluation = serie_evaluate_item(self, index)
 
+        # Validity checks for the index column:
         if len(index_evaluation) != 1:
             raise ValueError(f"Index should evaluate to a single column (here {len(index_evaluation)})")
+        if not len(index_evaluation[0]):
+            raise TypeError(f"Zero-length index are not supported")
+
+        # Ok. Initialize the core properties and start "recursive" evaluation of the
+        # remaining column expressions.
         self._index = index_evaluation[0]
+        self._rowcount = len(self._index)
 
         self._columns = ()
         while columns:
@@ -160,6 +172,10 @@ cdef class Serie:
     @property
     def columns(self):
         return self._columns
+
+    @property
+    def rowcount(self):
+        return self._rowcount
 
     def __str__(self):
         """

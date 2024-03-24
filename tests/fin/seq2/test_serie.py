@@ -186,9 +186,71 @@ class TestSerieToOtherFormatsConversion(unittest.TestCase):
 
         self.assertEqual(str(ser), expected)
 
+# ======================================================================
+# Column expressions evaluation
+# ======================================================================
+
+
+# ----------------------------------------------------------------------
+# Helper functions
+# ----------------------------------------------------------------------
+def arithmetic_test(validator, fct):
+    def _arithmetic_test(self):
+        x = 1.5
+        y = 2.0
+        ser = serie.Serie.create(
+                fc.sequence("ABCDEF"),
+                (fc.named("X"), fc.constant(x)),
+                (fct, "X", fc.constant(y)),
+                )
+
+        self.assertEqual(len(ser.columns), 2)
+        self.assertSequenceEqual(ser.columns[0].py_values,(x,)*6)
+        self.assertSequenceEqual(ser.columns[1].py_values,(validator(x,y),)*6)
+
+    return _arithmetic_test
+
+# ----------------------------------------------------------------------
+# Test class
+# ----------------------------------------------------------------------
 class TestSerieEvaluationExpression(unittest.TestCase):
     def test_name_single_column(self):
         ser = serie.Serie.create(
                 fc.sequence("ABCDEF"),
                 (fc.named("X"), fc.constant(1)),
                 )
+
+        self.assertEqual(len(ser.columns), 1)
+        self.assertSequenceEqual(ser.columns[0].py_values,(1,)*6)
+        self.assertEqual(ser.columns[0].name, "X")
+
+    def test_references(self):
+        ser = serie.Serie.create(
+                fc.sequence("ABCDEF"),
+                (fc.named("X"), fc.constant(1)),
+                "X",
+                )
+
+        self.assertEqual(len(ser.columns), 2)
+        self.assertSequenceEqual(ser.columns[0].py_values,(1,)*6)
+        self.assertSequenceEqual(ser.columns[1].py_values,(1,)*6)
+        self.assertEqual(ser.columns[0].name, "X")
+        self.assertEqual(ser.columns[1].name, "X")
+
+    def test_named_references(self):
+        ser = serie.Serie.create(
+                fc.sequence("ABCDEF"),
+                (fc.named("X"), fc.constant(1)),
+                (fc.named("Y"), "X"),
+                )
+
+        self.assertEqual(len(ser.columns), 2)
+        self.assertSequenceEqual(ser.columns[0].py_values,(1,)*6)
+        self.assertSequenceEqual(ser.columns[1].py_values,(1,)*6)
+        self.assertEqual(ser.columns[0].name, "X")
+        self.assertEqual(ser.columns[1].name, "Y")
+
+    test_add = arithmetic_test(lambda x, y: x+y, fc.add)
+    test_sub = arithmetic_test(lambda x, y: x-y, fc.sub)
+    test_mul = arithmetic_test(lambda x, y: x*y, fc.mul)
+    test_div = arithmetic_test(lambda x, y: x/y, fc.div)
