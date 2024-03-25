@@ -3,16 +3,7 @@ import unittest
 from fin.seq2 import column
 from fin.seq2.fc import core
 
-# ======================================================================
-# Mock series
-# ======================================================================
-class SerieMock:
-    def __init__(self, **kwargs):
-        self._properties = kwargs
-
-    def __getattr__(self, name):
-        # Emulate read-only properties
-        return self._properties[name]
+from tests.fin.seq2.mock import SerieMock
 
 # ======================================================================
 # Core functions

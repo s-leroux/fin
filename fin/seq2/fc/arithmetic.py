@@ -1,3 +1,7 @@
+from collections import deque
+
+from fin.seq2.column import Column
+
 # ======================================================================
 # Arithmetic operators
 # ======================================================================
