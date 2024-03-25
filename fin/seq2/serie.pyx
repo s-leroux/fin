@@ -376,3 +376,22 @@ cdef Join c_join(Serie serA, Serie serB):
             tuple(leftColumns),
             tuple(rightColumns)
     )
+
+def left_join(serA, serB):
+    return c_left_join(serA, serB).as_tuple()
+
+cdef Join c_left_join(Serie serA, Serie serB):
+    """
+    Create a left join from two series.
+    """
+    cdef Column indexA = serA._index
+    cdef Column indexB = serB._index
+
+    if indexA == indexB:
+        return Join.create(
+                indexA,
+                serA.columns,
+                serB.columns
+        )
+
+    raise NotImplementedError(f"Non-trivial left join are not implemented yet.")

@@ -130,7 +130,23 @@ class TestSerie(unittest.TestCase):
         self.assertEqual(res.index, c1)
         self.assertEqual(len(res.columns), 0)
 
-class TestJoin(unittest.TestCase):
+class TestLeftJoin(unittest.TestCase):
+    def test_serie_trivial_join(self):
+        seqA = [10, 11, 12, 13, 14, 15]
+        seqB = [20, 21, 22, 23, 24, 25]
+        serA = serie.Serie.create(fc.sequence("ABCD"), fc.sequence(seqA))
+        serB = serie.Serie.create(fc.sequence("ABCD"), fc.sequence(seqB))
+
+        index, (left,), (right,) = serie.left_join(serA, serB)
+
+        self.assertSequenceEqual(index, serA.index)
+        self.assertSequenceEqual(index, serB.index) # <- this is implicitly true
+
+
+        self.assertSequenceEqual(left.py_values, seqA)
+        self.assertSequenceEqual(right.py_values, seqB)
+
+class TestInnerJoin(unittest.TestCase):
     def test_serie_join(self):
         ser0 = serie.Serie.create(fc.sequence("ABCDFG"), fc.sequence([10, 11, 12, 13, 14, 15]))
         ser1 = serie.Serie.create(fc.sequence("ABCEF"), fc.sequence([20, 21, 22, 23, 24]))
