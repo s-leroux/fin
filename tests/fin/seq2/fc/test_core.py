@@ -43,6 +43,14 @@ class TestCoreFunctions(unittest.TestCase):
                 self.call(core.sequence(seq), tuple(seq))
         self.call(core.sequence(seq), tuple(seq))
 
+    def test_get(self):
+        serie = dict(X=object())
+
+        fct = core.get("X")
+        obj = fct(serie)
+
+        self.assertIs(obj, serie["X"])
+
     def test_named(self):
         serie = SerieMock()
         old_name = "X"

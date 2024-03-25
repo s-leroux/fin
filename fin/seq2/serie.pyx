@@ -68,6 +68,11 @@ cdef tuple serie_evaluate_item(Serie self, expr):
 
     if t is Column:
         return ( expr, )
+    if t is Serie:
+        join = c_left_join(self, expr)
+        if join.index != self._index:
+            raise ValueError(f"Cannot insert serie: indices differ.")
+        return join.right
     if t is str:
         return ( serie_get_column_by_name(self, expr), )
     if t is int or t is float:
@@ -96,6 +101,8 @@ def serie_evaluate_expr(Serie self, head, *tail):
             elif t is tuple:
                 head = t[0]
                 tail = t[1:]
+            elif t is Serie:
+                head, *tail = (<Serie>result)._columns
             else:
                 raise TypeError(f"Column functions should return a Column or a tuple of Columns ({type(result)}) found)")
         else:

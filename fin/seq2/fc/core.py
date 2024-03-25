@@ -12,6 +12,12 @@ def sequence(seq, **kwargs):
 
     return _sequence
 
+def get(spec):
+    def _named(serie):
+        return serie[spec]
+
+    return _named
+
 def named(new_name):
     def _named(serie, column):
         return column.rename(new_name)

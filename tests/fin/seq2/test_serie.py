@@ -270,3 +270,37 @@ class TestSerieEvaluationExpression(unittest.TestCase):
     test_sub = arithmetic_test(lambda x, y: x-y, fc.sub)
     test_mul = arithmetic_test(lambda x, y: x*y, fc.mul)
     test_div = arithmetic_test(lambda x, y: x/y, fc.div)
+
+    def test_trivial_left_join(self):
+        seqA = tuple(range(10,17))
+        seqB = tuple(range(20,27))
+        serA = serie.Serie.create(
+                fc.sequence("ABCDEF"),
+                (fc.named("X"), fc.sequence(seqA)),
+                )
+
+        serB = serie.Serie.create(
+                fc.sequence("ABCDEF"),
+                (fc.named("Y"), fc.sequence(seqB)),
+                serA["X"],
+                )
+
+
+        self.assertEqual(len(serB.columns), 2)
+        self.assertSequenceEqual(serB.columns[0].py_values,seqB)
+        self.assertSequenceEqual(serB.columns[1].py_values,seqA)
+        self.assertEqual(serB.columns[0].name, "Y")
+        self.assertEqual(serB.columns[1].name, "X")
+
+    def test_trivial_get(self):
+        ser = serie.Serie.create(
+                fc.sequence("ABCDEF"),
+                (fc.named("X"), fc.constant(2)),
+                (fc.named("Y"), fc.get("X")),
+                )
+
+        self.assertEqual(len(ser.columns), 2)
+        self.assertSequenceEqual(ser.columns[0].py_values,(2,)*6)
+        self.assertSequenceEqual(ser.columns[1].py_values,(2,)*6)
+        self.assertEqual(ser.columns[0].name, "X")
+        self.assertEqual(ser.columns[1].name, "Y")
