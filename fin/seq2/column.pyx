@@ -581,6 +581,23 @@ cdef class Column:
 
         return result
 
+    def shift(self, n):
+        """
+        Create a new column whose values are shifted.
+        """
+        return self.c_shift(n)
+
+    cdef Column c_shift(self, int n):
+        cdef Column result = new_column_with_meta(self)
+        cdef tuple values = self.get_py_values()
+
+        if n >= 0:
+            result._py_values = values[n:] + (None,)*n
+        else:
+            result._py_values = (None,)*-n + values[:n]
+
+        return result
+
     # ------------------------------------------------------------------
     # Addition
     # ------------------------------------------------------------------
@@ -653,6 +670,9 @@ cdef class Column:
         return result
 
 
+    # ------------------------------------------------------------------
+    # Mutation
+    # ------------------------------------------------------------------
     def remap(self, mapping):
         cdef array.array arr = array.array("I", mapping)
 

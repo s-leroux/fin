@@ -15,7 +15,7 @@ class SerieMock:
         return self._properties[name]
 
 # ======================================================================
-# Mock series
+# Core functions
 # ======================================================================
 class TestCoreFunctions(unittest.TestCase):
     def call(self, fct, expected, **kwargs):
@@ -61,3 +61,10 @@ class TestCoreFunctions(unittest.TestCase):
 
         self.assertEqual(col.name, new_name)
 
+    def test_shift(self):
+        serie = SerieMock()
+        col = column.Column.from_sequence((1,2,3,4,5))
+        fct = core.shift(3)
+        col = fct(serie, col)
+
+        self.assertSequenceEqual(col.py_values, (4,5,None,None,None))

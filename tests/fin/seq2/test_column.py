@@ -249,6 +249,40 @@ class TestColumnMetadata(unittest.TestCase):
         self.assertIs(c.formatter, fct)
 
 # ======================================================================
+# Mutations
+# ======================================================================
+class TestMutations(unittest.TestCase):
+    def test_shift_positive(self):
+        """
+        You can shift a column by discarding the initial data.
+        """
+        col = Column.from_sequence((1,2,3,4,5))
+        res = col.shift(2)
+
+        self.assertSequenceEqual(res.py_values, (3,4,5,None,None))
+
+    def test_shift_negative(self):
+        """
+        You can shift a column by discarding the final data.
+        """
+        col = Column.from_sequence((1,2,3,4,5))
+        res = col.shift(-2)
+
+        self.assertSequenceEqual(res.py_values, (None,None,1,2,3))
+
+    def test_shift_zero(self):
+        """
+        Shift by zero is the identity operation.
+        """
+        col = Column.from_sequence((1,2,3,4,5))
+        res = col.shift(0)
+
+        self.assertSequenceEqual(res.py_values, (1,2,3,4,5))
+
+
+
+
+# ======================================================================
 # Utilities
 # ======================================================================
 class TestColumnUtilities(unittest.TestCase):

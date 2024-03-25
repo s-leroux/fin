@@ -40,6 +40,7 @@ cdef class Column:
     # ------------------------------------------------------------------
     cdef Column         c_remap(self, unsigned len, const unsigned* mapping)
     cdef Column         c_rename(self, str newName)
+    cdef Column         c_shift(self, int n)
 
     cdef Column         c_add_scalar(self, double scalar)
     cdef Column         c_sub_scalar(self, double scalar)
