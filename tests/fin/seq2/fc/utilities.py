@@ -1,9 +1,7 @@
 import unittest
 
 from fin.seq2 import column
-from fin.seq2.fc import interpolation
 
-from testing import assertions
 from tests.fin.seq2.mock import SerieMock
 
 # ======================================================================

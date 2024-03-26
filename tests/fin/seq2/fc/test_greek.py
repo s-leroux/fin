@@ -1,6 +1,6 @@
 import unittest
 
-from fin.seq2.fc import greek
+from fin.seq2.fc import greeks
 
 from tests.fin.seq2.fc import utilities
 
@@ -13,7 +13,7 @@ class TestDelta(unittest.TestCase):
         col = [*range(LEN)]
 
         expected = [None] + [1]*(LEN-1)
-        actual = utilities.apply(self, greek.delta(), col)
+        actual = utilities.apply(self, greeks.delta(), col)
 
         self.assertSequenceEqual(actual.py_values, expected)
 
@@ -26,7 +26,7 @@ class TestDelta(unittest.TestCase):
         expected = [None] + [1]*(LEN-1)
         expected[IDX] = None
         expected[IDX+1] = None
-        actual = utilities.apply(self, greek.delta(), col)
+        actual = utilities.apply(self, greeks.delta(), col)
 
         self.assertSequenceEqual(actual.py_values, expected)
 
@@ -37,7 +37,7 @@ class TestBeta(unittest.TestCase):
         COL_X = COL_Y = [*range(LEN)]
         EXPECTED = [None]*(WINDOW-1) + [1.0]*(LEN-WINDOW+1)
 
-        actual = utilities.apply(self, greek.beta(WINDOW), COL_X, COL_Y)
+        actual = utilities.apply(self, greeks.beta(WINDOW), COL_X, COL_Y)
 
         self.assertSequenceEqual(actual.py_values, EXPECTED)
 
@@ -48,7 +48,7 @@ class TestBeta(unittest.TestCase):
         COL_Y = [x*10 for x in COL_X]
         EXPECTED = [None]*(WINDOW-1) + [10.0]*(LEN-WINDOW+1)
 
-        actual = utilities.apply(self, greek.beta(WINDOW), COL_X, COL_Y)
+        actual = utilities.apply(self, greeks.beta(WINDOW), COL_X, COL_Y)
 
         self.assertSequenceEqual(actual.py_values, EXPECTED)
 
@@ -59,7 +59,7 @@ class TestBeta(unittest.TestCase):
         COL_Y = [-x for x in COL_X]
         EXPECTED = [None]*(WINDOW-1) + [-1.0]*(LEN-WINDOW+1)
 
-        actual = utilities.apply(self, greek.beta(WINDOW), COL_X, COL_Y)
+        actual = utilities.apply(self, greeks.beta(WINDOW), COL_X, COL_Y)
 
         self.assertSequenceEqual(actual.py_values, EXPECTED)
 

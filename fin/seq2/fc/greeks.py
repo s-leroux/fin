@@ -1,6 +1,6 @@
 from fin.seq2.column import Column
 
-from fin.seq2.fc import window
+from fin.seq2.fc import windows
 
 # ======================================================================
 # Greeks
@@ -39,7 +39,7 @@ def delta(n=1):
 
 def beta(n):
     """
-    Compute the Beta between two columns over a n-period window.
+    Compute the Beta between two columns over a n-period windows.
     """
     def _beta(col_x, col_y):
         try:
@@ -51,11 +51,11 @@ def beta(n):
         covar = [(x-x_bar)*(y-y_bar) for x, y in zip(col_x, col_y)]
         var = [(x-x_bar)**2 for x in col_x]
         return sum(covar)/sum(var)
-    return window.naive_window(_beta, n)
+    return windows.naive_window(_beta, n)
 
 def alpha(n):
     """
-    Compute the Alpha between two columns over a n-period window.
+    Compute the Alpha between two columns over a n-period windows.
     """
     def _alpha(col_x, col_y):
         try:
@@ -67,6 +67,6 @@ def alpha(n):
         covar = [(x-x_bar)*(y-y_bar) for x, y in zip(col_x, col_y)]
         var = [(x-x_bar)**2 for x in col_x]
         return y_bar - x_bar*sum(covar)/sum(var)
-    return window.naive_window(_alpha, n)
+    return windows.naive_window(_alpha, n)
 
 

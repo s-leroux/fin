@@ -1,7 +1,7 @@
 import unittest
 
 from fin.seq2 import column
-from fin.seq2.fc import arithmetic
+from fin.seq2.fc import arithmetics
 
 from tests.fin.seq2.mock import SerieMock
 
@@ -22,16 +22,16 @@ class TestArithmeticOperators(unittest.TestCase):
         self.assertSequenceEqual(res.py_values, [validator(x,y,z) for x,y,z in zip(colA,colB,colC)])
 
     def test_add(self):
-        self.call(arithmetic.add, lambda x,y,z : x+y+z)
+        self.call(arithmetics.add, lambda x,y,z : x+y+z)
 
     def test_sub(self):
-        self.call(arithmetic.sub, lambda x,y,z : x-y-z)
+        self.call(arithmetics.sub, lambda x,y,z : x-y-z)
 
     def test_mul(self):
-        self.call(arithmetic.mul, lambda x,y,z : x*y*z)
+        self.call(arithmetics.mul, lambda x,y,z : x*y*z)
 
     def test_div(self):
-        self.call(arithmetic.div, lambda x,y,z : x/y/z)
+        self.call(arithmetics.div, lambda x,y,z : x/y/z)
 
 # ======================================================================
 # Comparisons
@@ -45,7 +45,7 @@ class TestComparison(unittest.TestCase):
         seq = tuple(range(10,20))*3
         col = column.Column.from_sequence(seq)
 
-        fct = arithmetic.min(n)
+        fct = arithmetics.min(n)
         res = fct(serie, col)
         expected = (
                 None, None, None, None, None, None, None, 10, 11, 12,
@@ -62,7 +62,7 @@ class TestComparison(unittest.TestCase):
         seq = tuple(range(10,20))*3
         col = column.Column.from_sequence(seq)
 
-        fct = arithmetic.max(n)
+        fct = arithmetics.max(n)
         res = fct(serie, col)
         expected = (
                 None, None, None, None, None, None, None, 17, 18, 19,

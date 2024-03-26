@@ -1,7 +1,7 @@
 import unittest
 
 from fin.seq2 import column
-from fin.seq2.fc import interpolation
+from fin.seq2.fc import interpolations
 
 from testing import assertions
 from tests.fin.seq2.mock import SerieMock
@@ -20,7 +20,7 @@ class TestLine(unittest.TestCase, assertions.ExtraTests):
             for b in range(LEN):
                 if a != b:
                     with self.subTest(locals=locals()):
-                        actual = utilities.apply(self, interpolation.line(a,b), X, Y)
+                        actual = utilities.apply(self, interpolations.line(a,b), X, Y)
                         self.assertSequenceTrue(
                                 assertions.almostEqual(ndigits=8),
                                 actual,
