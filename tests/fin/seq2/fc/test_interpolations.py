@@ -21,9 +21,8 @@ class TestLine(unittest.TestCase, assertions.ExtraTests):
                 if a != b:
                     with self.subTest(locals=locals()):
                         actual = utilities.apply(self, interpolations.line(a,b), X, Y)
-                        self.assertSequenceTrue(
-                                assertions.almostEqual(ndigits=8),
+                        self.assertFloatSequenceEqual(
                                 actual,
-                                EXPECTED
+                                EXPECTED,
                                 )
 

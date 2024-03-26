@@ -16,14 +16,14 @@ class ExtraTests:
 
     def assertSequencePass(self, test, actual, expected, msg=None):
         for a, b in zip(actual, expected):
-            test(a, b, msg)
+            test(self, a, b, msg)
 
     def assertSequenceTrue(self, test, actual, expected, msg=None):
         for a, b in zip(actual, expected):
             self.assertTrue(test(a, b), msg)
 
-    def assertFloatSequenceEqual(self, actual, expected, msg=None):
-        return self.assertSequencePass(self.assertFloatEqual, actual, expected, msg)
+    def assertFloatSequenceEqual(self, actual, expected, msg=None, *, ndigits=8):
+        return self.assertSequencePass(assertAlmostEqual(ndigits=ndigits), actual, expected, msg)
 
     def assertIterableEqual(self, actual, expected, msg=None):
         """
@@ -32,8 +32,16 @@ class ExtraTests:
         return self.assertSequenceEqual(list(iter(actual)), list(iter(expected)), msg)
 
 
-def almostEqual(*, ndigits=8):
-    def _almostEqual(a, b):
-        return round(a, ndigits) == round(b, ndigits)
+def assertAlmostEqual(*, ndigits=8):
+    def _assertAlmostEqual(self, actual, expected, msg=None):
+        if actual is not None and expected is not None:
+            if isnan(actual) and isnan(expected):
+                return
 
-    return _almostEqual
+            if ndigits is not None:
+                actual = round(actual, ndigits)
+                expected = round(expected, ndigits)
+
+        self.assertEqual(actual, expected, msg)
+
+    return _assertAlmostEqual

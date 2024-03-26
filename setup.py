@@ -9,6 +9,10 @@ setup(
         "fin/seq/column.pyx",
         "fin/seq2/column.pyx",
         "fin/seq2/serie.pyx",
+        "fin/seq2/fc/functorx.pyx",
+        "fin/seq2/fc/statisticx.pyx",
+
+        "tests/fin/seq2/fc/functor.pyx",
         ],
         annotate=True,
         compiler_directives={'language_level' : "3"},
