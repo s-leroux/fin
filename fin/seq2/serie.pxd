@@ -7,6 +7,7 @@ cdef class Serie:
     cdef Column  _index
     cdef tuple   _columns
     cdef unsigned rowcount
+    cdef str      title
 
     # ------------------------------------------------------------------
     # Arithmetic operators

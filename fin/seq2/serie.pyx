@@ -14,11 +14,12 @@ cdef array.array    double_array    = array.array("d", [])
 # ======================================================================
 # Low-level helpers
 # ======================================================================
-cdef Serie serie_bind(Column index, tuple columns):
+cdef Serie serie_bind(Column index, tuple columns, str title):
     cdef Serie self = Serie.__new__(Serie)
-    self.rowcount = len(index)
     self._index = index
     self._columns = columns
+    self.rowcount = len(index)
+    self.title = title if title is not None else "Untitled"
 
     return self
 
@@ -135,7 +136,7 @@ cdef class Serie:
     # Factory methods
     # ------------------------------------------------------------------
     @staticmethod
-    def create(index, *columns):
+    def create(index, *columns, title=None):
         cdef Serie self = Serie.__new__(Serie)
         cdef tuple index_evaluation = serie_evaluate_item(self, index)
 
@@ -149,6 +150,7 @@ cdef class Serie:
         # remaining column expressions.
         self._index = index_evaluation[0]
         self.rowcount = len(self._index)
+        self.title = str(title) if title is not None else "Untitled"
 
         self._columns = ()
         while columns:
@@ -158,8 +160,8 @@ cdef class Serie:
         return self
 
     @staticmethod
-    def bind(index, *columns):
-        return serie_bind(index, columns)
+    def bind(index, *columns, title=None):
+        return serie_bind(index, columns, title)
 
     # ------------------------------------------------------------------
     # Column expression evaluation
@@ -182,8 +184,27 @@ cdef class Serie:
         return self._columns
 
     @property
+    def rows(self):
+        """
+        Return an *iterator* over the serie rows.
+        """
+        cols = [self._index.py_values] + [col.py_values for col in self._columns]
+        return zip(*cols)
+
+    @property
+    def headings(self):
+        """
+        Return a sequence containing the column's names.
+        """
+        return [self._index.name] + [col.name for col in self._columns]
+
+    @property
     def rowcount(self):
         return self.rowcount
+
+    @property
+    def title(self):
+        return self.title
 
     def __str__(self):
         """
@@ -224,13 +245,13 @@ cdef class Serie:
             else:
                 raise TypeError(f"serie indices cannot be {t}")
 
-        return serie_bind(self._index, tuple(columns))
+        return serie_bind(self._index, tuple(columns), self.title)
 
     cdef Serie c_get_item_by_index(self, int idx):
-        return serie_bind(self._index, (serie_get_column_by_index(self, idx),))
+        return serie_bind(self._index, (serie_get_column_by_index(self, idx),), self.title)
 
     cdef Serie c_get_item_by_name(self, str name):
-        return serie_bind(self._index, (serie_get_column_by_name(self, name),))
+        return serie_bind(self._index, (serie_get_column_by_name(self, name),), self.title)
 
     def clear(self):
         """
@@ -238,7 +259,7 @@ cdef class Serie:
 
         EXPERIMENTAL. Change name?
         """
-        return serie_bind(self.index, ())
+        return serie_bind(self.index, (), "Empty")
 
     # ------------------------------------------------------------------
     # Arithmetic operators
@@ -257,14 +278,14 @@ cdef class Serie:
     cdef Serie c_add_scalar(self, double other):
         cdef Column column
         new = [column.c_add_scalar(other) for column in self._columns]
-        return serie_bind(self._index, tuple(new))
+        return serie_bind(self._index, tuple(new), "Add")
 
     cdef Serie c_add_serie(self, Serie other):
         cdef Join join = c_join(self, other)
         cdef Column a, b
         cdef list new = [ a + b for a in join.left for b in join.right ]
 
-        return serie_bind(join.index, tuple(new))
+        return serie_bind(join.index, tuple(new), "Add")
 
     # ------------------------------------------------------------------
     # Joins
@@ -278,11 +299,12 @@ cdef class Serie:
 
         if isinstance(other, Serie):
             join = c_join(that, other)
-            return serie_bind(join.index, (join.left+join.right))
+            return serie_bind(join.index, (join.left+join.right), f"{self.title} & {other.title}")
         elif isinstance(other, (int, float)):
             return serie_bind(
                     that._index, 
-                    (*that._columns, Column.from_constant(len(that.index), other))
+                    (*that._columns, Column.from_constant(len(that.index), other)),
+                    f"{self.title} & {other}"
             )
         else:
             return NotImplemented
