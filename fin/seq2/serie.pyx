@@ -17,6 +17,10 @@ cdef array.array    double_array    = array.array("d", [])
 # ======================================================================
 # Low-level helpers
 # ======================================================================
+
+# ----------------------------------------------------------------------
+# Factory functions
+# ----------------------------------------------------------------------
 cdef Serie serie_bind(Column index, tuple columns, str title):
     cdef Serie self = Serie.__new__(Serie)
     self._index = index
@@ -25,16 +29,6 @@ cdef Serie serie_bind(Column index, tuple columns, str title):
     self.title = title if title is not None else "Untitled"
 
     return self
-
-cdef Serie serie_select(Serie self, tuple columns, str title):
-    """
-    Build a new serie with the same index and evaluate column expressions for the data columns.
-    """
-    cdef Serie result = serie_bind(self.index, (), title)
-    if len(columns) > 0:
-        result._columns = serie_evaluate_expr(self, columns)
-
-    return result
 
 cdef Serie serie_from_data(data, headings, dict kwargs):
     """
@@ -109,6 +103,52 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
     return result
 
 
+# ----------------------------------------------------------------------
+# Projections
+# ----------------------------------------------------------------------
+cdef Serie serie_select(Serie self, tuple columns, str title):
+    """
+    Build a new serie with the same index and evaluate column expressions for the data columns.
+    """
+    cdef Serie result = serie_bind(self.index, (), title)
+    if len(columns) > 0:
+        result._columns = serie_evaluate_expr(self, columns)
+
+    return result
+
+cdef Serie serie_lstrip(Serie self, tuple columns):
+    """
+    Return a a new table with rows at the start containing None removed.
+
+    If columns is not empty is is assumed to be a sequence of column names.
+    In that case, only those columns are checked.
+    If columns is empty all the serie columns are checked.
+    """
+    if len(columns) == 0:
+        columns = self._columns
+    else:
+        columns = serie_evaluate_expr(self, columns)
+
+    none_row = (None,)*len(columns)
+    try:
+        for i, row in enumerate(zip(*columns)):
+            if row != none_row:
+                break
+    except TypeError:
+        pass
+
+    end = self.rowcount
+    return serie_bind(
+            self.index[i:end],
+            tuple(column[i:end] for column in self._columns),
+            self.title
+            )
+
+
+
+# ----------------------------------------------------------------------
+# Accessors
+# ----------------------------------------------------------------------
 cdef inline Column serie_get_column_by_index(Serie self, int idx):
     cdef int col_count
     if idx < 0:
@@ -258,10 +298,13 @@ cdef class Serie:
         return serie_bind(index, columns, title)
 
     # ------------------------------------------------------------------
-    # Select
+    # Projections
     # ------------------------------------------------------------------
     def select(self, *columns, title=None):
         return serie_select(self, columns, title)
+
+    def lstrip(self, *columns):
+        return serie_lstrip(self, columns)
 
     # ------------------------------------------------------------------
     # Column expression evaluation

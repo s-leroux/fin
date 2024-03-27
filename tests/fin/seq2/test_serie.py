@@ -230,8 +230,45 @@ class TestSerieFromCSV(unittest.TestCase):
         self.assertSequenceEqual(ser.columns[1].py_values, range(20,25))
 
 # ======================================================================
-# Select
+# Projections
 # ======================================================================
+class TestSerieStrip(unittest.TestCase):
+    def setUp(self):
+        XX=None
+        self.cols = tuple(zip(*(
+            (11,XX,XX,XX,XX,),
+            (12,XX,32,XX,52,),
+            (13,XX,33,43,53,),
+            (14,24,XX,44,54,),
+            (15,25,35,45,55,),
+            (16,XX,36,46,56,),
+            (17,27,37,47,57,),
+            (18,28,38,48,58,),
+            (19,29,39,49,59,),
+        )))
+
+        self.ser = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_lstrip(self):
+        cols, ser = self.cols, self.ser
+        res = ser.lstrip()
+
+        self.assertEqual(res.rowcount, ser.rowcount-1)
+        self.assertEqual(len(res.columns), 4)
+        self.assertEqual(res.index.py_values, cols[0][1:])
+        self.assertEqual(res.columns[0].py_values, cols[1][1:])
+
+    def test_lstrip_select(self):
+        cols, ser = self.cols, self.ser
+        res = ser.lstrip("B")
+
+        self.assertEqual(res.rowcount, ser.rowcount-3)
+        self.assertEqual(len(res.columns), 4)
+        self.assertEqual(res.index.py_values, cols[0][3:])
+        self.assertEqual(res.columns[0].py_values, cols[1][3:])
+
+
+
 class TestSerieSelect(unittest.TestCase):
     def test_select(self):
         cols = tuple(zip(*(
@@ -253,7 +290,7 @@ class TestSerieSelect(unittest.TestCase):
                 fc.constant(42),
                 )
 
-        self.assertEqual(a.rowcount, b.rowcount)
+        self.assertEqual(b.rowcount, a.rowcount)
         self.assertSequenceEqual(b.index, a.index)
         self.assertEqual(len(b.columns), 3)
         self.assertSequenceEqual(b.columns[0].py_values, cols[0])
