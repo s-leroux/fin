@@ -230,6 +230,39 @@ class TestSerieFromCSV(unittest.TestCase):
         self.assertSequenceEqual(ser.columns[1].py_values, range(20,25))
 
 # ======================================================================
+# Select
+# ======================================================================
+class TestSerieSelect(unittest.TestCase):
+    def test_select(self):
+        cols = tuple(zip(*(
+            (11,21,31,41,51,),
+            (12,22,32,42,52,),
+            (13,23,33,43,53,),
+            (14,24,34,44,54,),
+            (15,25,35,45,55,),
+            (16,26,36,46,56,),
+            (17,27,37,47,57,),
+            (18,28,38,48,58,),
+            (19,29,39,49,59,),
+        )))
+
+        a = serie.Serie.from_data(cols, "ABCDE")
+        b = a.select(
+                "A",
+                (fc.add, "B", "C"),
+                fc.constant(42),
+                )
+
+        self.assertEqual(a.rowcount, b.rowcount)
+        self.assertSequenceEqual(b.index, a.index)
+        self.assertEqual(len(b.columns), 3)
+        self.assertSequenceEqual(b.columns[0].py_values, cols[0])
+        self.assertSequenceEqual(b.columns[1].py_values, [x+y for x,y in zip(cols[1], cols[2])])
+        self.assertSequenceEqual(b.columns[2].py_values, (42,)*a.rowcount)
+        
+
+
+# ======================================================================
 # Output
 # ======================================================================
 class TestSerieToOtherFormatsConversion(unittest.TestCase):

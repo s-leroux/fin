@@ -26,24 +26,36 @@ cdef Serie serie_bind(Column index, tuple columns, str title):
 
     return self
 
+cdef Serie serie_select(Serie self, tuple columns, str title):
+    """
+    Build a new serie with the same index and evaluate column expressions for the data columns.
+    """
+    cdef Serie result = serie_bind(self.index, (), title)
+    if len(columns) > 0:
+        result._columns = serie_evaluate_expr(self, columns)
+
+    return result
+
 cdef Serie serie_from_data(data, headings, dict kwargs):
     """
     Create a serie from raw Python data (sequences).
     """
     title = kwargs.get("title", "Untitled")
-    if not len(data):
+
+    # `data` can be an iterator: compute the columns first so we can later call `len()`
+    columns = [
+        Column.from_sequence(column, name=heading) for heading, column in zip(headings, data)
+            ]
+
+    if not len(columns):
         rowcount = 0
     else:
         # Check is all columns have the same length
-        it = iter(data)
+        it = iter(columns)
         rowcount = len(next(it))
         for col in it:
             if len(col) != rowcount:
                 raise ValueError(f"All columns must have the same length.")
-
-    columns = [
-        Column.from_sequence(column, name=heading) for heading, column in zip(headings, data)
-            ]
 
     return Serie.create(*columns, title=title)
 
@@ -244,6 +256,12 @@ cdef class Serie:
     @staticmethod
     def bind(index, *columns, title=None):
         return serie_bind(index, columns, title)
+
+    # ------------------------------------------------------------------
+    # Select
+    # ------------------------------------------------------------------
+    def select(self, *columns, title=None):
+        return serie_select(self, columns, title)
 
     # ------------------------------------------------------------------
     # Column expression evaluation
