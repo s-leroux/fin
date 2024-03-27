@@ -236,7 +236,7 @@ class Multiplot:
 
         self._plot = {
                 "mode": mode,
-                "title": serie.title,
+                "title": serie.name or "Untitled",
                 "x": x_axis_column,
                 "plots": [],
                 }

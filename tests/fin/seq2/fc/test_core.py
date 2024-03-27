@@ -27,6 +27,18 @@ class TestCoreFunctions(unittest.TestCase):
                 col = utilities.apply(self, core.sequence(seq), rowcount=len(seq))
                 self.assertSequenceEqual(col.py_values, seq)
 
+    def test_range(self):
+        testcases = (
+            (5,),
+            (1,5),
+            (1,5,2),
+        )
+
+        for testcase in testcases:
+            with self.subTest(testcase=testcase):
+                col = utilities.apply(self, core.range(*testcase), rowcount=len(range(*testcase)))
+                self.assertSequenceEqual(col.py_values, range(*testcase))
+
     def test_get(self):
         serie = dict(X=object())
 

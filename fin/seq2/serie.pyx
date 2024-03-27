@@ -14,6 +14,8 @@ cdef array.array    int_array       = array.array("i", [])
 cdef array.array    unsigned_array  = array.array("I", [])
 cdef array.array    double_array    = array.array("d", [])
 
+cdef str SERIE_DEFAULT_NAME = ""
+
 # ======================================================================
 # Low-level helpers
 # ======================================================================
@@ -21,12 +23,12 @@ cdef array.array    double_array    = array.array("d", [])
 # ----------------------------------------------------------------------
 # Factory functions
 # ----------------------------------------------------------------------
-cdef Serie serie_bind(Column index, tuple columns, str title):
+cdef Serie serie_bind(Column index, tuple columns, str name):
     cdef Serie self = Serie.__new__(Serie)
     self._index = index
     self._columns = columns
     self.rowcount = len(index)
-    self.title = title if title is not None else "Untitled"
+    self.name = name if name is not None else SERIE_DEFAULT_NAME
 
     return self
 
@@ -34,7 +36,7 @@ cdef Serie serie_from_data(data, headings, dict kwargs):
     """
     Create a serie from raw Python data (sequences).
     """
-    title = kwargs.get("title", "Untitled")
+    name = kwargs.get("name", SERIE_DEFAULT_NAME)
 
     # `data` can be an iterator: compute the columns first so we can later call `len()`
     columns = [
@@ -51,7 +53,7 @@ cdef Serie serie_from_data(data, headings, dict kwargs):
             if len(col) != rowcount:
                 raise ValueError(f"All columns must have the same length.")
 
-    return Serie.create(*columns, title=title)
+    return Serie.create(*columns, name=name)
 
 import csv
 from fin import datetime
@@ -106,11 +108,11 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
 # ----------------------------------------------------------------------
 # Projections
 # ----------------------------------------------------------------------
-cdef Serie serie_select(Serie self, tuple columns, str title):
+cdef Serie serie_select(Serie self, tuple columns, str name):
     """
     Build a new serie with the same index and evaluate column expressions for the data columns.
     """
-    cdef Serie result = serie_bind(self.index, (), title)
+    cdef Serie result = serie_bind(self.index, (), name)
     if len(columns) > 0:
         result._columns = serie_evaluate_expr(self, columns)
 
@@ -141,7 +143,7 @@ cdef Serie serie_lstrip(Serie self, tuple columns):
     return serie_bind(
             self.index[i:end],
             tuple(column[i:end] for column in self._columns),
-            self.title
+            self.name
             )
 
 
@@ -262,7 +264,7 @@ cdef class Serie:
     # Factory methods
     # ------------------------------------------------------------------
     @staticmethod
-    def create(index, *columns, title=None):
+    def create(index, *columns, name=None):
         cdef Serie self = Serie.__new__(Serie)
         cdef tuple index_evaluation = serie_evaluate_item(self, index)
 
@@ -276,7 +278,7 @@ cdef class Serie:
         # remaining column expressions.
         self._index = index_evaluation[0]
         self.rowcount = len(self._index)
-        self.title = str(title) if title is not None else "Untitled"
+        self.name = str(name) if name is not None else SERIE_DEFAULT_NAME
 
         self._columns = ()
         while columns:
@@ -294,14 +296,14 @@ cdef class Serie:
         return serie_from_csv(iterator, format, fieldnames, delimiter, kwargs)
 
     @staticmethod
-    def bind(index, *columns, title=None):
-        return serie_bind(index, columns, title)
+    def bind(index, *columns, name=None):
+        return serie_bind(index, columns, name)
 
     # ------------------------------------------------------------------
     # Projections
     # ------------------------------------------------------------------
-    def select(self, *columns, title=None):
-        return serie_select(self, columns, title)
+    def select(self, *columns, name=None):
+        return serie_select(self, columns, name)
 
     def lstrip(self, *columns):
         return serie_lstrip(self, columns)
@@ -346,8 +348,18 @@ cdef class Serie:
         return self.rowcount
 
     @property
-    def title(self):
-        return self.title
+    def name(self):
+        return self.name
+
+    def __repr__(self):
+        """
+        Convert to string.
+
+        Return a programmer-useful representation of the serie.
+
+        EXPERIMENTAL: The output format is subject to changes.
+        """
+        return f"{self.__class__.__qualname__}(rowcount={self.rowcount!r}, name={self.name!r}, headings={self.headings!r})"
 
     def __str__(self):
         """
@@ -355,8 +367,7 @@ cdef class Serie:
 
         Rely on the serie formatting utility.
         """
-        pres = Presentation(heading=False)
-
+        pres = Presentation(heading=True)
         return pres(self)
 
     # ------------------------------------------------------------------
@@ -388,13 +399,13 @@ cdef class Serie:
             else:
                 raise TypeError(f"serie indices cannot be {t}")
 
-        return serie_bind(self._index, tuple(columns), self.title)
+        return serie_bind(self._index, tuple(columns), self.name)
 
     cdef Serie c_get_item_by_index(self, int idx):
-        return serie_bind(self._index, (serie_get_column_by_index(self, idx),), self.title)
+        return serie_bind(self._index, (serie_get_column_by_index(self, idx),), self.name)
 
     cdef Serie c_get_item_by_name(self, str name):
-        return serie_bind(self._index, (serie_get_column_by_name(self, name),), self.title)
+        return serie_bind(self._index, (serie_get_column_by_name(self, name),), self.name)
 
     def clear(self):
         """
@@ -424,7 +435,7 @@ cdef class Serie:
         return serie_bind(self._index, tuple(new), "Add")
 
     cdef Serie c_add_serie(self, Serie other):
-        cdef Join join = c_join(self, other)
+        cdef Join join = c_join(self, other, rename=False)
         cdef Column a, b
         cdef list new = [ a + b for a in join.left for b in join.right ]
 
@@ -441,13 +452,13 @@ cdef class Serie:
         cdef Serie that = self
 
         if isinstance(other, Serie):
-            join = c_join(that, other)
-            return serie_bind(join.index, (join.left+join.right), f"{self.title} & {other.title}")
+            join = c_join(that, other, True)
+            return serie_bind(join.index, (join.left+join.right), f"{self.name} & {other.name}")
         elif isinstance(other, (int, float)):
             return serie_bind(
                     that._index, 
                     (*that._columns, Column.from_constant(len(that.index), other)),
-                    f"{self.title} & {other}"
+                    f"{self.name} & {other}"
             )
         else:
             return NotImplemented
@@ -477,10 +488,10 @@ cdef class Join:
         """
         return (self.index, self.left, self.right)
 
-def join(serA, serB):
-    return c_join(serA, serB).as_tuple()
+def join(serA, serB, *, rename=True):
+    return c_join(serA, serB, rename).as_tuple()
 
-cdef Join c_join(Serie serA, Serie serB):
+cdef Join c_join(Serie serA, Serie serB, bint rename):
     """
     Create a join from two series.
     """
@@ -536,12 +547,32 @@ cdef Join c_join(Serie serA, Serie serB):
     cdef list joinIndex = [indexA[mappingA[i]] for i in range(n)]
     cdef Column column
 
+    # Rename the columns if:
+    # 1. `rename` is true
+    # 2. the serie has a non-empty name
+    cdef str prefix
+    cdef list colA = list(serA._columns)
+    cdef list colB = list(serB._columns)
+    if rename:
+        prefix = serA.name
+        if len(prefix) > 0:
+            prefix += ":"
+            colA = [
+                    column.c_rename(prefix + column.name) for column in colA
+                    ]
+
+        prefix = serB.name
+        if len(prefix) > 0:
+            prefix += ":"
+            colB = [
+                    column.c_rename(prefix + column.name) for column in colB
+                    ]
     # Build the left and right series
     cdef list leftColumns = [
-            column.c_remap(len(mappingA), mappingA.data.as_uints) for column in serA._columns
+            column.c_remap(len(mappingA), mappingA.data.as_uints) for column in colA
     ]
     cdef list rightColumns = [
-            column.c_remap(len(mappingB), mappingB.data.as_uints) for column in serB._columns
+            column.c_remap(len(mappingB), mappingB.data.as_uints) for column in colB
     ]
 
     return Join.create(

@@ -305,10 +305,11 @@ class TestSerieSelect(unittest.TestCase):
 class TestSerieToOtherFormatsConversion(unittest.TestCase):
     def test_str_representation_1_column(self):
         ser = serie.Serie.create(
-                fc.sequence("ABCDF"),
-                fc.sequence([10, 20, 30, 40, 50]),
+                (fc.named("T"), fc.sequence("ABCDF")),
+                (fc.named("V"), fc.sequence([10, 20, 30, 40, 50])),
         )
         expected="\n".join((
+            "T, V",
             "A, 10",
             "B, 20",
             "C, 30",
@@ -320,14 +321,15 @@ class TestSerieToOtherFormatsConversion(unittest.TestCase):
 
     def test_str_representation_2_columns(self):
         ser = serie.Serie.create(
-                fc.sequence("ABC"), 
-                fc.sequence([10, 20, 30]
-        )) & serie.Serie.create(
-                fc.sequence("ABC"), 
-                fc.sequence([11, 21, 31])
+                (fc.named("T"), fc.sequence("ABC")), 
+                (fc.named("V"), fc.sequence([10, 20, 30]))
+        ) & serie.Serie.create(
+                (fc.named("T"), fc.sequence("ABC")), 
+                (fc.named("W"), fc.sequence([11, 21, 31]))
         )
 
         expected="\n".join((
+            "T, V, W",
             "A, 10, 11",
             "B, 20, 21",
             "C, 30, 31",

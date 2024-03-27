@@ -1,3 +1,5 @@
+import builtins
+
 from fin.seq2.column import Column
 
 # ======================================================================
@@ -23,6 +25,17 @@ def sequence(seq, **kwargs):
         return Column.from_sequence(seq, **kwargs)
 
     return _sequence
+
+def range(*args):
+    """
+    Evaluates to a function returning a range.
+
+    Shorthand for `fc.sequence(range(...))`
+    """
+    def _range(serie):
+        return Column.from_sequence(builtins.range(*args))
+
+    return _range
 
 def get(spec):
     """
