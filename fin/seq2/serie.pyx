@@ -16,6 +16,7 @@ cdef array.array    double_array    = array.array("d", [])
 # ======================================================================
 cdef Serie serie_bind(Column index, tuple columns):
     cdef Serie self = Serie.__new__(Serie)
+    self.rowcount = len(index)
     self._index = index
     self._columns = columns
 
@@ -147,7 +148,7 @@ cdef class Serie:
         # Ok. Initialize the core properties and start "recursive" evaluation of the
         # remaining column expressions.
         self._index = index_evaluation[0]
-        self._rowcount = len(self._index)
+        self.rowcount = len(self._index)
 
         self._columns = ()
         while columns:
@@ -182,7 +183,7 @@ cdef class Serie:
 
     @property
     def rowcount(self):
-        return self._rowcount
+        return self.rowcount
 
     def __str__(self):
         """

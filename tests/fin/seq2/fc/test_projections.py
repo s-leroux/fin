@@ -1,17 +1,17 @@
 import unittest
 
 from fin.seq2.column import Column
+from fin.seq2.serie import Serie
 from fin.seq2.fc import projections
 
 from tests.fin.seq2.fc import utilities
-from tests.fin.seq2.mock import SerieMock
 
 # ======================================================================
 # Projections
 # ======================================================================
 class TestMap(unittest.TestCase):
     def test_map(self):
-        serie = SerieMock()
+        serie = Serie.create(Column.from_sequence(range(6)))
         seqs = (
             tuple(range(10,16)),
             tuple(range(20,26)),
@@ -27,7 +27,7 @@ class TestMap(unittest.TestCase):
 class TestMapChange(unittest.TestCase):
     def test_map_change(self):
         rowcount = 6
-        serie = SerieMock(rowcount=rowcount)
+        serie = Serie.create(Column.from_sequence(range(rowcount)))
         seq = tuple(range(10,10+rowcount))
         column = Column.from_sequence(seq)
         fn = lambda x,y : x-y

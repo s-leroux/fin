@@ -4,7 +4,6 @@ from fin.seq2 import column
 from fin.seq2.fc import interpolations
 
 from testing import assertions
-from tests.fin.seq2.mock import SerieMock
 from tests.fin.seq2.fc import utilities
 
 # ======================================================================

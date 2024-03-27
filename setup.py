@@ -8,9 +8,10 @@ setup(
         "fin/seq/algox.pyx",
         "fin/seq/column.pyx",
         "fin/seq2/column.pyx",
-        "fin/seq2/serie.pyx",
         "fin/seq2/fc/functorx.pyx",
         "fin/seq2/fc/statisticx.pyx",
+        "fin/seq2/fc/tix.pyx",
+        "fin/seq2/serie.pyx",
 
         "tests/fin/seq2/fc/functor.pyx",
         ],

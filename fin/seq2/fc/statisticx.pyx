@@ -26,11 +26,6 @@ cdef class var(functorx.Functor1):
 
     This general implmentation allows for a correction parameter.
     """
-    cdef double a
-    cdef double b
-    cdef unsigned n
-    cdef double correction
-
     def __init__(self, *args, **wargs):
         raise NotImplementedError("Use a factory method, not a constructor")
 
@@ -114,8 +109,6 @@ cdef class stdev(functorx.Functor1):
     The standard deviation is defined as the square root of the variance
     as implemented here.
     """
-    cdef var delegate
-
     def __init__(self, *args, **wargs):
         raise NotImplementedError("Use a factory method, not a constructor")
 

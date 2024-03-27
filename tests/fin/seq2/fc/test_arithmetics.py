@@ -1,24 +1,23 @@
 import unittest
 
-from fin.seq2 import column
+from fin.seq2.column import Column
+from fin.seq2.serie import Serie
 from fin.seq2.fc import arithmetics
-
-from tests.fin.seq2.mock import SerieMock
 
 # ======================================================================
 # Arithmetic operators
 # ======================================================================
 class TestArithmeticOperators(unittest.TestCase):
     def call(self, fct, validator, **kwargs):
-        serie = SerieMock(**kwargs)
-
-        colA = column.Column.from_sequence(range(10,16))
-        colB = column.Column.from_sequence(range(20,26))
-        colC = column.Column.from_sequence(range(30,36))
+        idx = Column.from_sequence(range(6))
+        colA = Column.from_sequence(range(10,16))
+        colB = Column.from_sequence(range(20,26))
+        colC = Column.from_sequence(range(30,36))
+        serie = Serie.create(idx)
 
         res = fct(serie, colA, colB, colC)
         
-        self.assertIsInstance(res, column.Column)
+        self.assertIsInstance(res, Column)
         self.assertSequenceEqual(res.py_values, [validator(x,y,z) for x,y,z in zip(colA,colB,colC)])
 
     def test_add(self):
@@ -40,10 +39,10 @@ class TestComparison(unittest.TestCase):
     def test_min(self):
         rowcount = 100
         n = 8
-        serie = SerieMock(rowcount=rowcount)
-        
         seq = tuple(range(10,20))*3
-        col = column.Column.from_sequence(seq)
+        col = Column.from_sequence(seq)
+        idx = Column.from_sequence(range(len(seq)))
+        serie = Serie.create(idx)
 
         fct = arithmetics.min(n)
         res = fct(serie, col)
@@ -57,10 +56,10 @@ class TestComparison(unittest.TestCase):
     def test_max(self):
         rowcount = 100
         n = 8
-        serie = SerieMock(rowcount=rowcount)
-        
         seq = tuple(range(10,20))*3
-        col = column.Column.from_sequence(seq)
+        col = Column.from_sequence(seq)
+        idx = Column.from_sequence(range(len(seq)))
+        serie = Serie.create(idx)
 
         fct = arithmetics.max(n)
         res = fct(serie, col)
