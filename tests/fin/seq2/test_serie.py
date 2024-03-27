@@ -4,6 +4,9 @@ from fin.seq2 import serie
 from fin.seq2 import column
 from fin.seq2 import fc
 
+# ======================================================================
+# Core Serie functionalities
+# ======================================================================
 class TestSerie(unittest.TestCase):
     def test_create_serie_from_lists(self):
         """
@@ -130,6 +133,9 @@ class TestSerie(unittest.TestCase):
         self.assertEqual(res.index, c1)
         self.assertEqual(len(res.columns), 0)
 
+# ======================================================================
+# Joins
+# ======================================================================
 class TestLeftJoin(unittest.TestCase):
     def test_serie_trivial_join(self):
         seqA = [10, 11, 12, 13, 14, 15]
@@ -169,6 +175,63 @@ class TestInnerJoin(unittest.TestCase):
         self.assertSequenceEqual(join.columns[0].py_values, [10, 11, 12, 14])
         self.assertSequenceEqual(join.columns[1].py_values, [20, 21, 22, 24])
 
+# ======================================================================
+# Extra factory methods
+# ======================================================================
+class TestSerieFromData(unittest.TestCase):
+    def test_from_data(self):
+        columns = (
+                # col A
+                tuple(range(5)),
+                # col B
+                tuple(range(10,15)),
+                # col C
+                tuple(range(20,25)),
+        )
+        headings = "ABC"
+
+        ser = serie.Serie.from_data(columns, headings)
+
+        self.assertEqual(len(ser.columns), 2)
+        self.assertEqual(ser.rowcount, 5)
+
+        self.assertEqual(ser.index.name, "A")
+        self.assertSequenceEqual(ser.index.py_values, range(0,5))
+        self.assertEqual(ser.columns[0].name, "B")
+        self.assertSequenceEqual(ser.columns[0].py_values, range(10,15))
+        self.assertEqual(ser.columns[1].name, "C")
+        self.assertSequenceEqual(ser.columns[1].py_values, range(20,25))
+
+
+class TestSerieFromCSV(unittest.TestCase):
+    def test_from_csv_numbers_only(self):
+        from textwrap import dedent
+        text = dedent("""\
+            A, B, C
+            0,10,20
+            1,11,21
+            2,12,22
+            3,13,23
+            4,14,24
+        """)
+        ser = serie.Serie.from_csv(
+                iter(text.splitlines()),
+                format='nnn'
+        )
+
+        self.assertEqual(len(ser.columns), 2)
+        self.assertEqual(ser.rowcount, 5)
+
+        self.assertEqual(ser.index.name, "A")
+        self.assertSequenceEqual(ser.index.py_values, range(0,5))
+        self.assertEqual(ser.columns[0].name, "B")
+        self.assertSequenceEqual(ser.columns[0].py_values, range(10,15))
+        self.assertEqual(ser.columns[1].name, "C")
+        self.assertSequenceEqual(ser.columns[1].py_values, range(20,25))
+
+# ======================================================================
+# Output
+# ======================================================================
 class TestSerieToOtherFormatsConversion(unittest.TestCase):
     def test_str_representation_1_column(self):
         ser = serie.Serie.create(

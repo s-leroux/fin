@@ -1,6 +1,9 @@
+import sys
+
 from cpython cimport array
 import array
 
+from fin.utils.log import console
 from fin.seq2.column cimport Column
 from fin.seq2.presentation import Presentation
 
@@ -22,6 +25,77 @@ cdef Serie serie_bind(Column index, tuple columns, str title):
     self.title = title if title is not None else "Untitled"
 
     return self
+
+cdef Serie serie_from_data(data, headings, dict kwargs):
+    """
+    Create a serie from raw Python data (sequences).
+    """
+    title = kwargs.get("title", "Untitled")
+    if not len(data):
+        rowcount = 0
+    else:
+        # Check is all columns have the same length
+        it = iter(data)
+        rowcount = len(next(it))
+        for col in it:
+            if len(col) != rowcount:
+                raise ValueError(f"All columns must have the same length.")
+
+    columns = [
+        Column.from_sequence(column, name=heading) for heading, column in zip(headings, data)
+            ]
+
+    return Serie.create(*columns, title=title)
+
+import csv
+from fin import datetime
+cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict kwargs):
+    """
+    Create a new serie by iterating over CSV data rows.
+    """
+    rows = []
+    reader = csv.reader(iterator, delimiter=delimiter)
+    if fieldnames is not None:
+        heading = [str(fieldname) for fieldname in fieldnames]
+    else:
+        # default to first line
+        heading = [fieldname.strip() for fieldname in next(reader)]
+    rows = list(reader)
+    cols = []
+    names = []
+    for name, fchar, col in zip(heading, format, zip(*rows)):
+        if fchar=='-': # IGNORE
+            continue
+        elif fchar=='n': # NUMERIC
+            f = float
+        elif fchar=='d': # ISO DATE
+            f = datetime.parseisodate
+        elif fchar=='s': # SECONDS SINCE UNIX EPOCH
+            f = datetime.parsetimestamp
+        elif fchar=='m': # MILLISECONDS SINCE UNIX EPOCH
+            f = datetime.parsetimestamp_ms
+        elif fchar=='i': # INTEGER
+            f = int
+
+        col = list(col)
+        for index, value in enumerate(col):
+            try:
+                col[index] = f(value)
+            except:
+                e = sys.exc_info()[1] # This will also catch an exception that doesn't inherit from Exception
+                console.warn(f"Can't convert {col[index]} using {f}")
+                console.info(str(e))
+                col[index] = None
+
+        names.append(name)
+        cols.append(col)
+
+    result = serie_from_data(cols, names, kwargs)
+#    if select:
+#        result = result.select(*select)
+
+    return result
+
 
 cdef inline Column serie_get_column_by_index(Serie self, int idx):
     cdef int col_count
@@ -158,6 +232,14 @@ cdef class Serie:
             self._columns += serie_evaluate_item(self, head)
 
         return self
+    
+    @staticmethod
+    def from_data(columns, headings, **kwargs):
+        return serie_from_data(columns, headings, kwargs)
+
+    @staticmethod
+    def from_csv(iterator, format='', *, fieldnames=None, delimiter=",", **kwargs):
+        return serie_from_csv(iterator, format, fieldnames, delimiter, kwargs)
 
     @staticmethod
     def bind(index, *columns, title=None):
