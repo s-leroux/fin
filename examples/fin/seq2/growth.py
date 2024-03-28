@@ -1,6 +1,6 @@
-from fin.seq import plot
-from fin.seq.table import Table
-from fin.seq import expr
+from fin.seq2 import plot
+from fin.seq2.serie import Serie
+from fin.seq2 import fc
 from fin.model import kellyx
 """
 Plot the expected growth rate E log X of balancing between two investments
@@ -14,12 +14,10 @@ exp2=((0.30, 0.8), (0.40, 1.1), (0.30, 2))
 WEALTH=1
 o = kellyx.Experiment(exp1, exp2)
 
-t = Table(101)
-t.add_columns(
-    ("X", (expr.serie(0, lambda x : x+1))),
-    ("Y", (expr.map(lambda x : o.growth(x/100)), "X"))
-
-)
+t = Serie.create(
+        (fc.named("X"), fc.range(101)),
+        (fc.named("Y"), fc.map(lambda x : o.growth(x/100)), "X")
+    )
 
 mp = plot.Multiplot(t, "X")
 p = mp.new_plot(3)
