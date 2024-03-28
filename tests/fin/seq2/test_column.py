@@ -21,6 +21,14 @@ class TestColumnRemap(unittest.TestCase):
 
         self.assertSequenceEqual(actual.py_values, "DEADBEEF")
 
+    def test_remap_from_py_values_with_missing(self):
+        column = Column.from_sequence("ABCDEF")
+        #                                   012345
+
+        actual = column.remap([3,4,0,3,-1,1,4,4,5,-1])
+
+        self.assertSequenceEqual(actual.py_values, tuple((*"DEAD", None, *"BEEF", None)))
+
     def test_remap_from_f_values(self):
         arr = array.array("d", (10, 20, 30, 40, 50, 60))
         #                        0   1   2   3   4   5

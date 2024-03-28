@@ -288,6 +288,11 @@ cdef array.array neg(unsigned count, const double* values):
 # ----------------------------------------------------------------------
 # Column remapping
 # ----------------------------------------------------------------------
+
+"""
+Magic number for missing values in `remap()`
+"""
+
 cdef array.array remap_from_f_values(double* values, unsigned count, const unsigned* mapping):
     """
     Remap an array of double using the indices provided in `mapping`.
@@ -298,9 +303,14 @@ cdef array.array remap_from_f_values(double* values, unsigned count, const unsig
     """
     cdef array.array result = array.clone(_double_array_template, count, zero=False)
     cdef unsigned i
+    cdef unsigned idx
+    cdef unsigned MISSING=-1
+    # XXX Above:
+    # replace by a global constant when it will be properly supported by Cython
 
     for i in range(count):
-        result.data.as_doubles[i] = values[mapping[i]]
+        idx = mapping[i]
+        result.data.as_doubles[i] = values[idx] if idx != MISSING else NaN
 
     return result
 
@@ -314,9 +324,14 @@ cdef tuple remap_from_py_values(tuple values, unsigned count, const unsigned* ma
     """
     cdef list  result = [None,]*count
     cdef unsigned i
+    cdef unsigned idx
+    cdef unsigned MISSING=-1
+    # XXX Above:
+    # replace by a global constant when it will be properly supported by Cython
 
     for i in range(count):
-        result[i] = values[mapping[i]]
+        idx = mapping[i]
+        result[i] = values[idx] if idx != MISSING else None
 
     return tuple(result)
     
@@ -674,6 +689,8 @@ cdef class Column:
     # Mutation
     # ------------------------------------------------------------------
     def remap(self, mapping):
-        cdef array.array arr = array.array("I", mapping)
+        cdef array.array arr = array.array("i", mapping)
+        # Above: use a *signed* int array to accomodate for the -1u
+        # magic value ("MISSING" constant).
 
         return self.c_remap(len(mapping), arr.data.as_uints)

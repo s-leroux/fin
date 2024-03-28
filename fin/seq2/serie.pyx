@@ -493,6 +493,12 @@ cdef class Join:
 def join(serA, serB, *, rename=True):
     return c_join(serA, serB, rename).as_tuple()
 
+ctypedef unsigned (*join_build_mapping_t)(
+        unsigned lenA, tuple indexA, 
+        unsigned lenB, tuple indexB,
+        unsigned *mappingA,
+        unsigned *mappingB)
+
 cdef unsigned inner_join_build_mapping(
         unsigned lenA, tuple indexA, 
         unsigned lenB, tuple indexB,
@@ -540,12 +546,18 @@ cdef unsigned inner_join_build_mapping(
 
     return n
 
-cdef list join_remap_columns(list columns, unsigned n, unsigned* mapping):
+cdef list join_engine_remap_columns(list columns, unsigned n, unsigned* mapping):
     cdef Column column
 
     return [ column.c_remap(n, mapping) for column in columns ]
 
 cdef Join c_join(Serie serA, Serie serB, bint rename):
+    return join_engine(inner_join_build_mapping, serA, serB, rename)
+
+cdef Join join_engine(
+        join_build_mapping_t join_build_mapping,
+        Serie serA, Serie serB,
+        bint rename):
     """
     Create a join from two series.
     """
@@ -561,7 +573,7 @@ cdef Join c_join(Serie serA, Serie serB, bint rename):
     cdef array.array mappingA = array.clone(unsigned_array, lenMapping, zero=False)
     cdef array.array mappingB = array.clone(unsigned_array, lenMapping, zero=False)
 
-    cdef unsigned n = inner_join_build_mapping(
+    cdef unsigned n = join_build_mapping(
             lenA, indexA,
             lenB, indexB, 
             mappingA.data.as_uints, mappingB.data.as_uints,
@@ -597,8 +609,8 @@ cdef Join c_join(Serie serA, Serie serB, bint rename):
                     column.c_rename(prefix + column.name) for column in colB
                     ]
     # Build the left and right series
-    cdef list leftColumns = join_remap_columns(colA, n, mappingA.data.as_uints)
-    cdef list rightColumns = join_remap_columns(colB, n, mappingB.data.as_uints)
+    cdef list leftColumns = join_engine_remap_columns(colA, n, mappingA.data.as_uints)
+    cdef list rightColumns = join_engine_remap_columns(colB, n, mappingB.data.as_uints)
 
     return Join.create(
             Column.from_sequence(joinIndex, name=serA._index.name, formatter=serA._index.formatter),
