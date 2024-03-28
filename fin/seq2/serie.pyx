@@ -493,21 +493,22 @@ cdef class Join:
 def join(serA, serB, *, rename=True):
     return c_join(serA, serB, rename).as_tuple()
 
-cdef Join c_join(Serie serA, Serie serB, bint rename):
+DEF MISSING = -1u
+# XXX Above: replace by `const unsigned = ...` when it will be properly supported by Cython
+
+cdef unsigned inner_join_build_mapping(
+        unsigned lenA, tuple indexA, 
+        unsigned lenB, tuple indexB,
+        unsigned *mappingA,
+        unsigned *mappingB):
     """
-    Create a join from two series.
+    Build the translation table for an inner join of indexA and indexB.
+
+    The buffer mappingA and mappingB are *assumed* to be large enough
+    to store the required amount of data.
+
+    Return the actual number of row in the resulting join.
     """
-    cdef tuple indexA = serA._index.get_py_values()
-    cdef tuple indexB = serB._index.get_py_values()
-
-    cdef unsigned lenA = len(indexA)
-    cdef unsigned lenB = len(indexB)
-
-    # At worst, we will have min(lenA, lenB) rows in the inner join
-    cdef unsigned lenMapping = lenA if lenA < lenB else lenB
-    cdef array.array mappingA = array.clone(unsigned_array, lenMapping, zero=False)
-    cdef array.array mappingB = array.clone(unsigned_array, lenMapping, zero=False)
-
     cdef unsigned n = 0
     cdef unsigned posA = 0
     cdef unsigned posB = 0
@@ -532,13 +533,37 @@ cdef Join c_join(Serie serA, Serie serB, bint rename):
             if posB == lenB:
                 break
         else:
-            mappingA.data.as_uints[n] = posA
-            mappingB.data.as_uints[n] = posB
+            mappingA[n] = posA
+            mappingB[n] = posB
             n += 1
             posA += 1
             posB += 1
             if posA == lenA or posB == lenB:
                 break
+
+    return n
+
+cdef Join c_join(Serie serA, Serie serB, bint rename):
+    """
+    Create a join from two series.
+    """
+    cdef tuple indexA = serA._index.get_py_values()
+    cdef tuple indexB = serB._index.get_py_values()
+
+    cdef unsigned lenA = len(indexA)
+    cdef unsigned lenB = len(indexB)
+
+    # In the worst case, a join can have lenA+lenB rows (case of a full outer join with 
+    # completely disjoined indices).
+    cdef unsigned lenMapping = lenA+lenB
+    cdef array.array mappingA = array.clone(unsigned_array, lenMapping, zero=False)
+    cdef array.array mappingB = array.clone(unsigned_array, lenMapping, zero=False)
+
+    cdef unsigned n = inner_join_build_mapping(
+            lenA, indexA,
+            lenB, indexB, 
+            mappingA.data.as_uints, mappingB.data.as_uints,
+        )
 
     # shrink array to their correct length:
     array.resize(mappingA, n)
