@@ -108,17 +108,17 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
 # ----------------------------------------------------------------------
 # Projections
 # ----------------------------------------------------------------------
-cdef Serie serie_select(Serie self, tuple columns, str name):
+cdef Serie serie_select(Serie self, tuple exprs, str name):
     """
     Build a new serie with the same index and evaluate column expressions for the data columns.
     """
     cdef Serie result = serie_bind(self.index, (), name)
-    if len(columns) > 0:
-        result._columns = serie_evaluate_expr(self, columns)
+    if len(exprs) > 0:
+        result._columns = serie_evaluate_items(self, exprs)
 
     return result
 
-cdef Serie serie_lstrip(Serie self, tuple columns):
+cdef Serie serie_lstrip(Serie self, tuple exprs):
     """
     Return a a new table with rows at the start containing None removed.
 
@@ -126,10 +126,12 @@ cdef Serie serie_lstrip(Serie self, tuple columns):
     In that case, only those columns are checked.
     If columns is empty all the serie columns are checked.
     """
-    if len(columns) == 0:
+    cdef tuple columns
+
+    if len(exprs) == 0:
         columns = self._columns
     else:
-        columns = serie_evaluate_expr(self, columns)
+        columns = serie_evaluate_items(self, exprs)
 
     none_row = (None,)*len(columns)
     try:
@@ -229,8 +231,8 @@ def serie_evaluate_expr(Serie self, head, *tail):
                 head = result
                 tail = ()
             elif t is tuple:
-                head = t[0]
-                tail = t[1:]
+                head = result[0]
+                tail = result[1:]
             elif t is Serie:
                 head, *tail = (<Serie>result)._columns
             else:

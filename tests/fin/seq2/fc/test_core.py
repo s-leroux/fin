@@ -47,6 +47,14 @@ class TestCoreFunctions(unittest.TestCase):
 
         self.assertIs(obj, serie["X"])
 
+    def test_all(self):
+        serie = type("", (), dict(columns=tuple(range(10))))
+
+        fct = core.all
+        obj = fct(serie)
+
+        self.assertIs(obj, serie.columns)
+
     def test_named(self):
         old_name = "X"
         new_name = "Y"

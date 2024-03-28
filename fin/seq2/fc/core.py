@@ -46,6 +46,15 @@ def get(spec):
 
     return _named
 
+def all(serie):
+    """
+    Evaluates to the whole list of columns in the context.
+
+    Think of this like the star(`*`) in an SQL statement `SELECT * FROM ...`.
+    """
+    return serie.columns # Or serie[:] ?
+
+
 def named(new_name):
     """
     Evaluates to a function that changes the name of a column.

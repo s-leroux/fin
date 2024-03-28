@@ -47,3 +47,16 @@ class TestFunctor(unittest.TestCase):
                 res.py_values,
                 [x+y+z for x,y,z in zip(self.src1.py_values, self.src2.py_values, self.src3.py_values)]
         )
+
+    def test_functor_1_3(self):
+        fct = functor.Functor1_3Example()
+        serie = Serie.create(self.idx)
+
+        res = fct(serie, self.src1)
+
+        self.assertIsInstance(res, tuple)
+        self.assertEqual(len(res), 3)
+        self.assertSequenceEqual(
+                res[0],
+                self.src1
+        )

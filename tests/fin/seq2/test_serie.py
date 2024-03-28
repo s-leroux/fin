@@ -427,6 +427,17 @@ class TestSerieEvaluationExpression(unittest.TestCase):
         self.assertEqual(serB.columns[0].name, "Y")
         self.assertEqual(serB.columns[1].name, "X")
 
+    def test_all(self):
+        ser = serie.Serie.create(
+                fc.sequence("ABCDEF"),
+                fc.constant(2),
+                fc.constant(3),
+                fc.constant(4),
+                )
+
+        cols = ser.evaluate(fc.all)
+        self.assertSequenceEqual(cols, ser.columns)
+
     def test_trivial_get(self):
         ser = serie.Serie.create(
                 fc.sequence("ABCDEF"),

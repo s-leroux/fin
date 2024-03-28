@@ -74,11 +74,11 @@ cdef class Functor1_3:
 
         names = self.make_names(src1);
 
-        return [
+        return (
                 Column.from_float_array(dst1, name=names[0]),
                 Column.from_float_array(dst2, name=names[1]),
                 Column.from_float_array(dst3, name=names[2]),
-                ]
+                )
 
 cdef class Functor2:
     """

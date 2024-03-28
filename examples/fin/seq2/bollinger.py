@@ -1,6 +1,6 @@
 from fin.api import yf
-from fin.seq import algo
-from fin.seq import plot
+from fin.seq2 import fc
+from fin.seq2 import plot
 from fin.datetime import CalendarDateDelta
 """
 Plot recent the quotes for a stock alongside with a couple of indicators.
@@ -11,8 +11,12 @@ Usage:
 client = yf.Client()
 
 t = client.historical_data("BAC", CalendarDateDelta(days=200))
-sma, = t.add_column((algo.sma(5), "Close"))
-boll_b, boll_m, boll_a = t.add_column((algo.bband(5), "Close"))
+t = t.select(
+        fc.all,
+        (fc.sma(5), "Close"),
+        (fc.bband(5), "Close"),
+)
+sma, boll_b, boll_m, boll_a = t.columns[-4:]
 
 mp = plot.Multiplot(t, "Date")
 p = mp.new_plot(3)

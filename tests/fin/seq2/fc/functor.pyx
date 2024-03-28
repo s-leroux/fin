@@ -42,3 +42,16 @@ cdef class Functor3Example(functorx.Functor3):
             # Sum
             dst1[i] = src1[i] + src2[i] + src3[i]
 
+cdef class Functor1_3Example(functorx.Functor1_3):
+    cdef void eval(
+            self,
+            unsigned n,
+            double* dst1,
+            double* dst2,
+            double* dst3,
+            const double* src1,
+            ):
+        cdef unsigned i
+        for i in range(n):
+            # Sum
+            dst1[i] = dst2[i] = dst3[i] = src1[i]
