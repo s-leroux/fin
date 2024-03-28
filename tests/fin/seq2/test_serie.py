@@ -175,6 +175,90 @@ class TestInnerJoin(unittest.TestCase):
         self.assertSequenceEqual(join.columns[0].py_values, [10, 11, 12, 14])
         self.assertSequenceEqual(join.columns[1].py_values, [20, 21, 22, 24])
 
+class TestFullOuterJoin(unittest.TestCase):
+    def test_serie_join(self):
+        XX=None
+        testcases = (
+                (
+                    # Simple case: identical indices
+                    "ABCEF", [10, 11, 12, 13, 14], 
+                    "ABCEF", [20, 21, 22, 23, 24],
+                    "ABCEF", [10, 11, 12, 13, 14], [20, 21, 22, 23, 24]
+                ),
+                (
+                    # Trailing rows in A
+                    "ABCEFGH", [10, 11, 12, 13, 14, 15, 16], 
+                    "ABCEF", [20, 21, 22, 23, 24],
+                    "ABCEFGH", [10, 11, 12, 13, 14, 15, 16], [20, 21, 22, 23, 24, XX, XX]
+                ),
+                (
+                    # Trailing rows in B
+                    "ABCEF", [10, 11, 12, 13, 14], 
+                    "ABCEFGH", [20, 21, 22, 23, 24, 25, 26],
+                    "ABCEFGH", [10, 11, 12, 13, 14, XX, XX], [20, 21, 22, 23, 24, 25, 26]
+                ),
+                (
+                    # Leading rows in A
+                    "ABCEF", [10, 11, 12, 13, 14], 
+                    "CEF", [22, 23, 24],
+                    "ABCEF", [10, 11, 12, 13, 14], [XX, XX, 22, 23, 24]
+                ),
+                (
+                    # Leading rows in B
+                    "CEF", [12, 13, 14], 
+                    "ABCEF", [20, 21, 22, 23, 24],
+                    "ABCEF", [XX, XX, 12, 13, 14], [20, 21, 22, 23, 24]
+                ),
+                (
+                    # Hole in A
+                    "AF", [10, 14], 
+                    "ABCEF", [20, 21, 22, 23, 24],
+                    "ABCEF", [10, XX, XX, XX, 14], [20, 21, 22, 23, 24]
+                ),
+                (
+                    # Hole in B
+                    "ABCEF", [10, 11, 12, 13, 14], 
+                    "AF", [20, 24],
+                    "ABCEF", [10, 11, 12, 13, 14], [20, XX, XX, XX, 24]
+                ),
+                (
+                    # Disjoint sets, A leading
+                    "ABC", [10, 11, 12], 
+                    "EFG", [23, 24, 25],
+                    "ABCEFG", [10, 11, 12, XX, XX, XX], [XX, XX, XX, 23, 24, 25]
+                ),
+                (
+                    # Disjoint sets, B leading
+                    "EFG", [10, 11, 12], 
+                    "ABC", [23, 24, 25],
+                    "ABCEFG", [XX, XX, XX, 10, 11, 12], [23, 24, 25, XX, XX, XX]
+                ),
+            )
+
+        for indexA, colA, indexB, colB, expIndex, expLeft, expRight in testcases:
+            with self.subTest(indices=(indexA, indexB)):
+                ser0 = serie.Serie.create(fc.sequence(indexA), fc.sequence(colA))
+                ser1 = serie.Serie.create(fc.sequence(indexB), fc.sequence(colB))
+
+                index, (left,), (right,) = serie.full_outer_join(ser0, ser1)
+
+                self.assertSequenceEqual(index.py_values, expIndex)
+
+                self.assertSequenceEqual(left.py_values, expLeft)
+                self.assertSequenceEqual(right.py_values, expRight)
+
+    def test_serie_join_operator(self):
+        XX=None
+        serA = serie.Serie.create(fc.sequence("ABCDFG"), fc.sequence([10, 11, 12, 13, 14, 15]))
+        serB = serie.Serie.create(fc.sequence("ABCEF"), fc.sequence([20, 21, 22, 23, 24]))
+
+        join = serA | serB
+
+        self.assertSequenceEqual(join.index.py_values, "ABCDEFG")
+
+        self.assertSequenceEqual(join.columns[0].py_values, [10, 11, 12, 13, XX, 14, 15])
+        self.assertSequenceEqual(join.columns[1].py_values, [20, 21, 22, XX, 23, 24, XX])
+
 # ======================================================================
 # Extra factory methods
 # ======================================================================

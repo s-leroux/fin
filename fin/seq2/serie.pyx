@@ -437,30 +437,50 @@ cdef class Serie:
         return serie_bind(self._index, tuple(new), "Add")
 
     cdef Serie c_add_serie(self, Serie other):
-        cdef Join join = c_join(self, other, rename=False)
+        cdef Join join = c_inner_join(self, other, rename=False)
         cdef Column a, b
         cdef list new = [ a + b for a in join.left for b in join.right ]
 
         return serie_bind(join.index, tuple(new), "Add")
 
     # ------------------------------------------------------------------
-    # Joins
+    # Joins operators
     # ------------------------------------------------------------------
     def __and__(self, other):
         """
-        Join operator.
+        Inner join operator.
         """
         cdef Join join
         cdef Serie that = self
 
         if isinstance(other, Serie):
-            join = c_join(that, other, True)
+            join = c_inner_join(that, other, True)
             return serie_bind(join.index, (join.left+join.right), f"{self.name} & {other.name}")
         elif isinstance(other, (int, float)):
             return serie_bind(
                     that._index, 
                     (*that._columns, Column.from_constant(len(that.index), other)),
                     f"{self.name} & {other}"
+            )
+        else:
+            return NotImplemented
+
+    def __or__(self, other):
+        """
+        Full outer join operator.
+        """
+        cdef Join join
+        cdef Serie that = self
+
+        if isinstance(other, Serie):
+            join = c_full_outer_join(that, other, True)
+            return serie_bind(join.index, (join.left+join.right), f"{self.name} | {other.name}")
+        elif isinstance(other, (int, float)):
+            # XXX Is this correct for `serie FULL OUTER JOIN constant`?
+            return serie_bind(
+                    that._index, 
+                    (*that._columns, Column.from_constant(len(that.index), other)),
+                    f"{self.name} | {other}"
             )
         else:
             return NotImplemented
@@ -491,7 +511,10 @@ cdef class Join:
         return (self.index, self.left, self.right)
 
 def join(serA, serB, *, rename=True):
-    return c_join(serA, serB, rename).as_tuple()
+    return c_inner_join(serA, serB, rename).as_tuple()
+
+def full_outer_join(serA, serB, *, rename=True):
+    return c_full_outer_join(serA, serB, rename).as_tuple()
 
 ctypedef unsigned (*join_build_mapping_t)(
         unsigned lenA, tuple indexA, 
@@ -505,7 +528,7 @@ cdef unsigned inner_join_build_mapping(
         unsigned *mappingA,
         unsigned *mappingB):
     """
-    Build the translation table for an inner join of indexA and indexB.
+    Build the translation table for the inner join of indexA and indexB.
 
     The buffer mappingA and mappingB are *assumed* to be large enough
     to store the required amount of data.
@@ -546,13 +569,82 @@ cdef unsigned inner_join_build_mapping(
 
     return n
 
+cdef unsigned full_outer_join_build_mapping(
+        unsigned lenA, tuple indexA, 
+        unsigned lenB, tuple indexB,
+        unsigned *mappingA,
+        unsigned *mappingB):
+    """
+    Build the translation table for the full outer join of indexA and indexB.
+
+    The buffer mappingA and mappingB are *assumed* to be large enough
+    to store the required amount of data.
+
+    Return the actual number of row in the resulting join.
+    """
+    cdef unsigned n = 0
+    cdef unsigned posA = 0
+    cdef unsigned posB = 0
+
+    while True:
+        while indexA[posA] is None and posA < lenA:
+            posA += 1
+        if posA == lenA:
+            break
+
+        while indexB[posB] is None and posB < lenB:
+            posB += 1
+        if posB == lenB:
+            break
+
+        if indexA[posA] < indexB[posB]:
+            mappingA[n] = posA
+            mappingB[n] = -1
+            n += 1
+            posA += 1
+            if posA == lenA:
+                break
+        elif indexB[posB] < indexA[posA]:
+            mappingA[n] = -1
+            mappingB[n] = posB
+            n += 1
+            posB += 1
+            if posB == lenB:
+                break
+        else:
+            mappingA[n] = posA
+            mappingB[n] = posB
+            n += 1
+            posA += 1
+            posB += 1
+            if posA == lenA or posB == lenB:
+                break
+
+    while posA < lenA:
+        mappingA[n] = posA
+        mappingB[n] = -1
+        n += 1
+        posA += 1
+
+    while posB < lenB:
+        mappingA[n] = -1
+        mappingB[n] = posB
+        n += 1
+        posB += 1
+
+
+    return n
+
 cdef list join_engine_remap_columns(list columns, unsigned n, unsigned* mapping):
     cdef Column column
 
     return [ column.c_remap(n, mapping) for column in columns ]
 
-cdef Join c_join(Serie serA, Serie serB, bint rename):
+cdef Join c_inner_join(Serie serA, Serie serB, bint rename):
     return join_engine(inner_join_build_mapping, serA, serB, rename)
+
+cdef Join c_full_outer_join(Serie serA, Serie serB, bint rename):
+    return join_engine(full_outer_join_build_mapping, serA, serB, rename)
 
 cdef Join join_engine(
         join_build_mapping_t join_build_mapping,
@@ -585,7 +677,12 @@ cdef Join join_engine(
 
     # Build the index
     cdef unsigned i
-    cdef list joinIndex = [indexA[mappingA[i]] for i in range(n)]
+    cdef list joinIndex = [
+            # A bit of hack here: -1u ("MISSING") is the greatest unsigned int so
+            # .... < lenA will catch both the out-of-bound and the missing cases
+            indexA[mappingA[i]] if mappingA[i] < lenA else indexB[mappingB[i]]
+            for i in range(n)
+        ]
     cdef Column column
 
     # Rename the columns if:
