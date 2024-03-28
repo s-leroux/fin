@@ -1,5 +1,5 @@
 from fin.api.yf import Client
-from fin.seq import algo
+from fin.seq2 import fc
 from fin.datetime import CalendarDateDelta
 
 """
@@ -14,10 +14,9 @@ t = t.select(
         "High",
         "Low",
         "Close",
-        { "name": "Volume (k)", "expr": (algo.map(lambda x : x//1000), "Volume") },
-        )
-
+        (fc.named("Volume (k)"), fc.map(lambda x : x//1000), "Volume"),
+    )
 print(t)
 
-t = client.historical_data("^FCHI", CalendarDateDelta(days=20), select=("Date", "Close"))
+t = client.historical_data("^FCHI", CalendarDateDelta(days=20)).select("Close")
 print(t)
