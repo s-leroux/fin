@@ -1,4 +1,4 @@
-from fin.seq import table, plot
+from fin.seq2 import serie, plot
 """
 Plot intraday date from a CSV file
 
@@ -7,10 +7,8 @@ Usage:
 """
 FNAME="tests/_fixtures/BTCUSDT.csv"
 with open(FNAME, "r") as f:
-    fieldnames = (
-            "Date", "Open", "High", "Low", "Close", "Volume"
-            )
-    t = table.table_from_csv(f, "mnnnnn", fieldnames=fieldnames)
+    fieldnames = ( "Date", "Open", "High", "Low", "Close", "Volume" )
+    t = serie.Serie.from_csv(f, "mnnnnn", fieldnames=fieldnames)
 
 mp = plot.Multiplot(t, "Date")
 p = mp.new_plot(3)
