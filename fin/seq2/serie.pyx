@@ -493,9 +493,6 @@ cdef class Join:
 def join(serA, serB, *, rename=True):
     return c_join(serA, serB, rename).as_tuple()
 
-DEF MISSING = -1u
-# XXX Above: replace by `const unsigned = ...` when it will be properly supported by Cython
-
 cdef unsigned inner_join_build_mapping(
         unsigned lenA, tuple indexA, 
         unsigned lenB, tuple indexB,
@@ -542,6 +539,11 @@ cdef unsigned inner_join_build_mapping(
                 break
 
     return n
+
+cdef list join_remap_columns(list columns, unsigned n, unsigned* mapping):
+    cdef Column column
+
+    return [ column.c_remap(n, mapping) for column in columns ]
 
 cdef Join c_join(Serie serA, Serie serB, bint rename):
     """
@@ -595,12 +597,8 @@ cdef Join c_join(Serie serA, Serie serB, bint rename):
                     column.c_rename(prefix + column.name) for column in colB
                     ]
     # Build the left and right series
-    cdef list leftColumns = [
-            column.c_remap(len(mappingA), mappingA.data.as_uints) for column in colA
-    ]
-    cdef list rightColumns = [
-            column.c_remap(len(mappingB), mappingB.data.as_uints) for column in colB
-    ]
+    cdef list leftColumns = join_remap_columns(colA, n, mappingA.data.as_uints)
+    cdef list rightColumns = join_remap_columns(colB, n, mappingB.data.as_uints)
 
     return Join.create(
             Column.from_sequence(joinIndex, name=serA._index.name, formatter=serA._index.formatter),
