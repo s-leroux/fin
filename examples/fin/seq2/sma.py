@@ -1,5 +1,5 @@
 from fin.api.yf import Client
-from fin.seq import algo
+from fin.seq2 import fc
 from fin.datetime import CalendarDateDelta
 
 """
@@ -11,6 +11,9 @@ Usage:
 """
 client = Client()
 t = client.historical_data("^FCHI", CalendarDateDelta(days=900))
-t.add_column("MA", (algo.sma(50), "Close"))
+t = t.select(
+        fc.all,
+        (fc.named("SMA"), fc.sma(50), "Close")
+    )
 
 print(t)
