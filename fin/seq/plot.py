@@ -2,6 +2,8 @@
 Plot 2D curves using GNUPlot
 """
 from fin.seq import formatter
+from fin.seq.column import Column
+from fin.seq.serie import Serie
 import asyncio
 import math
 import collections
@@ -123,9 +125,9 @@ class _OHLCElement(_Element):
 # A plot
 # ======================================================================
 class _Plot:
-    def __init__(self, plot, table):
+    def __init__(self, plot, serie):
         self._plot = plot
-        self._table = table
+        self._serie = serie
 
         plot["elements"] = []
         plot["poi"] = Tics()
@@ -140,7 +142,7 @@ class _Plot:
         """
         Add a new line drawing on a plot.
         """
-        column = self._table[data_column]
+        column = self._serie[data_column]
         element = {
                 "kind": kind,
                 "data": [ data_column ],
@@ -155,10 +157,10 @@ class _Plot:
         """
         Add an open/high/low/close 4D element to the plot.
         """
-        # open = self._table[open_price_column]
-        # high = self._table[high_price_column]
-        # low = self._table[low_price_column]
-        # close = self._table[close_price_column]
+        # open = self._serie[open_price_column]
+        # high = self._serie[high_price_column]
+        # low = self._serie[low_price_column]
+        # close = self._serie[close_price_column]
         element = {
                 "kind": kind,
                 "data": [
@@ -211,21 +213,30 @@ class Multiplot:
     """
     Interface to a multiplot.
 
-    A multiplot is made of 1-to-n plots. All plots are based on the same table
+    A multiplot is made of 1-to-n plots. All plots are based on the same serie
     and uses the same x-axis.
     """
     LABEL = "LABEL"
     XY = "XY"
 
-    def __init__(self, table, x_axis_column, *, mode=None):
+    def __init__(self, serie, x_axis_column, *, mode=None):
         if mode is None:
             mode = Multiplot.LABEL
 
-        self._table = table
+#        if type(x_axis_column) is Serie:
+#            cols = x_axis_column.columns
+#            if len(cols) != 1:
+#                raise ValueError(f"Multi-column are not allowed here")
+#            x_axis_column = x_axis_column[1]
+#
+#        if type(x_axis_column) is not Column:
+#            raise TypeError(f"Column or serie expected. Found {x_axis_column!r}")
+
+        self._serie = serie
 
         self._plot = {
                 "mode": mode,
-                "title": table.name(),
+                "title": serie.name or "Untitled",
                 "x": x_axis_column,
                 "plots": [],
                 }
@@ -246,7 +257,7 @@ class Multiplot:
                 }
 
         self._plot["plots"].append(plot)
-        return _Plot(plot, self._table)
+        return _Plot(plot, self._serie)
 
 # ======================================================================
 # GNUPlot
@@ -352,10 +363,10 @@ class _GNUPlotVisitor:
 
     def plot(self, mp):
         write = self._write
-        self._table = table = mp._table
+        self._serie = serie = mp._serie
 
         multiplot = self._multiplot = mp.plot
-        self._table = table
+        self._serie = serie
 
         # write the preamble
         write("\n")
@@ -372,8 +383,8 @@ class _GNUPlotVisitor:
         # xtics
         mode = multiplot["mode"]
         if mode == Multiplot.LABEL:
-            write(f"set xrange [0:{table.rows()+1}]\n")
-            x_column = table[multiplot["x"]]
+            write(f"set xrange [0:{serie.rowcount+1}]\n")
+            x_column = serie[multiplot["x"]].columns[0]
             x_tics = make_tics_from_sequence(5, x_column)
         elif mode == Multiplot.XY:
             x_tics = None
@@ -384,7 +395,7 @@ class _GNUPlotVisitor:
         write("set grid xtics ytics\n")
 
         # write the data
-        data = formatter.CSV(delimiter=" ").format(table)
+        data = formatter.CSV(delimiter=" ").format(serie)
         write("$MyData << EOD\n#")
         write(data)
         write("EOD\n")
@@ -411,7 +422,7 @@ class _GNUPlotVisitor:
 
             # Auto-append the min, max and last value of the last column of each element
             for element in plot["elements"]:
-                column = table[element["data"][-1]]
+                column = serie[element["data"][-1]].columns[0]
                 poi.extend([*column.min_max(), column[-1]])
 
             if len(poi):
@@ -447,9 +458,9 @@ class _GNUPlotVisitor:
                 write(f'set xtics axis ({",".join(x_tics_labels)})\n')
 
             # Draw the plot
-            self._plot_plot(write, table, plot)
+            self._plot_plot(write, serie, plot)
 
-    def _plot_plot(self, write, table, plot):
+    def _plot_plot(self, write, serie, plot):
         self._plot = plot
         elements = plot["elements"]
 
@@ -462,7 +473,7 @@ class _GNUPlotVisitor:
         the_max = float("-inf")
         for element in elements:
             for column_name in element["data"]:
-                mi, ma = table[column_name].min_max()
+                mi, ma = serie[column_name].columns[0].min_max()
                 if mi < the_min:
                     the_min = mi
                 if ma > the_max:
@@ -489,11 +500,11 @@ class _GNUPlotVisitor:
         sep = ""
         for element in elements:
             write(sep)
-            self._plot_element(write, table, element)
+            self._plot_element(write, serie, element)
             sep = ",\\\n"
         write("\n")
 
-    def _plot_element(self, write, table, element):
+    def _plot_element(self, write, serie, element):
         kind = element["kind"]
         color, x, *data = self._get_field_numbers(
                 element["color"],
@@ -535,8 +546,9 @@ class _GNUPlotVisitor:
         """
         Map column names to their index+1 (gnuplot columns are 1-based)
         """
-        table = self._table
-        return [1+table._get_column_index(field_name) if field_name is not None else None for field_name in field_names]
+        serie = self._serie
+        headings = serie.headings
+        return [1+headings.index(field_name) if field_name is not None else None for field_name in field_names]
 
     def _make_fields(self, *field_names):
         return ":".join(map(str, self._get_field_numbers(*field_names)))

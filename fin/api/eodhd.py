@@ -4,8 +4,8 @@ An interface to some API provided by eodhistoricaldata.com
 
 from fin.api.core import HistoricalData
 from fin.requests import get
-from fin.seq2 import serie
-from fin.seq2 import fc
+from fin.seq import serie
+from fin.seq import fc
 
 EODHD_BASE_URI="https://eodhistoricaldata.com/api"
 
