@@ -1,6 +1,7 @@
 import sys
 
 from cpython cimport array
+from cpython.object cimport Py_EQ, Py_NE
 import array
 
 from fin.utils.log import console
@@ -54,6 +55,9 @@ cdef Serie serie_from_data(data, headings, dict kwargs):
                 raise ValueError(f"All columns must have the same length.")
 
     return Serie.create(*columns, name=name)
+
+cdef Serie serie_from_rows(headings, rows, dict kwargs):
+    return serie_from_data(zip(*rows), headings, kwargs)
 
 import csv
 from fin import datetime
@@ -212,7 +216,7 @@ cdef tuple serie_evaluate_item(Serie self, expr):
     if callable(expr):
         # Only nullary callable are allowed here
         return wrap_in_tuple(expr(self))
-        
+
     return serie_evaluate_expr(self, *expr) # implicit test for iter(expr)
 
 def serie_evaluate_expr(Serie self, head, *tail):
@@ -288,10 +292,15 @@ cdef class Serie:
             self._columns += serie_evaluate_item(self, head)
 
         return self
-    
+
     @staticmethod
     def from_data(columns, headings, **kwargs):
         return serie_from_data(columns, headings, kwargs)
+
+    @staticmethod
+    def from_rows(headings, rows, **kwargs):
+        return serie_from_rows(headings, rows, kwargs)
+    # XXX Above: fix from_data() and from_rows() to have the parameters in the same order
 
     @staticmethod
     def from_csv(iterator, format='', *, fieldnames=None, delimiter=",", **kwargs):
@@ -418,6 +427,32 @@ cdef class Serie:
         return serie_bind(self.index, (), "Empty")
 
     # ------------------------------------------------------------------
+    # Comparison
+    # ------------------------------------------------------------------
+    def __richcmp__(self, other, int op):
+        if op == Py_NE:
+            return not(self == other)
+        if op != Py_EQ or type(other) is not Serie:
+            return NotImplemented # XXX Shouldn't we raise an exception here?
+
+        # Identity
+        if self is other:
+            return True
+
+        # Equality
+        serA = <Serie>self
+        serB = <Serie>other
+        if serA.rowcount != serB.rowcount:
+            return False
+        if serA.name != serB.name:
+            return False
+        if serA._index != serB._index:
+            return False
+
+        return serA._columns == serB._columns
+
+
+    # ------------------------------------------------------------------
     # Arithmetic operators
     # ------------------------------------------------------------------
     def __add__(self, other):
@@ -458,7 +493,7 @@ cdef class Serie:
             return serie_bind(join.index, (join.left+join.right), f"{self.name} & {other.name}")
         elif isinstance(other, (int, float)):
             return serie_bind(
-                    that._index, 
+                    that._index,
                     (*that._columns, Column.from_constant(len(that.index), other)),
                     f"{self.name} & {other}"
             )
@@ -478,7 +513,7 @@ cdef class Serie:
         elif isinstance(other, (int, float)):
             # XXX Is this correct for `serie FULL OUTER JOIN constant`?
             return serie_bind(
-                    that._index, 
+                    that._index,
                     (*that._columns, Column.from_constant(len(that.index), other)),
                     f"{self.name} | {other}"
             )
@@ -522,13 +557,13 @@ def left_outer_join(serA, serB, *, rename=True):
     return c_left_outer_join(serA, serB, rename).as_tuple()
 
 ctypedef unsigned (*join_build_mapping_t)(
-        unsigned lenA, tuple indexA, 
+        unsigned lenA, tuple indexA,
         unsigned lenB, tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB)
 
 cdef unsigned inner_join_build_mapping(
-        unsigned lenA, tuple indexA, 
+        unsigned lenA, tuple indexA,
         unsigned lenB, tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB):
@@ -575,7 +610,7 @@ cdef unsigned inner_join_build_mapping(
     return n
 
 cdef unsigned full_outer_join_build_mapping(
-        unsigned lenA, tuple indexA, 
+        unsigned lenA, tuple indexA,
         unsigned lenB, tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB):
@@ -643,7 +678,7 @@ cdef unsigned full_outer_join_build_mapping(
     return n
 
 cdef unsigned left_outer_join_build_mapping(
-        unsigned lenA, tuple indexA, 
+        unsigned lenA, tuple indexA,
         unsigned lenB, tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB):
@@ -728,7 +763,7 @@ cdef Join join_engine(
     cdef unsigned lenA = len(indexA)
     cdef unsigned lenB = len(indexB)
 
-    # In the worst case, a join can have lenA+lenB rows (case of a full outer join with 
+    # In the worst case, a join can have lenA+lenB rows (case of a full outer join with
     # completely disjoined indices).
     cdef unsigned lenMapping = lenA+lenB
     cdef array.array mappingA = array.clone(unsigned_array, lenMapping, zero=False)
@@ -736,7 +771,7 @@ cdef Join join_engine(
 
     cdef unsigned n = join_build_mapping(
             lenA, indexA,
-            lenB, indexB, 
+            lenB, indexB,
             mappingA.data.as_uints, mappingB.data.as_uints,
         )
 

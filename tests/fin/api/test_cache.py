@@ -17,5 +17,4 @@ class TestCache(unittest.TestCase):
             t1 = self.client.historical_data(self.ticker, duration, end)
             t2 = self.client.historical_data(self.ticker, duration, end)
 
-            for a, b in zip(t1, t2):
-                self.assertEqual(a,b)
+            self.assertEqual(t1, t2)
