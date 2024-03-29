@@ -201,7 +201,7 @@ cdef tuple serie_evaluate_item(Serie self, expr):
     if t is Column:
         return ( expr, )
     if t is Serie:
-        join = c_left_join(self, expr)
+        join = c_left_outer_join(self, expr, False)
         if join.index != self._index:
             raise ValueError(f"Cannot insert serie: indices differ.")
         return join.right
@@ -518,6 +518,9 @@ join=inner_join # Compatibility with previous implementations. DEPRECATED.
 def full_outer_join(serA, serB, *, rename=True):
     return c_full_outer_join(serA, serB, rename).as_tuple()
 
+def left_outer_join(serA, serB, *, rename=True):
+    return c_left_outer_join(serA, serB, rename).as_tuple()
+
 ctypedef unsigned (*join_build_mapping_t)(
         unsigned lenA, tuple indexA, 
         unsigned lenB, tuple indexB,
@@ -717,10 +720,7 @@ cdef Join join_engine(
             tuple(rightColumns)
     )
 
-def left_join(serA, serB):
-    return c_left_join(serA, serB).as_tuple()
-
-cdef Join c_left_join(Serie serA, Serie serB):
+cdef Join c_left_outer_join(Serie serA, Serie serB, rename):
     """
     Create a left join from two series.
     """

@@ -136,14 +136,14 @@ class TestSerie(unittest.TestCase):
 # ======================================================================
 # Joins
 # ======================================================================
-class TestLeftJoin(unittest.TestCase):
+class TestLeftOuterJoin(unittest.TestCase):
     def test_serie_trivial_join(self):
         seqA = [10, 11, 12, 13, 14, 15]
         seqB = [20, 21, 22, 23, 24, 25]
         serA = serie.Serie.create(fc.sequence("ABCD"), fc.sequence(seqA))
         serB = serie.Serie.create(fc.sequence("ABCD"), fc.sequence(seqB))
 
-        index, (left,), (right,) = serie.left_join(serA, serB)
+        index, (left,), (right,) = serie.left_outer_join(serA, serB)
 
         self.assertSequenceEqual(index, serA.index)
         self.assertSequenceEqual(index, serB.index) # <- this is implicitly true
@@ -157,6 +157,7 @@ class TestJoin(unittest.TestCase):
     class Join(Enum):
         INNER_JOIN =        (0, serie.inner_join)
         FULL_OUTER_JOIN =   (1, serie.full_outer_join)
+        LEFT_OUTER_JOIN =   (2, serie.left_outer_join)
 
     def run_join_engine(self, join):
         XX=None
@@ -167,12 +168,14 @@ class TestJoin(unittest.TestCase):
                     "ABCEF", [20, 21, 22, 23, 24],
                     "ABCEF", [10, 11, 12, 13, 14], [20, 21, 22, 23, 24],
                     "ABCEF", [10, 11, 12, 13, 14], [20, 21, 22, 23, 24],
+                    "ABCEF", [10, 11, 12, 13, 14], [20, 21, 22, 23, 24],
                 ),
                 (
                     # Trailing rows in A
                     "ABCEFGH", [10, 11, 12, 13, 14, 15, 16], 
                     "ABCEF", [20, 21, 22, 23, 24],
                     "ABCEF",   [10, 11, 12, 13, 14],         [20, 21, 22, 23, 24],
+                    "ABCEFGH", [10, 11, 12, 13, 14, 15, 16], [20, 21, 22, 23, 24, XX, XX],
                     "ABCEFGH", [10, 11, 12, 13, 14, 15, 16], [20, 21, 22, 23, 24, XX, XX],
                 ),
                 (
@@ -181,12 +184,14 @@ class TestJoin(unittest.TestCase):
                     "ABCEFGH", [20, 21, 22, 23, 24, 25, 26],
                     "ABCEF",   [10, 11, 12, 13, 14],         [20, 21, 22, 23, 24],
                     "ABCEFGH", [10, 11, 12, 13, 14, XX, XX], [20, 21, 22, 23, 24, 25, 26],
+                    "ABCEF",   [10, 11, 12, 13, 14],         [20, 21, 22, 23, 24],
                 ),
                 (
                     # Leading rows in A
                     "ABCEF", [10, 11, 12, 13, 14], 
                     "CEF", [22, 23, 24],
                     "CEF",           [12, 13, 14],         [22, 23, 24],
+                    "ABCEF", [10, 11, 12, 13, 14], [XX, XX, 22, 23, 24],
                     "ABCEF", [10, 11, 12, 13, 14], [XX, XX, 22, 23, 24],
                 ),
                 (
@@ -195,6 +200,7 @@ class TestJoin(unittest.TestCase):
                     "ABCEF", [20, 21, 22, 23, 24],
                     "CEF",           [12, 13, 14],         [22, 23, 24],
                     "ABCEF", [XX, XX, 12, 13, 14], [20, 21, 22, 23, 24],
+                    "CEF",           [12, 13, 14],         [22, 23, 24],
                 ),
                 (
                     # Hole in A
@@ -202,12 +208,14 @@ class TestJoin(unittest.TestCase):
                     "ABCEF", [20, 21, 22, 23, 24],
                     "AF",    [10,             14], [20,             24],
                     "ABCEF", [10, XX, XX, XX, 14], [20, 21, 22, 23, 24],
+                    "AF",    [10,             14], [20,             24],
                 ),
                 (
                     # Hole in B
                     "ABCEF", [10, 11, 12, 13, 14], 
                     "AF", [20, 24],
                     "AF",    [10,             14], [20,             24],
+                    "ABCEF", [10, 11, 12, 13, 14], [20, XX, XX, XX, 24],
                     "ABCEF", [10, 11, 12, 13, 14], [20, XX, XX, XX, 24],
                 ),
                 (
@@ -216,12 +224,14 @@ class TestJoin(unittest.TestCase):
                     "EFG", [23, 24, 25],
                     "",       [],                       [],
                     "ABCEFG", [10, 11, 12, XX, XX, XX], [XX, XX, XX, 23, 24, 25],
+                    "ABCEFG", [10, 11, 12, XX, XX, XX], [XX, XX, XX, 23, 24, 25],
                 ),
                 (
                     # Disjoint sets, B leading
                     "EFG", [10, 11, 12], 
                     "ABC", [23, 24, 25],
                     "",       [],                       [],
+                    "ABCEFG", [XX, XX, XX, 10, 11, 12], [23, 24, 25, XX, XX, XX],
                     "ABCEFG", [XX, XX, XX, 10, 11, 12], [23, 24, 25, XX, XX, XX],
                 ),
             )
@@ -241,11 +251,9 @@ class TestJoin(unittest.TestCase):
                 self.assertSequenceEqual(left.py_values, expLeft)
                 self.assertSequenceEqual(right.py_values, expRight)
 
-    def test_serie_inner_join(self):
-        self.run_join_engine(TestJoin.Join.INNER_JOIN)
-
-    def test_serie_full_outer_join(self):
-        self.run_join_engine(TestJoin.Join.FULL_OUTER_JOIN)
+    def test_serie_all_join(self):
+        for join in TestJoin.Join:
+            self.run_join_engine(join)
 
     def test_serie_inner_join_operator(self):
         serA = serie.Serie.create(fc.sequence("ABCDFG"), fc.sequence([10, 11, 12, 13, 14, 15]))
@@ -501,7 +509,7 @@ class TestSerieEvaluationExpression(unittest.TestCase):
     test_mul = arithmetic_test(lambda x, y: x*y, fc.mul)
     test_div = arithmetic_test(lambda x, y: x/y, fc.div)
 
-    def test_trivial_left_join(self):
+    def test_trivial_left_outer_join(self):
         seqA = tuple(range(10,17))
         seqB = tuple(range(20,27))
         serA = serie.Serie.create(
