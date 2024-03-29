@@ -642,6 +642,65 @@ cdef unsigned full_outer_join_build_mapping(
 
     return n
 
+cdef unsigned left_outer_join_build_mapping(
+        unsigned lenA, tuple indexA, 
+        unsigned lenB, tuple indexB,
+        unsigned *mappingA,
+        unsigned *mappingB):
+    """
+    Build the translation table for the left outer join of indexA and indexB.
+
+    The buffer mappingA and mappingB are *assumed* to be large enough
+    to store the required amount of data.
+
+    Return the actual number of row in the resulting join.
+    """
+    cdef unsigned n = 0
+    cdef unsigned posA = 0
+    cdef unsigned posB = 0
+
+    while True:
+        while indexA[posA] is None and posA < lenA:
+            posA += 1
+        if posA == lenA:
+            break
+
+        while indexB[posB] is None and posB < lenB:
+            posB += 1
+        if posB == lenB:
+            break
+
+        if indexA[posA] < indexB[posB]:
+            mappingA[n] = posA
+            mappingB[n] = -1
+            n += 1
+            posA += 1
+            if posA == lenA:
+                break
+        elif indexB[posB] < indexA[posA]:
+            posB += 1
+            if posB == lenB:
+                break
+        else:
+            mappingA[n] = posA
+            mappingB[n] = posB
+            n += 1
+            posA += 1
+            posB += 1
+            if posA == lenA or posB == lenB:
+                break
+
+    while posA < lenA:
+        if indexA[posA] is not None:
+            mappingA[n] = posA
+            mappingB[n] = -1
+            n += 1
+        posA += 1
+
+    # No need to consume the remaining items in indexB
+
+    return n
+
 cdef list join_engine_remap_columns(list columns, unsigned n, unsigned* mapping):
     cdef Column column
 
@@ -652,6 +711,9 @@ cdef Join c_inner_join(Serie serA, Serie serB, bint rename):
 
 cdef Join c_full_outer_join(Serie serA, Serie serB, bint rename):
     return join_engine(full_outer_join_build_mapping, serA, serB, rename)
+
+cdef Join c_left_outer_join(Serie serA, Serie serB, bint rename):
+    return join_engine(left_outer_join_build_mapping, serA, serB, rename)
 
 cdef Join join_engine(
         join_build_mapping_t join_build_mapping,
@@ -721,19 +783,3 @@ cdef Join join_engine(
             tuple(leftColumns),
             tuple(rightColumns)
     )
-
-cdef Join c_left_outer_join(Serie serA, Serie serB, rename):
-    """
-    Create a left join from two series.
-    """
-    cdef Column indexA = serA._index
-    cdef Column indexB = serB._index
-
-    if indexA == indexB:
-        return Join.create(
-                indexA,
-                serA.columns,
-                serB.columns
-        )
-
-    raise NotImplementedError(f"Non-trivial left join are not implemented yet.")

@@ -136,22 +136,6 @@ class TestSerie(unittest.TestCase):
 # ======================================================================
 # Joins
 # ======================================================================
-class TestLeftOuterJoin(unittest.TestCase):
-    def test_serie_trivial_join(self):
-        seqA = [10, 11, 12, 13, 14, 15]
-        seqB = [20, 21, 22, 23, 24, 25]
-        serA = serie.Serie.create(fc.sequence("ABCD"), fc.sequence(seqA))
-        serB = serie.Serie.create(fc.sequence("ABCD"), fc.sequence(seqB))
-
-        index, (left,), (right,) = serie.left_outer_join(serA, serB)
-
-        self.assertSequenceEqual(index, serA.index)
-        self.assertSequenceEqual(index, serB.index) # <- this is implicitly true
-
-
-        self.assertSequenceEqual(left.py_values, seqA)
-        self.assertSequenceEqual(right.py_values, seqB)
-
 from enum import Enum
 class TestJoin(unittest.TestCase):
     class Join(Enum):
@@ -224,7 +208,7 @@ class TestJoin(unittest.TestCase):
                     "EFG", [23, 24, 25],
                     "",       [],                       [],
                     "ABCEFG", [10, 11, 12, XX, XX, XX], [XX, XX, XX, 23, 24, 25],
-                    "ABCEFG", [10, 11, 12, XX, XX, XX], [XX, XX, XX, 23, 24, 25],
+                    "ABC",    [10, 11, 12,],            [XX, XX, XX],
                 ),
                 (
                     # Disjoint sets, B leading
@@ -232,7 +216,7 @@ class TestJoin(unittest.TestCase):
                     "ABC", [23, 24, 25],
                     "",       [],                       [],
                     "ABCEFG", [XX, XX, XX, 10, 11, 12], [23, 24, 25, XX, XX, XX],
-                    "ABCEFG", [XX, XX, XX, 10, 11, 12], [23, 24, 25, XX, XX, XX],
+                    "EFG",    [10, 11, 12],             [XX, XX, XX],
                 ),
             )
 
@@ -510,8 +494,8 @@ class TestSerieEvaluationExpression(unittest.TestCase):
     test_div = arithmetic_test(lambda x, y: x/y, fc.div)
 
     def test_trivial_left_outer_join(self):
-        seqA = tuple(range(10,17))
-        seqB = tuple(range(20,27))
+        seqA = tuple(range(10,16))
+        seqB = tuple(range(20,26))
         serA = serie.Serie.create(
                 fc.sequence("ABCDEF"),
                 (fc.named("X"), fc.sequence(seqA)),
