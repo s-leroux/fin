@@ -1,9 +1,8 @@
 import unittest
 
 from fin.seq import plot
-from fin.seq import column
-from fin.seq import table
-from fin.seq import expr
+from fin.seq.serie import Serie
+from fin.seq import fc
 
 # ======================================================================
 # Utilities
@@ -119,10 +118,11 @@ import io
 from textwrap import dedent
 class TestGNUPlot(unittest.TestCase):
     def setUp(self):
-        self.t = t = table.Table(5)
-        t.add_column("T", expr.apply(range))
-        t.add_column("D", 2)
-        t.add_column("V", 1)
+        self.s = s = Serie.create(
+                (fc.named("T"), fc.sequence(range(5))),
+                (fc.named("D"), fc.constant(2)),
+                (fc.named("V"), fc.constant(1)),
+                )
 
         capture = io.StringIO()
         class MyProcess:
@@ -137,7 +137,7 @@ class TestGNUPlot(unittest.TestCase):
 
         self.capture = capture = io.StringIO()
         self.Process = MyProcess
-        self.multiplot = plot.Multiplot(t, "T")
+        self.multiplot = plot.Multiplot(s, "T")
 
     def test_preamble(self):
         plot.gnuplot(self.multiplot, Process=self.Process)

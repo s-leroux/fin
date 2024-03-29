@@ -8,8 +8,8 @@ sqlite3.register_adapter(CalendarDate, str)
 sqlite3.register_converter("CalendarDate", parseisodate)
 
 from fin.api.core import HistoricalData
-from fin.seq2 import serie
-from fin.seq2 import fc
+from fin.seq import serie
+from fin.seq import fc
 from fin.utils.log import console
 
 # Historical data

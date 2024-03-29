@@ -2,7 +2,7 @@
 """
 
 from fin.requests import get
-from fin.seq2.serie import Serie
+from fin.seq.serie import Serie
 from fin.api.core import HistoricalData
 
 # Historical data

@@ -1,19 +1,19 @@
 """
-Formatters for fin.seq.table.Table
+Formatters for fin.seq.serie.Serie
 """
 
 class Tabular:
-    def format(self, table):
+    def format(self, serie):
         def value_to_string(value):
             if type(value) == float:
                 return f"{value:10.4f}"
             else:
                 return str(value)
 
-        rows = [ table.names() ]
+        rows = [ serie.headings ]
         width = [ len(c) for c in rows[0] ]
 
-        for row in zip(*table.data()):
+        for row in serie.rows:
             row = [value_to_string(value) for value in row]
             for i, value in enumerate(row):
                 width[i] = max(width[i], len(value))
@@ -42,13 +42,13 @@ class CSV:
     def __init__(self, delimiter=','):
         self._delimiter = delimiter
 
-    def format(self, table):
+    def format(self, serie):
         result = ""
         # Heading
-        result += self._delimiter.join(table.names()) + "\n"
+        result += self._delimiter.join(serie.headings) + "\n"
 
         # Data
-        for row in table.row_iterator():
+        for row in serie.rows:
             result += self._delimiter.join(map(str, row)) + "\n"
 
         return result
