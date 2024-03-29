@@ -626,15 +626,17 @@ cdef unsigned full_outer_join_build_mapping(
                 break
 
     while posA < lenA:
-        mappingA[n] = posA
-        mappingB[n] = -1
-        n += 1
+        if indexA[posA] is not None:
+            mappingA[n] = posA
+            mappingB[n] = -1
+            n += 1
         posA += 1
 
     while posB < lenB:
-        mappingA[n] = -1
-        mappingB[n] = posB
-        n += 1
+        if indexB[posB] is not None:
+            mappingA[n] = -1
+            mappingB[n] = posB
+            n += 1
         posB += 1
 
 
