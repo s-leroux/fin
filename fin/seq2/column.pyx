@@ -439,11 +439,11 @@ cdef class Column:
         """
         Return the content of the column as a sequence of Python objects.
         """
-        if self._py_values:
+        if self._py_values is not None:
             return self._py_values
 
         # else
-        if self._f_values:
+        if self._f_values is not None:
             self._py_values = py_values_from_f_values(self._f_values)
             return self._py_values
 
@@ -458,11 +458,11 @@ cdef class Column:
         """
         Return the content of the column as an array of floats.
         """
-        if self._f_values:
+        if self._f_values is not None:
             return self._f_values
 
         # else
-        if self._py_values:
+        if self._py_values is not None:
             self._f_values = f_values_from_py_values(self._py_values)
             return self._f_values
 

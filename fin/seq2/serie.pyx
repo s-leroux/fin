@@ -510,8 +510,10 @@ cdef class Join:
         """
         return (self.index, self.left, self.right)
 
-def join(serA, serB, *, rename=True):
+def inner_join(serA, serB, *, rename=True):
     return c_inner_join(serA, serB, rename).as_tuple()
+
+join=inner_join # Compatibility with previous implementations. DEPRECATED.
 
 def full_outer_join(serA, serB, *, rename=True):
     return c_full_outer_join(serA, serB, rename).as_tuple()
