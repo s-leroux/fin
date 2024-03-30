@@ -4,6 +4,84 @@ from fin.utils import formatters
 DEFAULT_FORMATTER=formatters.StringLeftFormatter()
 DEFAULT_CONTEXT=formatters.Context()
 
+def CSVFormatter(heading, columns, context, options):
+    lines = []
+    delimiter = options.get("delimiter", ", ")
+    lines.append(delimiter.join([t for t, *_ in heading]))
+    for row in zip(*columns):
+        lines.append(delimiter.join([t for t, *_ in row]))
+
+    return "\n".join(lines)+"\n"
+
+def justify(text, llen, rlen, llen_max, rlen_max):
+    """
+    Clip the text or add spaces so it fits exactly into a `llen+rlen` character width string.
+
+    The string is assumed to not contain newlines.
+    """
+    text = (llen_max-llen)*" " + text + (rlen_max-rlen)*" "
+    width_max = llen_max+rlen_max
+
+    while len(text) > width_max and text[0] == " ":
+        text = text[1:]
+
+    while len(text) > width_max and text[-1] == " ":
+        text = text[:-1]
+
+    # FIXME This can break escape sequences!
+    if len(text) > width_max:
+        return text[:width_max-1] + "…"
+
+    return text
+
+def TabularFormatter(heading, columns, context, options):
+    width = []
+
+    for column in columns:
+        llen_max = 0 # left spacing
+        rlen_max = 0 # right spacing
+
+        for _, llen, rlen in column:
+            llen_max = max(llen_max, llen)
+            rlen_max = max(rlen_max, rlen)
+
+        width.append((llen_max,rlen_max))
+
+    col_sep = options.get("column-separator"," | ")
+    heading_sep = options.get("heading-separator","-")
+
+    lines = []
+    if options.get("heading", True):
+        line = []
+        for (llen_max, rlen_max), cell in zip(width, heading):
+            line.append(justify(*cell, llen_max, rlen_max))
+        lines.append(col_sep.join(line))
+
+        if heading_sep:
+            line = []
+            for llen_max,rlen_max in width:
+                sep = ""
+                while len(sep) < llen_max+rlen_max:
+                    sep += heading_sep
+                sep = sep[:llen_max+rlen_max]
+                line.append(sep)
+
+            lines.append(col_sep.join(line))
+
+    for row in zip(*columns):
+        line = []
+        for (llen_max,rlen_max), cell in zip(width, row):
+            line.append(justify(*cell, llen_max, rlen_max))
+        lines.append(col_sep.join(line))
+
+    return "\n".join(lines)
+
+
+PRESENTATIONS = {
+    "CSV": CSVFormatter,
+    "TABULAR": TabularFormatter,
+}
+
 # ======================================================================
 # Presentation class
 # ======================================================================
@@ -13,7 +91,11 @@ class Presentation:
 
     XXX Possible rename this as "SerieFormatter".
     """
-    def __init__(self, **kwargs):
+    def __init__(self, format="TABULAR", **kwargs):
+        if not callable(format):
+            format = PRESENTATIONS[format]
+
+        self._format = format
         self._options = kwargs
 
     def prepare(self, serie, context):
@@ -32,23 +114,22 @@ class Presentation:
 
         columns = []
         heading = [] if not opt_heading else [ DEFAULT_FORMATTER(context, serie.index.name) ]
-        columns.append(heading + [DEFAULT_FORMATTER(context, cell) for cell in serie.index])
+        columns.append([DEFAULT_FORMATTER(context, cell) for cell in serie.index])
         for column in serie.columns:
-            heading = [] if not opt_heading else [ DEFAULT_FORMATTER(context, column.name) ]
+            if opt_heading:
+                heading.append(DEFAULT_FORMATTER(context, column.name))
             formatter = column.formatter
             if formatter is None:
                 formatter = DEFAULT_FORMATTER
 
-            columns.append(heading + [formatter(context, cell) for cell in column])
+            columns.append([formatter(context, cell) for cell in column])
 
-        return columns
+        return heading, columns
 
     def __call__(self, serie, context=None):
         if context is None:
             context = DEFAULT_CONTEXT
 
-        lines = []
-        for row in zip(*self.prepare(serie, context)):
-            lines.append(", ".join([t[0]+t[1]+t[2] for t in row]))
+        heading, columns = self.prepare(serie, context)
+        return self._format(heading, columns, context, self._options)
 
-        return "\n".join(lines)

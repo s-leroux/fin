@@ -396,12 +396,13 @@ class TestSerieToOtherFormatsConversion(unittest.TestCase):
                 (fc.named("V"), fc.sequence([10, 20, 30, 40, 50])),
         )
         expected="\n".join((
-            "T, V",
-            "A, 10",
-            "B, 20",
-            "C, 30",
-            "D, 40",
-            "F, 50",
+            "T | V ",
+            "- | --",
+            "A | 10",
+            "B | 20",
+            "C | 30",
+            "D | 40",
+            "F | 50",
         ))
 
         self.assertEqual(str(ser), expected)
@@ -415,11 +416,12 @@ class TestSerieToOtherFormatsConversion(unittest.TestCase):
                 (fc.named("W"), fc.sequence([11, 21, 31]))
         )
 
-        expected="\n".join((
-            "T, V, W",
-            "A, 10, 11",
-            "B, 20, 21",
-            "C, 30, 31",
+        expected = "\n".join((
+            "T | V  | W ",
+            "- | -- | --",
+            "A | 10 | 11",
+            "B | 20 | 21",
+            "C | 30 | 31",
         ))
 
         self.assertEqual(str(ser), expected)

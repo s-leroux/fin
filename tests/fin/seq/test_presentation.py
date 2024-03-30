@@ -12,12 +12,13 @@ class TestPresentation(unittest.TestCase):
         ser = serie.Serie.create(fc.sequence("ABCDEF"), fc.sequence((1,2,3,4,5,6)))
         
         expected = "\n".join((
-                "A, 1",
-                "B, 2",
-                "C, 3",
-                "D, 4",
-                "E, 5",
-                "F, 6",
+            "A | 1",
+            "B | 2",
+            "C | 3",
+            "D | 4",
+            "E | 5",
+            "F | 6",
         ))
+
         self.assertEqual(pres(ser), expected)
 
