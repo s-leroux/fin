@@ -1,7 +1,7 @@
 """
 Plot 2D curves using GNUPlot
 """
-from fin.seq import formatter
+from fin.seq import presentation
 from fin.seq.column import Column
 from fin.seq.serie import Serie
 import asyncio
@@ -395,7 +395,7 @@ class _GNUPlotVisitor:
         write("set grid xtics ytics\n")
 
         # write the data
-        data = formatter.CSV(delimiter=" ").format(serie)
+        data = presentation.Presentation("CSV", delimiter=" ")(serie)
         write("$MyData << EOD\n#")
         write(data)
         write("EOD\n")
