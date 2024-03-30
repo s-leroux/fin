@@ -14,7 +14,7 @@ def deg2rad(deg):
     return 2*pi*deg/360
 
 t = serie.Serie.create(
-        # Create a 351-rows serie
+        # Create a 361-rows serie
         (fc.named("ROW NUMBER"), fc.range(361)),
         # Maps the first column to the [0, 2π] range
         (fc.named("ANGLE"), fc.map(deg2rad), "ROW NUMBER"),
@@ -23,7 +23,7 @@ t = serie.Serie.create(
         (fc.named("COS"), fc.map(cos), "ANGLE"),
 )
 
-# Print the table
+# Print the serie
 print(t)
 
 # Plot the SIN/COS function:

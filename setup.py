@@ -3,6 +3,8 @@ from Cython.Build import cythonize
 
 setup(
     ext_modules = cythonize([
+        "test.pyx",
+
         "fin/mathx.pyx",
         "fin/model/kellyx.pyx",
         "fin/seq/column.pyx",
