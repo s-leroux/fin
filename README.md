@@ -6,6 +6,7 @@ The project does not have a GUI. You interact with the tools by writing Python s
 # Getting started
 I keep the dependencies to a minimum. Currently, outside Python 3 (≥ 3.6.9) and the standard Python library, you need:
 
+* GNU Make (≥ 4.1)
 * Python Requests (≥ 2.18.4)
 * Cython3 (≥ 0.26.1)
 * Gnuplot (≥ 5.2)
