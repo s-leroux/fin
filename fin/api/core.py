@@ -26,7 +26,7 @@ class HistoricalData:
             end = CalendarDate.today()
         t = self._historical_data(ticker, duration, end)
 
-        if select:
-            t = t.select(*select)
+#        if select:
+#            t = t.select(*select)
 
         return t

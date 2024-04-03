@@ -27,14 +27,14 @@ class ColorFormatter(ComposableFormatter):
     def __call__(self, context, obj, parent):
         tc = context['termcap']
 
-        left, sep, right, llen, rlen = parent(context, obj)
+        text, llen, rlen = parent(context, obj)
 
         if tc is not None:
             color = getattr(tc, self._color)
         else:
             color = lambda x : x
 
-        return (color(left), color(sep), color(right), llen, rlen)
+        return (color(text), llen, rlen)
 
 def Red():
     return ColorFormatter('red')
@@ -53,19 +53,31 @@ class FloatFormatter(ComposableFormatter):
         self._precision = precision
 
     def __call__(self, context, number):
-        number = float(number)
-        left, right = f"{number:.{self._precision}f}".split(".")
-        return (left, ".", right, len(left), len(right))
+        try:
+            number = float(number)
+        except TypeError:
+            return (str(number), 0, 0)
+
+        text = f"{number:.{self._precision}f}"
+        dp_idx = text.find(".")
+        if dp_idx < 0:
+            llen = len(text)
+            rlen = 0
+        else:
+            llen = dp_idx
+            rlen = len(text)-dp_idx
+
+        return (text, llen, rlen)
 
 class PercentFormatter(FloatFormatter):
     def __call__(self, context, number):
-        left, sep, right, llen, rlen = FloatFormatter.__call__(self, context, number*100.0)
-        return (left, sep, right+"%", llen, rlen+1)
+        text, llen, rlen = FloatFormatter.__call__(self, context, number*100.0)
+        return (text+"%", llen, rlen+1)
 
 class ColorFloatFormatter(FloatFormatter):
     def __call__(self, context, number):
         number = float(number)
-        left, sep, right, llen, rlen = FloatFormatter.__call__(self, context, number)
+        text, llen, rlen = FloatFormatter.__call__(self, context, number)
 
         tc = context['termcap']
         if number < 0:
@@ -75,14 +87,17 @@ class ColorFloatFormatter(FloatFormatter):
         else:
             color = lambda x : x
 
-        return (color(left), color(sep), color(right), llen, rlen)
+        return (color(text), llen, rlen)
 
 class StringLeftFormatter(ComposableFormatter):
     def __call__(self, context, string):
         result = str(string)
-        return ("", "", result, 0, len(result))
+        return (result, 0, len(result))
 
 class StringRightFormatter(ComposableFormatter):
     def __call__(self, context, string):
         result = str(string)
-        return (result,  "", "", len(result), 0)
+        return (result, len(result), 0)
+
+IntegerFormatter = StringRightFormatter
+

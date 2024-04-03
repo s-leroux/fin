@@ -1,6 +1,6 @@
 from fin.api import yf
-from fin.seq import table
-from fin.seq import algo
+from fin.seq import serie
+from fin.seq import fc
 from fin.seq import plot
 from fin.datetime import CalendarDateDelta
 """
@@ -16,11 +16,18 @@ load = yf.Client().historical_data
 duration = CalendarDateDelta(days=25)
 ta = load("QQQ", duration)
 tb = load("SPY", duration)
-t = table.join(ta,tb,"Date")
+t = ta & tb
 keyX="QQQ:Adj Close"
 keyY="SPY:Adj Close"
-
-t.add_column("BEST FIT", (algo.best_fit, keyX, keyY))
+print(t)
+print(repr(ta))
+print(repr(tb))
+print(repr(t))
+t = t.select(
+        "QQQ:Adj Close",
+        "SPY:Adj Close",
+        (fc.named("BEST FIT"), fc.best_fit, keyX, keyY)
+)
 
 mp = plot.Multiplot(t, keyX, mode=plot.Multiplot.XY)
 p = mp.new_plot(3)

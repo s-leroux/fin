@@ -1,5 +1,5 @@
 from fin.api import yf
-from fin.seq import algo
+from fin.seq import fc
 from fin.seq import plot
 from fin.datetime import CalendarDateDelta
 """
@@ -10,8 +10,12 @@ Usage:
 """
 client = yf.Client()
 
-t = client.historical_data("BAC", CalendarDateDelta(days=100))
-sma, = t.add_column((algo.sma(5), "Close"))
+t = client.historical_data("BAC", CalendarDateDelta(days=100)) \
+    .select(
+        "Open", "High", "Low", "Close",
+        (fc.sma(5), "Close")
+    )
+sma = t.columns[-1]
 
 mp = plot.Multiplot(t, "Date")
 p = mp.new_plot(3)

@@ -4,7 +4,8 @@ An interface to some API provided by eodhistoricaldata.com
 
 from fin.api.core import HistoricalData
 from fin.requests import get
-from fin.seq import table
+from fin.seq import serie
+from fin.seq import fc
 
 EODHD_BASE_URI="https://eodhistoricaldata.com/api"
 
@@ -25,20 +26,18 @@ def Client(api_token):
             if r.status_code != 200:
                 raise Exception(f"Can't retrieve data at {uri} (status={r.status_code})")
 
-            t = table.table_from_csv(
+            t = serie.Serie.from_csv(
                     r.text.splitlines(),
                     name=ticker,
-                    format="dnnnnni",
-                    select=(
-                        "Date",
-                        "Open",
-                        "High",
-                        "Low",
-                        "Close",
-                        { "name":"Adj Close", "expr":"Adjusted_close" },
-                        "Volume"
-                        )
-                    )
+                    format="dnnnnni"
+                ).select(
+                    "Open",
+                    "High",
+                    "Low",
+                    "Close",
+                    (fc.named("Adj Close"), "Adjusted_close"),
+                    "Volume"
+                )
             return t
 
     return _Client()

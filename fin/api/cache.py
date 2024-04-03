@@ -8,9 +8,8 @@ sqlite3.register_adapter(CalendarDate, str)
 sqlite3.register_converter("CalendarDate", parseisodate)
 
 from fin.api.core import HistoricalData
-from fin.seq import column
-from fin.seq import table
-from fin.seq import expr
+from fin.seq import serie
+from fin.seq import fc
 from fin.utils.log import console
 
 # Historical data
@@ -85,7 +84,7 @@ class _DB:
         try:
             with self.con:
                 cur.executemany("""
-                    INSERT INTO eod(ticker, date, open, high, low, close, adj_close, volume)
+                    INSERT INTO eod(date, ticker, open, high, low, close, adj_close, volume)
                     VALUES (?,?,?,?,?,?,?,?)
                 """, rows)
                 cur.execute("""
@@ -117,20 +116,20 @@ def Client(base, *, db_name=CACHE_DEFAULT_DB_NAME):
                 console.info(f"Cache miss for {ticker} ({duration}, {end})")
                 t = base._historical_data(ticker, duration, end)
                 db.store_historical_data(ticker, start, end, t.select(
-                    expr.constant(ticker, name="ticker"),
-                    dict(name="date", expr="Date"),
-                    dict(name="open", expr="Open"),
-                    dict(name="high", expr="High"),
-                    dict(name="low", expr="Low"),
-                    dict(name="close", expr="Close"),
-                    dict(name="adj_close", expr="Adj Close"),
-                    dict(name="volume", expr="Volume"),
-                    ).row_iterator())
+                    # The Date column is implicitly selected since it is the index
+                    (fc.named("ticker"), fc.constant(ticker)),
+                    (fc.named("open"), "Open"),
+                    (fc.named("high"), "High"),
+                    (fc.named("low"), "Low"),
+                    (fc.named("close"), "Close"),
+                    (fc.named("adj_close"), "Adj Close"),
+                    (fc.named("volums"), "Volume"),
+                    ).rows)
                 return t
             else:
-                return table.table_from_rows(
-                        rows,
+                return serie.Serie.from_rows(
                         ("Date", "Open", "High", "Low", "Close", "Adj Close", "Volume"),
+                        rows,
                         name=ticker
                         )
 

@@ -1,6 +1,5 @@
-from fin.seq import table
-from fin.seq import algo
-from fin.seq import expr
+from fin.seq import serie
+from fin.seq import fc
 
 from math import pi, sin, cos
 
@@ -11,23 +10,20 @@ Usage:
     PYTHONPATH="$PWD" python3 examples/fin/seq/basic.py
 """
 
-# Create an empty table with provision for 361 rows:
-t = table.Table(361)
-
-# Create a column with values from 0 to 360
-t.add_column("ROW NUMBER", expr.ramp())
-
-# Create a second column that maps the first to the [0, 2π] range
 def deg2rad(deg):
     return 2*pi*deg/360
 
-t.add_column("ANGLE", (expr.map(deg2rad), "ROW NUMBER"))
+t = serie.Serie.create(
+        # Create a 361-rows serie
+        (fc.named("ROW NUMBER"), fc.range(361)),
+        # Maps the first column to the [0, 2π] range
+        (fc.named("ANGLE"), fc.map(deg2rad), "ROW NUMBER"),
+        # Do the same to map than ANGLE column to sin() and cos()
+        (fc.named("SIN"), fc.map(sin), "ANGLE"),
+        (fc.named("COS"), fc.map(cos), "ANGLE"),
+)
 
-# Do the same to map than ANGLE column to sin() and cos()
-t.add_column("SIN", (expr.map(sin), "ANGLE"))
-t.add_column("COS", (expr.map(cos), "ANGLE"))
-
-# Print the table
+# Print the serie
 print(t)
 
 # Plot the SIN/COS function:

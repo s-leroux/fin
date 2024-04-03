@@ -2,7 +2,7 @@
 """
 
 from fin.requests import get
-from fin.seq import table
+from fin.seq.serie import Serie
 from fin.api.core import HistoricalData
 
 # Historical data
@@ -27,7 +27,7 @@ def Client():
             if r.status_code != 200:
                 raise Exception(f"Can't retrieve data at {uri} (status={r.status_code})")
 
-            t = table.table_from_csv(
+            t = Serie.from_csv(
                     r.text.splitlines(),
                     name=ticker,
                     format="dnnnnni",

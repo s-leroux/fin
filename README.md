@@ -10,7 +10,7 @@ I keep the dependencies to a minimum. Currently, outside Python 3 (≥ 3.6.9) an
 * Cython3 (≥ 0.26.1)
 * Gnuplot (≥ 5.2)
 
-There was some development regarding web crawling and data mining using BeautifulSoup, but it is currently out of the main tree.
+Some development was made regarding web crawling and data mining using BeautifulSoup, but it is currently out of the main tree.
 
 ## Prerequisites
 The development is done under Linux Ubuntu Bionic.
@@ -30,53 +30,88 @@ make tests-all
 ```
 
 # `fin.seq`
-This package allows data manipulations using the concept of table and columns. You may think of it like a spreadsheet, but without the WISIWIG interface.
+This package allows data manipulations using the concept of series.
+A serie is a set of columns associated with an index.
+The index itself is a column with the special property of being ordered (in ascending order).
+Series are implemented in the `fin.seq.Serie` class.
+
+The most straightforward example is a time serie representing stock quotes.
+In that case, the _date_ is the index of the serie, and the _open_,_high_, _low_, and _close_ values are stored in the individual data columns of the serie.
+For example, the `fin.api` package can retrieve historical quotations from *Yahoo! Finance*, and return the result as a serie:
+
+```
+from fin.api import yf
+from fin.datetime import CalendarDateDelta, CalendarDate
+
+client = yf.Client()
+
+t = client.historical_data("TSLA", CalendarDateDelta(days=5), CalendarDate(2023, 7, 20))
+print(t)
+```
+
+```
+sh$ cat ./docs/snippets/snippet_1_00*.py | python3
+Date       |    Open |    High |    Low  |   Close | Adj Cl… |    Volume
+---------- | ------- | ------- | ------- | ------- | ------- | ---------
+2023-07-17 | 286.630 | 292.230 | 283.570 | 290.380 | 290.380 | 131569600
+2023-07-18 | 290.150 | 295.260 | 286.010 | 293.340 | 293.340 | 112434700
+2023-07-19 | 296.040 | 299.290 | 289.520 | 291.260 | 291.260 | 142355400
+2023-07-20 | 279.560 | 280.930 | 261.200 | 262.900 | 262.900 | 175158300
+```
+
+You can manually create serie using the `fin.seq.serie.Serie.create` factory method.
+The first parameter defines the index, and the remaining parameters define the data columns.
+Each is defined using a LISP-inspired mini-language:
 
 Here is a short example (from `examples/fin/seq/basic.py`):
 ```
-from fin.seq import table
-from fin.seq import algo
-from fin.seq import expr
+from fin.seq import serie
+from fin.seq import fc
 
 from math import pi, sin, cos
 
-# Create an empty table with provision for 361 rows:
-t = table.Table(361)
+"""
+Basic usage of the `fin.seq` package
 
-# Create a column with values from 0 to 360
-t.add_column("ROW NUMBER", expr.ramp())
+Usage:
+    PYTHONPATH="$PWD" python3 examples/fin/seq/basic.py
+"""
 
-# Create a second column that maps the first to the [0, 2π] range
 def deg2rad(deg):
     return 2*pi*deg/360
 
-t.add_column("ANGLE", (expr.map(deg2rad), "ROW NUMBER"))
+t = serie.Serie.create(
+        # Create a 361-rows serie
+        (fc.named("ROW NUMBER"), fc.range(361)),
+        # Maps the first column to the [0, 2π] range
+        (fc.named("ANGLE"), fc.map(deg2rad), "ROW NUMBER"),
+        # Do the same to map than ANGLE column to sin() and cos()
+        (fc.named("SIN"), fc.map(sin), "ANGLE"),
+        (fc.named("COS"), fc.map(cos), "ANGLE"),
+)
 
-# Do the same to map than ANGLE column to sin() and cos()
-t.add_column("SIN", (expr.map(sin), "ANGLE"))
-t.add_column("COS", (expr.map(cos), "ANGLE"))
-
-# Print the table
+# Print the serie
 print(t)
 ```
 
 Here is the result when you run this script:
+
 ```
-sh$ python3 basic-example.py
- ROW NUMBER      ANGLE        SIN        COS
----------------------------------------------
-          0     0.0000     0.0000     1.0000
-          1     0.0175     0.8415     0.5403
-          2     0.0349     0.9093    -0.4161
-          3     0.0524     0.1411    -0.9900
-          4     0.0698    -0.7568    -0.6536
-          5     0.0873    -0.9589     0.2837
-          6     0.1047    -0.2794     0.9602
-          7     0.1222     0.6570     0.7539
-    ...
+sh$ python3 < examples/fin/seq/basic.py | head -10
+RO… | ANGLE                | SIN                     | COS                    
+--- | -------------------- | ----------------------- | -----------------------
+0   | 0.0                  | 0.0                     | 1.0                    
+1   | 0.017453292519943295 | 0.01745240643728351     | 0.9998476951563913     
+2   | 0.03490658503988659  | 0.03489949670250097     | 0.9993908270190958     
+3   | 0.05235987755982988  | 0.05233595624294383     | 0.9986295347545738     
+4   | 0.06981317007977318  | 0.0697564737441253      | 0.9975640502598242     
+5   | 0.08726646259971647  | 0.08715574274765817     | 0.9961946980917455     
+6   | 0.10471975511965977  | 0.10452846326765346     | 0.9945218953682733     
+7   | 0.12217304763960307  | 0.12186934340514748     | 0.992546151641322      
 ```
 
 You can load that table in your favorite spreadsheet to plot the SIN/COS graph. If you have `gnuplot` installed on your system, you can also plot it directly from Python:
+
 ```
 # Plot the SIN/COS function:
 from fin.seq import plot
@@ -89,86 +124,143 @@ plot.gnuplot(mp, size=(800,600))
 
 ![A basic usage example of `fin.seq` displaying a circle](docs/images/basic.png)
 
-## Joining two tables
-Tables support join operation on *key* columns.
-It is caller's responsability to ensure the key columns are *sorted in ascending order*.
-Joining tables on unordered key columns is an *undefined behavior*.
+## Joining two series
+Series support join operations on the _index_ column.
+It is the caller's responsibility to ensure the key columns are *sorted in ascending order*.
+Future versions will enforce that requirement.
+Until that, joining series using an unordered index should be considered an *undefined behavior*.
 
 ### Inner join
-When performing an inner-join, the result table will contain only rows present in both tables according to the key column.
+When performing an _inner join_, the result serie will contain only rows present in both series according to the index.
+The _inner join_ is implemented as the `&` (*and*) operator between series:
 
 ```
-from fin.seq import table as table
+from fin.seq import serie
+from fin.seq import fc
 
-t1 = table.table_from_dict({"c":[1,2,3,4], "d":[1,1,1,1]})
-t2 = table.table_from_dict({"c":[1,3], "e":[21,23]})
-t3 = table.join(t1, t2, "c")
-print(t3)
+s1 = serie.Serie.create(
+        (fc.named("X"), fc.sequence((1,2,3,4))),
+        (fc.named("Y"), fc.mul, "X", fc.constant(10)),
+    )
 
- c d e
--------
- 1 1 21
- 3 1 23
+print(s1)
+
+# Display:
+# X, Y
+# 1, 10.0
+# 2, 20.0
+# 3, 30.0
+# 4, 40.0
+
+s2 = serie.Serie.create(
+        (fc.named("X"), fc.sequence((1,4))),
+        (fc.named("Z"), fc.mul, "X", fc.constant(100)),
+    )
+
+print(s2)
+
+# Display:
+# X, Z
+# 1, 100.0
+# 4, 400.0
+# 5, 500.0
+
+print(s1 & s2)
 ```
 
-### Outer join
-When performing an outer-join, the result table will contain rows present in either (or both tables) according to the key column.
+The result of the inner join operation is:
 
-If the keyword parameter `propagate` is set to `False` (the dafault), missing data will be set to `None` in the result table.
-Otherwise, the last known values are used.
+```
+sh$ < ./docs/snippets/snippet_2_001.py python3 | sed -n '/s1 & s2/,$p'
+s1 & s2 is:
+X | Y    | Z    
+- | ---- | -----
+1 | 10.0 | 100.0
+4 | 40.0 | 400.0
+```
+
+### Full outer join
+When performing a _full outer join_, the result serie will contain the rows present in either (or both) series in the index order.
+The _full outer join_ is implemented as the `|` (*or*) operator between series:
 
 ```
 # Continuing from the previous example
 
-t3 = table.outer_join(t1,t2,"c")
-print(t3)
-
- c d    e
-----------
- 1 1   21
- 2 1 None
- 3 1   23
- 4 1 None
+print(s1 | s2)
 ```
 
 ```
-# Continuing from the previous example
-
-t3 = table.outer_join(t1,t2,"c", propagate=True)
-print(t3)
-
- c d    e
-----------
- 1 1   21
- 2 1   21
- 3 1   23
- 4 1   23
+sh$ cat ./docs/snippets/snippet_2_00[12].py | python3 | sed -n '/s1 | s2/,$p'
+s1 | s2 is:
+X | Y    | Z    
+- | ---- | -----
+1 | 10.0 | 100.0
+2 | 20.0 | None 
+3 | 30.0 | None 
+4 | 40.0 | 400.0
+5 | None | 500.0
 ```
 
 ## Loading financial data
-You can use the `fin.seq` package like a command-line spreadsheet. But its primary purpose remains working with financial data.
+You can use the `fin.seq` package like a command-line spreadsheet. However, its primary purpose remains working with financial data.
 
 Currently, the library supports the *Yahoo! Finance* and *eodhistoricaldata.com* data providers for historical quotes. 
 
 In the next example, we will load from *Yahoo! Finance* the last 100 end-of-day quote for *Bank of America* (ticker `BAC`):
+
 ```
 from fin.api import yf
-from fin.seq import algo
+from fin.seq import fc
 from fin.seq import plot
 
 # Use the Yahoo! Finance provider
 provider = yf.Client()
 
-t = provider.historical_data("BAC", dict(days=100))
+t1 = provider.historical_data("BAC", dict(days=100))
 ```
-The provider returns a table (instance of `table.Table`) with the data, open, high, low, close, adj close and volumes columns. You can add more columns if you need. In the example, I will add a 5-period simple moving average:
+
+The provider returns a serie (instance of `serie.Serie`) with the data, open, high, low, close, adj close, and volumes columns.
+Serie are _immutable_.
+
+However, you can create a projection with the `selection` member function.
+A projection is a series whose columns are calculated from the original serie.
+
+For example, if you are interested only in the _open_, _high_, _low_, _close_ values, and the 5-perod simple moving average (_sma_) of the _close_ prices, you can write:
+
 ```
-sma = t.add_column((algo.sma(5), "Close"))
+t2 = t1.select(
+        "Open",
+        "High",
+        "Low",
+        "Close",
+        (fc.sma(5), "Close"),
+    )
+
+print(t2)
+```
+
+Running from the terminal, you get:
+
+```
+sh$ cat ./docs/snippets/snippet_3_00[12].py | python3 | head -10
+Date       |  Open |  High |   Low | Close | SMA(…
+---------- | ----- | ----- | ----- | ----- | -----
+2023-12-26 | 33.45 | 33.96 | 33.37 | 33.86 | None 
+2023-12-27 | 33.80 | 33.95 | 33.66 | 33.84 | None 
+2023-12-28 | 33.82 | 33.97 | 33.77 | 33.88 | None 
+2023-12-29 | 33.94 | 33.99 | 33.55 | 33.67 | None 
+2024-01-02 | 33.39 | 34.07 | 33.27 | 33.90 | 33.83
+2024-01-03 | 33.65 | 33.77 | 33.24 | 33.53 | 33.76
+2024-01-04 | 33.57 | 34.31 | 33.54 | 33.80 | 33.76
+2024-01-05 | 33.80 | 34.69 | 33.71 | 34.43 | 33.87
 ```
 
 Finally, let's plot the graph:
+
 ```
-mp = plot.Multiplot(t, "Date")
+sma = t2.columns[-1]
+
+mp = plot.Multiplot(t2, "Date")
 p = mp.new_plot(3)
 p.draw_candlestick("Open", "High", "Low", "Close")
 p.draw_line(sma.name)

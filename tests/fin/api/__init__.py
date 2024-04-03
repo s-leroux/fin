@@ -13,7 +13,7 @@ class HistoricalDataTest:
             end-of-day data.
             """
             t = self.client.historical_data(self.ticker)
-            self.assertSequenceEqual(t.names(), ('Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume'))
+            self.assertSequenceEqual(t.headings, ('Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume'))
 
         def test_historical_data_start_end(self):
             """
@@ -25,7 +25,7 @@ class HistoricalDataTest:
                 )
 
             t = self.client.historical_data(self.ticker, **params)
-            dc = t["Date"]
+            dc = t["Date"].columns[-1]
             self.assertEqual(str(dc[0]), "2022-12-27")
             self.assertEqual(str(dc[-1]), "2023-01-03")
             self.assertEqual(len(dc), 5)
