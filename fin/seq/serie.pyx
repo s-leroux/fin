@@ -227,7 +227,7 @@ cdef tuple serie_evaluate_item(Serie self, expr):
     if t is str:
         return ( serie_get_column_by_name(self, expr), )
     if t is int or t is float:
-        raise SystemError(f"Did you mean fc.constant({t!r})?")
+        raise TypeError(f"Did you mean fc.constant({t!r})?")
     if callable(expr):
         # Only nullary callable are allowed here
         return wrap_in_tuple(expr(self))
