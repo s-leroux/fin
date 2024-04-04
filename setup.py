@@ -12,8 +12,10 @@ setup(
         "fin/seq/fc/statisticx.pyx",
         "fin/seq/fc/tix.pyx",
         "fin/seq/serie.pyx",
+        "fin/tuplex.pyx",
 
         "tests/fin/seq/fc/functor.pyx",
+        "tests/fin/tuplex.pyx",
         ],
         annotate=True,
         compiler_directives={'language_level' : "3"},
