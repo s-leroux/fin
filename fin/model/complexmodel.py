@@ -31,14 +31,14 @@ class ComplexModel:
         the best possible the set of constraints.
     """
     def __init__(self):
-        self._eqs = [] # The list of equilibrium functions
+        self._eqs = [] # The list of equilibrium functions and param names order
         self._pdict = {} # Map between (eq, param_name) => param_data
         self._domains = {} # Map a param cluster to its domain
 
     def register(self, eq, *params):
         """ Register a new equilibirum function and associated metadata into the model.
         """
-        self._eqs.append(eq)
+        self._eqs.append((eq, [param["name"] for param in params]))
         idx = 0
         for param in params:
             sig = (eq, param["name"])
@@ -100,6 +100,27 @@ class ComplexModel:
             raise DomainError(f"Unsolvable constraint for {cluster}: min is {new_min} max is {new_max}")
 
         self._domains[cluster] = (new_min, new_max)
+
+    def export(self):
+        """ Return the model as a list of parameters with their associated domain,
+            and map between equilirium functions and their paramter index in the list.
+
+            This is the prefered format to interface with solvers.
+        """
+
+        clusters = tuple(self._domains.keys())
+        # Above:
+        # Iteration over a dict is in arbitrary order (and can vary from run to run),
+        # but it should be consistent in the same run.
+        # As I didn't find the confirmation in the docs, I map to a tuple for peace of
+        # mind.
+        cidx = { cluster: idx for idx, cluster in enumerate(clusters) }
+        pidx = { sig: cidx[param["cluster"]] for sig, param in self._pdict.items() }
+
+        domains = [ self._domains[cluster] for cluster in clusters ]
+        eqs = [ (eq, [ pidx[eq, pname] for pname in pnames ]) for eq, pnames in self._eqs ]
+
+        return domains, eqs
 
     def __repr__(self):
         return "ComplexModel(" \

@@ -22,34 +22,61 @@ class TestComplexModel(unittest.TestCase):
         self._model = complexmodel.ComplexModel()
 
     def test_basic_workflow(self):
-        self._model.register(self._eq_A, *self._params_A)
-        self._model.register(self._eq_B, *self._params_B)
+        my_model = self._model
+
+        my_model.register(self._eq_A, *self._params_A)
+        my_model.register(self._eq_B, *self._params_B)
 
         sig_X = (self._eq_A, "x")
         sig_A = (self._eq_B, "a")
         sig_B = (self._eq_B, "b")
-        self.assertEqual(len(self._model._domains), 3)
-        self.assertEqual(self._model.get_domain_for(*sig_X), complexmodel.DEFAULT_DOMAIN)
-        self.assertEqual(self._model.get_domain_for(*sig_A), complexmodel.DEFAULT_DOMAIN)
-        self.assertEqual(self._model.get_domain_for(*sig_B), complexmodel.DEFAULT_DOMAIN)
+        self.assertEqual(len(my_model._domains), 3)
+        self.assertEqual(my_model.get_domain_for(*sig_X), complexmodel.DEFAULT_DOMAIN)
+        self.assertEqual(my_model.get_domain_for(*sig_A), complexmodel.DEFAULT_DOMAIN)
+        self.assertEqual(my_model.get_domain_for(*sig_B), complexmodel.DEFAULT_DOMAIN)
 
-        self._model.bind(*sig_X, *sig_A)
-        self.assertEqual(len(self._model._domains), 2)
-        self.assertEqual(self._model.get_domain_for(*sig_X), complexmodel.DEFAULT_DOMAIN)
-        self.assertEqual(self._model.get_domain_for(*sig_A), complexmodel.DEFAULT_DOMAIN)
-        self.assertEqual(self._model.get_domain_for(*sig_B), complexmodel.DEFAULT_DOMAIN)
+        my_model.bind(*sig_X, *sig_A)
+        self.assertEqual(len(my_model._domains), 2)
+        self.assertEqual(my_model.get_domain_for(*sig_X), complexmodel.DEFAULT_DOMAIN)
+        self.assertEqual(my_model.get_domain_for(*sig_A), complexmodel.DEFAULT_DOMAIN)
+        self.assertEqual(my_model.get_domain_for(*sig_B), complexmodel.DEFAULT_DOMAIN)
 
         REDUCED_DOMAIN=(1,50)
-        self._model.domain(*sig_A, *REDUCED_DOMAIN)
-        self.assertEqual(len(self._model._domains), 2)
-        self.assertEqual(self._model.get_domain_for(*sig_X), REDUCED_DOMAIN)
-        self.assertEqual(self._model.get_domain_for(*sig_A), REDUCED_DOMAIN)
-        self.assertEqual(self._model.get_domain_for(*sig_B), complexmodel.DEFAULT_DOMAIN)
+        my_model.domain(*sig_A, *REDUCED_DOMAIN)
+        self.assertEqual(len(my_model._domains), 2)
+        self.assertEqual(my_model.get_domain_for(*sig_X), REDUCED_DOMAIN)
+        self.assertEqual(my_model.get_domain_for(*sig_A), REDUCED_DOMAIN)
+        self.assertEqual(my_model.get_domain_for(*sig_B), complexmodel.DEFAULT_DOMAIN)
 
         REDUCED_DOMAIN_2=(2,75)
-        self._model.domain(*sig_X, *REDUCED_DOMAIN_2)
-        self.assertEqual(len(self._model._domains), 2)
-        self.assertEqual(self._model.get_domain_for(*sig_X), (2, 50))
-        self.assertEqual(self._model.get_domain_for(*sig_A), (2, 50))
-        self.assertEqual(self._model.get_domain_for(*sig_B), complexmodel.DEFAULT_DOMAIN)
-        print(self._model)
+        my_model.domain(*sig_X, *REDUCED_DOMAIN_2)
+        self.assertEqual(len(my_model._domains), 2)
+        self.assertEqual(my_model.get_domain_for(*sig_X), (2, 50))
+        self.assertEqual(my_model.get_domain_for(*sig_A), (2, 50))
+        self.assertEqual(my_model.get_domain_for(*sig_B), complexmodel.DEFAULT_DOMAIN)
+
+    def test_export(self):
+        my_model = self._model
+
+        my_model.register(self._eq_A, *self._params_A)
+        my_model.register(self._eq_B, *self._params_B)
+        my_model.bind(self._eq_A, "x", self._eq_B, "a")
+        my_model.domain(self._eq_A, "x", 2, 50)
+
+        domains, eqs = my_model.export()
+
+        self.assertEqual(len(domains), 2)
+        self.assertEqual(len(eqs), 2)
+        self.assertEqual(len(eqs[0][1]), 1)
+        self.assertEqual(len(eqs[1][1]), 2)
+        self.assertEqual(eqs[0][1][0], eqs[1][1][0])
+        self.assertNotEqual(eqs[1][1][0], eqs[1][1][1])
+
+#        # Take a look at this to understand the above tests:
+#        from pprint import pprint
+#        pprint(domains)
+#        pprint(eqs)
+        
+
+
+
