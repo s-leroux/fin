@@ -100,6 +100,8 @@ cpdef double cdf(double x, double mu=0.0, double sigma=1.0):
 # Array management
 # ======================================================================
 cdef array.array double_array_template = array.array('d', [])
+cdef array.array int_array_template = array.array('i', [])
+cdef array.array byte_array_template = array.array('b', [])
 
 cdef inline double[::1] alloc(unsigned n, double init_value = NaN):
     """
@@ -123,6 +125,32 @@ cdef inline array.array aalloc(unsigned n, double init_value = NaN):
     cdef unsigned i
     for i in range(n):
         arr.data.as_doubles[i] = init_value
+
+    return arr
+
+cdef inline array.array ialloc(unsigned n, int init_value = 0):
+    """
+    Allocate a contiguous array of n integers.
+    Return the array.
+    """
+    cdef array.array arr = array.clone(int_array_template, n, zero=(init_value==0))
+    cdef unsigned i
+    if init_value != 0:
+        for i in range(n):
+            arr.data.as_ints[i] = init_value # XXX Use memset ?
+
+    return arr
+
+cdef inline array.array balloc(unsigned n, char init_value = 0):
+    """
+    Allocate a contiguous array of n bytes.
+    Return the array.
+    """
+    cdef array.array arr = array.clone(byte_array_template, n, zero=(init_value==0))
+    cdef unsigned i
+    if init_value != 0:
+        for i in range(n):
+            arr.data.as_ints[i] = init_value # XXX Use memset ?
 
     return arr
 

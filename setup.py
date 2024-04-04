@@ -5,6 +5,7 @@ setup(
     ext_modules = cythonize([
         "fin/mathx.pyx",
         "fin/model/kellyx.pyx",
+        "fin/model/solvers/solver.pyx",
         "fin/seq/column.pyx",
         "fin/seq/fc/functorx.pyx",
         "fin/seq/fc/statisticx.pyx",
