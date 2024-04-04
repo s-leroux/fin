@@ -3,6 +3,7 @@
 
 from cpython cimport array
 from libc.math cimport erf, sqrt, exp, log
+from libc.stdlib cimport rand, RAND_MAX
 
 from fin.mathx cimport NaN
 
@@ -154,3 +155,17 @@ cdef inline array.array balloc(unsigned n, char init_value = 0):
 
     return arr
 
+# ======================================================================
+# Vectorized operations
+# ======================================================================
+cdef void vrand(unsigned n, double* buffer):
+    """ Fill a buffer with random values in the range (0, 1) exclusive.
+    """
+    cdef unsigned i
+    cdef int rnd
+    for i in range(n):
+        while True:
+            rnd = rand() # XXX Replace with https://en.wikipedia.org/wiki/Mersenne_Twister ?
+            if rnd != 0 and rnd != RAND_MAX:
+                break
+        buffer[i] = float(rnd)/float(RAND_MAX)
