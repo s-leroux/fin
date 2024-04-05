@@ -137,7 +137,7 @@ cdef void _update(Model* model, Particle* particles):
 #     for i in range(model.population_size):
 #         print(f"{i} {particles.best_score}")
 #         for j in range(model.n):
-#             print(f"{particles.position[j]} {particles.best_position[j]} {particles.velocity[j]}")
+#             print(f"{particles.position[j]:+9.4f} {particles.best_position[j]:+9.4f} {particles.velocity[j]:+9.4f}")
 # 
 #         particles += 1
  
@@ -206,6 +206,7 @@ cdef class ParticleSwarmSolver(Solver):
         cdef int remaining = self._iterations
         while True:
             remaining -= 1
+            # _print(&model, particles)
             _evaluate(&model, particles)
             if remaining < 1:
                 break
