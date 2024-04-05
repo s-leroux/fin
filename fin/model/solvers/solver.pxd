@@ -4,7 +4,7 @@ from cpython.ref cimport PyObject
 # Structs
 # ======================================================================
 cdef struct Domain:
-    double _min
+    double _min # XXX Those are public fields. Remove the leading underscore
     double _max
 
 cdef struct Eq:
