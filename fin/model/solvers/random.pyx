@@ -5,6 +5,7 @@ from fin.model.solvers.solver cimport Domain, Eq, Solver
 from cpython cimport array
 
 from fin.mathx cimport aalloc, vrand
+from fin cimport tuplex
 
 cdef inline void _populate(unsigned count, unsigned n, double* points, const Domain* domains):
     vrand(count*n, points)
@@ -33,10 +34,11 @@ cdef inline void _evaluate(
     cdef double score, tmp
     for i in range(count):
         score = 0.0
+        point = tuplex.from_doubles(n, curr_point)
         for j in range(k):
             # map params to a list
             # XXX We might use the PyTuple low-level API here
-            params = [ curr_point[eqs[j].params[h]] for h in range(eqs[j].count) ]
+            params = [ point[eqs[j].params[h]] for h in range(eqs[j].count) ]
             tmp = (<object>eqs[j].fct)(*params)
             score += tmp*tmp
 

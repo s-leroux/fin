@@ -1,4 +1,3 @@
-from cpython.ref cimport PyObject
 from cpython.tuple cimport PyTuple_New
 
 cdef extern from "Python.h":
@@ -6,9 +5,6 @@ cdef extern from "Python.h":
     # Above:
     # Do NOT use the definition from `cpython.float` to avoid
     # automatic DECREF calls.
-
-    ctypedef struct PyTupleObject:
-        PyObject *ob_item[1]
 
 # ======================================================================
 # Tuple utility API
