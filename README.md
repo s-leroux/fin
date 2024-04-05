@@ -271,8 +271,127 @@ plot.gnuplot(mp, size=(1000,600), font="Sans,8")
 Et voilà:
 ![A candlestick plot of the last 100 daily quotations for Bank of America](docs/images/candlesticks.png)
 
+# `fin.model.solvers`
+Version 0.2.1 introduced a new multi-variable solver framework in `fin.model.solvers`.
+Currently, two solvers have been implemented:
+
+1. The `RandomSolver` simply draws a (potentially large) number of random solutions and returns the best guess.
+   This solver is mostly a proof-of-concept for the solver framework.
+2. The `ParticleSwarmSolver`, an implementation of the [Particle swarm optimization](https://en.wikipedia.org/wiki/Particle_swarm_optimization) algorithm.
+
+To use those solvers, you must first build a `fin.model.complexmodel.ComplexModel` to describe the problem to solve.
+Once done, the `ComplexModel` can export the necessary information to feed the solver.
+
+In the following example we will find the duration of a placement to buy a good, taking into consideration the inflation.
+
+Let's assume I plan to buy a good that costs $1000 today.
+I only have $800 in the bank. The yearly inflation is 2%, and I have a placement that yields 4% each year.
+
+The solution to that problem can be found by solving the two constraints below:
+
+```math
+\begin{align}
+800\times1.04^{duration} &= {buy price} \\
+1000\times1.02^{duration} &= {buy price}
+\end{align}
+```
+
+The solver always tries to minimize (in absolute value) the constraints. We have to rewrite our equations to have zero on the right side:
+
+```math
+\begin{align}
+800\times1.04^{duration} - {buy price} &= 0 \\
+1000\times1.02^{duration} - {buy price} &= 0
+\end{align}
+```
+
+Once do, we are ready to write the code:
+
+```
+from fin.model.complexmodel import ComplexModel
+
+model = ComplexModel()
+eq1 = model.register(
+        lambda duration, buyprice : 800*1.04**duration-buyprice,
+        dict(name="duration", description="Placement duration in years"),
+        dict(name="buyprice", description="Good's buy price"),
+    )
+eq2 = model.register(
+        lambda duration, buyprice : 1000*1.02**duration-buyprice,
+        dict(name="duration", description="Placement duration in years"),
+        dict(name="buyprice", description="Good's buy price"),
+    )
+```
+
+We used the same name for the corresponding parameters in both equations.
+However, the `ComplexModel` logic does not automatically infer that those parameters are the same.
+You have to say it explicitly:
+
+```
+model.bind(eq1, "duration", eq2, "duration")
+model.bind(eq1, "buyprice", eq2, "buyprice")
+```
+
+We will also set the domain of possible solutions for the _duration_ parameter between 1 and 100 years,
+and for the _buyprice_ between $1 and $10000:
+
+```
+model.domain(eq1, "duration", 1, 100)
+model.domain(eq1, "buyprice", 1, 10000)
+```
+
+**Pitfall:** While not mandatory, providing a domain for the unknown parameters is always better.
+This will speed up convergence toward a solution and, most importantly, prevent the solver from remaining stuck in areas producing _infinity_ or _NaN_ ([Not a Number](https://en.wikipedia.org/wiki/NaN)) results. 
+
+You are now ready to export the model:
+
+```
+params, domains, eqs = model.export()
+
+from pprint import pprint
+pprint(params)
+pprint(domains)
+pprint(eqs)
+```
+
+Displaying:
+
+```
+[{'description': 'Placement duration in years', 'name': 'duration'},
+ {'description': "Good's buy price", 'name': 'buyprice'}]
+[(1, 100), (1, 10000)]
+[(<function <lambda> at 0x7f8a5bbf7ea0>, [0, 1]),
+ (<function <lambda> at 0x7f8a58694bf8>, [0, 1])]
+```
+
+It is not very useful _per se_, but we may not feed that into a solver to obtain a solution:
+
+```
+from fin.model.solvers import ParticleSwarmSolver
+solver = ParticleSwarmSolver()
+score, result = solver.solve(domains, eqs)
+
+print(f"Score {score}")
+for param, value in zip(params, result):
+    print(f"{param['description']:20s}: {value}")
+```
+
+```
+Score 1.9085888931664045e-09
+Placement duration in years: 11.491534021542874
+Good's buy price    : 1255.5360323116345
+```
+
+The closer the score is to zero, the better the solution is.
+Here, with a score of 2e-09, we have a pretty good solution.
+
+I will have to wait 11½ years, and the buy price will be $1255—assuming, of course, all parameters remain constant for such a long time.
 
 # `fin.model`
+The solver presented in this section is a legacy solver. It is mostly superseded by the new multi-variable solver implemented in `fin.model.solvers`.
+The predefined models haven't been ported to that new framework, though.
+Until then, the information given here remains valid.
+
 The ``fin`` package also contains a simple 1-variable solver (implemented in ``fin.math``) designed to work seamlessly with predefined models.
 
 For example, using the [Kelly Criterion](https://en.wikipedia.org/wiki/Kelly_criterion) you can find the optimum allocation for a risky investment:
