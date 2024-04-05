@@ -63,8 +63,9 @@ class TestComplexModel(unittest.TestCase):
         my_model.bind(self._eq_A, "x", self._eq_B, "a")
         my_model.domain(self._eq_A, "x", 2, 50)
 
-        domains, eqs = my_model.export()
+        params, domains, eqs = my_model.export()
 
+        self.assertEqual(len(params), 2)
         self.assertEqual(len(domains), 2)
         self.assertEqual(len(eqs), 2)
         self.assertEqual(len(eqs[0][1]), 1)

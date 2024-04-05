@@ -55,6 +55,7 @@ class ComplexModel:
             cluster = frozenset((sig,))
             self._pdict[sig] = dict(
                     position = idx,
+                    name = param["name"],
                     description = param["description"],
                     cluster = cluster
                     )
@@ -68,6 +69,7 @@ class ComplexModel:
                 self._domains[cluster] = domain
             else:
                 raise TypeError(f"The domain must be either a float of a 2-tuple. Found {domain}")
+        return eq
 
     def bind(self, eq_A, param_name_A, eq_B, param_name_B):
         """ Bind two parameters.
@@ -138,7 +140,17 @@ class ComplexModel:
         domains = [ self._domains[cluster] for cluster in clusters ]
         eqs = [ (eq, [ pidx[eq, pname] for pname in pnames ]) for eq, pnames in self._eqs ]
 
-        return domains, eqs
+        params = [ dict(cluster=cluster) for cluster in clusters ]
+        for param in params:
+            cluster = param.pop("cluster")
+            for first in cluster:
+                first = self._pdict[first]
+                break
+
+            param["name"] = first["name"]
+            param["description"] = first["description"]
+
+        return params, domains, eqs
 
     def __repr__(self):
         return "ComplexModel(" \

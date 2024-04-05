@@ -156,11 +156,11 @@ cdef class ParticleSwarmSolver(Solver):
     cdef double _social_coef
 
     def __cinit__(self,
-            population_size,
-            iterations,
-            inertia,
-            cognitive_coef,
-            social_coef,
+            population_size = 10,
+            iterations = 100,
+            inertia = 0.5,
+            cognitive_coef = 1.5,
+            social_coef = 1.5,
             ):
         self._population_size = population_size
         self._iterations = iterations
