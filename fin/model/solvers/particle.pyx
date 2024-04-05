@@ -101,10 +101,6 @@ cdef int _evaluate(Model* model, Particle* particles) except -1:
 
         curr += 1
 
-    print(model.global_best_score)
-    for j in range(model.n):
-        print(model.global_best_position[j])
-
     return 0
 
 cdef void _update(Model* model, Particle* particles):
@@ -135,16 +131,16 @@ cdef void _update(Model* model, Particle* particles):
 
         curr += 1
 
-cdef _print(Model* model, Particle* particles):
-    print("-----"*14)
-    cdef unsigned i,j
-    for i in range(model.population_size):
-        print(f"{i} {particles.best_score}")
-        for j in range(model.n):
-            print(f"{particles.position[j]} {particles.best_position[j]} {particles.velocity[j]}")
-
-        particles += 1
-
+# cdef _print(Model* model, Particle* particles):
+#     print("-----"*14)
+#     cdef unsigned i,j
+#     for i in range(model.population_size):
+#         print(f"{i} {particles.best_score}")
+#         for j in range(model.n):
+#             print(f"{particles.position[j]} {particles.best_position[j]} {particles.velocity[j]}")
+# 
+#         particles += 1
+ 
 # ======================================================================
 # Particle Swarm Solver
 # ======================================================================
@@ -209,7 +205,6 @@ cdef class ParticleSwarmSolver(Solver):
 
         cdef int remaining = self._iterations
         while True:
-            _print(&model, particles)
             remaining -= 1
             _evaluate(&model, particles)
             if remaining < 1:
