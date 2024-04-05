@@ -21,7 +21,7 @@ cdef inline void _populate(unsigned count, unsigned n, double* points, const Dom
                 it[0] += domains[j]._min
             it += 1
 
-cdef inline void _evaluate(
+cdef inline _evaluate(
         unsigned k, const Eq *eqs,
         unsigned count, unsigned n, double* points
         ):
@@ -48,9 +48,10 @@ cdef inline void _evaluate(
 
         curr_point += n
 
-    print(best_score)
-    for j in range(k):
-        print(best_solution[j])
+    return (
+        best_score,
+        tuplex.from_doubles(n, best_solution),
+            )
 
 # ======================================================================
 # Random solver
@@ -70,6 +71,6 @@ cdef class RandomSolver(Solver):
         cdef double *points_base_ptr = points.data.as_doubles
 
         _populate(self._count, n, points_base_ptr, domains)
-        _evaluate(k, eqs, self._count, n, points_base_ptr,)
+        return _evaluate(k, eqs, self._count, n, points_base_ptr,)
 
 
