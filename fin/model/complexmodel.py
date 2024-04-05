@@ -14,15 +14,15 @@ class ComplexModel:
         a model made of (possibly one or) several constraints.
 
         Constraints are given as "equilibrium functions" that evaluates to
-        0 if the constraint is fully satisfied. The solvers will try
+        0 if the constraint is fully satisfied. The solver will try
         to minimize the absolute value of the set of equilibrium functions that
         defines the model.
 
-        To ease integration, equilibrium functions are assiciated at 
-        definition-time with a set of meta data to ease introspection.
+        Equilibrium functions are associated at definition-time with a set of
+        metadata to ease introspection.
 
-        Currently, the metadata consists of a list of paramters in
-        function parameter's order as well as a description and a domain.
+        Currently, the metadata consists of a list of parameters in
+        function argument's order as well as a description and a domain.
 
         The domain is either a signed value, or a [min; max] range.
         When the domain is a single value, the parameter is set to be bound.
@@ -36,7 +36,7 @@ class ComplexModel:
         self._domains = {} # Map a param cluster to its domain
 
     def register(self, eq, *params):
-        """ Register a new equilibirum function and associated metadata into the model.
+        """ Register a new equilibrium function and associated metadata into the model.
         """
         self._eqs.append((eq, [param["name"] for param in params]))
         idx = 0
@@ -103,9 +103,9 @@ class ComplexModel:
 
     def export(self):
         """ Return the model as a list of parameters with their associated domain,
-            and map between equilirium functions and their paramter index in the list.
+            and map between equilibrium functions and their parameter index in the list.
 
-            This is the prefered format to interface with solvers.
+            This is the preferred format to interface with solvers.
         """
 
         clusters = tuple(self._domains.keys())
