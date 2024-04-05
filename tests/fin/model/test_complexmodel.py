@@ -77,6 +77,34 @@ class TestComplexModel(unittest.TestCase):
 #        pprint(domains)
 #        pprint(eqs)
         
+class TestComplexModelDomain(unittest.TestCase):
+    def test_optional_domain(self):
+        """ If the domain is not specified it defaults to DEFAULT_DOMAIN.
+        """
+        model = complexmodel.ComplexModel()
+        fct = lambda x: x
+        model.register(
+                fct,
+                dict(name="x", description="The x parameter"),
+                )
+
+        self.assertEqual(model.get_domain_for(fct, "x"), complexmodel.DEFAULT_DOMAIN)
+
+    def test_optional_domain(self):
+        """ Each parameter may specify a domain.
+        """
+        model = complexmodel.ComplexModel()
+        fct = lambda x, y, z: x+y+z
+        model.register(
+                fct,
+                dict(name="x", description="The x parameter", domain=(3,4)),
+                dict(name="y", description="The y parameter", domain=12),
+                dict(name="z", description="The z parameter"),
+                )
+
+        self.assertEqual(model.get_domain_for(fct, "x"), (3,4))
+        self.assertEqual(model.get_domain_for(fct, "y"), (12,12))
+        self.assertEqual(model.get_domain_for(fct, "z"), complexmodel.DEFAULT_DOMAIN)
 
 
 

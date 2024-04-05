@@ -1,7 +1,10 @@
+import sys
+
 # ======================================================================
 # Constants
 # ======================================================================
-DEFAULT_DOMAIN = (0,100) # FIXME Replace with the full fp32/fp64 domain?
+DBL_MAX = sys.float_info.max
+DEFAULT_DOMAIN = (-DBL_MAX, +DBL_MAX)
 
 class DomainError(ValueError):
     pass
@@ -37,6 +40,13 @@ class ComplexModel:
 
     def register(self, eq, *params):
         """ Register a new equilibrium function and associated metadata into the model.
+
+            Each parameter is described as a dictionary with the following entries:
+
+            1.  name: The name of the parameter (mandatory)
+            2.  description: A descrition for human consumption (mandatory)
+            3.  domain: The domain either as a float if the value is bound, or a 2-uple
+                for a range (optional)
         """
         self._eqs.append((eq, [param["name"] for param in params]))
         idx = 0
@@ -49,7 +59,15 @@ class ComplexModel:
                     cluster = cluster
                     )
             idx += 1
-            self._domains[cluster] = DEFAULT_DOMAIN
+
+            # Optional domain
+            domain = param.get("domain", DEFAULT_DOMAIN)
+            if type(domain) in (float, int):
+                self._domains[cluster] = (domain, domain)
+            elif type(domain) is tuple and len(domain) == 2:
+                self._domains[cluster] = domain
+            else:
+                raise TypeError(f"The domain must be either a float of a 2-tuple. Found {domain}")
 
     def bind(self, eq_A, param_name_A, eq_B, param_name_B):
         """ Bind two parameters.
@@ -72,7 +90,7 @@ class ComplexModel:
         max_C = min(max_A, max_B)
         if min_C > max_C: # FIXME Or is NaN !
             raise DomainError(f"Unsolvable constraint for {cluster_C}: min is {min_C} max is {max_C}")
-        
+
         # save the new cluster
         self._domains[cluster_C] = (min_C, max_C)
         # Update all parameters belonging to the same cluster
