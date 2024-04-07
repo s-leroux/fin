@@ -382,12 +382,12 @@ cdef class Column:
         return column
 
     @staticmethod
-    def from_sequence(sequence, **kwargs):
+    def from_sequence(sequence, *, convert=True, **kwargs):
         """
         Create a Column from a sequence of Python objects.
         """
         cdef Column column = Column(**kwargs)
-        column._py_values = tuple(sequence)
+        column._py_values = column._type.from_sequence(sequence) if convert else tuple(sequence)
 
         return column
 
@@ -539,9 +539,9 @@ cdef class Column:
         return f"Column({', '.join(parts)})"
 
     def __len__(self):
-        if self._f_values:
+        if self._f_values is not None:
             return len(self._f_values)
-        if self._py_values:
+        if self._py_values is not None:
             return len(self._py_values)
 
         raise NotImplementedError()

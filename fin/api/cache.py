@@ -5,7 +5,7 @@ import sqlite3
 from fin.datetime import CalendarDate, parseisodate
 
 sqlite3.register_adapter(CalendarDate, str)
-sqlite3.register_converter("CalendarDate", parseisodate)
+#sqlite3.register_converter("CalendarDate", parseisodate)
 
 from fin.api.core import HistoricalData
 from fin.seq import serie
@@ -129,6 +129,7 @@ def Client(base, *, db_name=CACHE_DEFAULT_DB_NAME):
             else:
                 return serie.Serie.from_rows(
                         ("Date", "Open", "High", "Low", "Close", "Adj Close", "Volume"),
+                        "dnnnnnn",
                         rows,
                         name=ticker
                         )

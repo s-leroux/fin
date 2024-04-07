@@ -1,10 +1,7 @@
-import sys
-
 from cpython cimport array
 from cpython.object cimport Py_EQ, Py_NE
 import array
 
-from fin.utils.log import console
 from fin.seq import coltypes
 from fin.seq.column cimport Column
 from fin.seq.presentation import Presentation
@@ -18,9 +15,42 @@ cdef array.array    double_array    = array.array("d", [])
 
 cdef str SERIE_DEFAULT_NAME = ""
 
+cdef IGNORE = object()
+
 # ======================================================================
 # Low-level helpers
 # ======================================================================
+cdef parse_types(object types):
+    if not isinstance(types, str):
+        return types
+
+    cdef str fstring = <str>types
+    types = []
+
+    for fchar in fstring:
+        if fchar=='-': # IGNORE
+            type = IGNORE
+        elif fchar=='n': # NUMERIC
+#            f = float
+            type = coltypes.Float()
+        elif fchar=='d': # ISO DATE
+#            f = datetime.parseisodate
+            type = coltypes.Date(from_string=datetime.parseisodate)
+        elif fchar=='s': # SECONDS SINCE UNIX EPOCH
+#            f = datetime.parsetimestamp
+            type = coltypes.DateTime(from_string=datetime.parsetimestamp)
+        elif fchar=='m': # MILLISECONDS SINCE UNIX EPOCH
+#            f = datetime.parsetimestamp_ms
+            type = coltypes.DateTime(from_string=datetime.parsetimestamp_ms)
+        elif fchar=='i': # INTEGER
+#            f = int
+            type = coltypes.Integer()
+        else:
+            raise ValueError(f"Invalid column type specifier {fchar!r} found in {format!r}")
+
+        types.append(type)
+
+    return types
 
 # ----------------------------------------------------------------------
 # Factory functions
@@ -39,10 +69,11 @@ cdef Serie serie_from_data(data, headings, types, dict kwargs):
     Create a serie from raw Python data (sequences).
     """
     name = kwargs.get("name", SERIE_DEFAULT_NAME)
+    types = parse_types(types)
 
     # `data` can be an iterator: compute the columns first so we can later call `len()`
     columns = [
-        Column.from_sequence(column, name=heading, type=type) for heading, type, column in zip(headings, types, data)
+        Column.from_sequence(column, name=heading, type=type) for heading, type, column in zip(headings, types, data) if type is not IGNORE
             ]
 
     if not len(columns):
@@ -76,52 +107,12 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
     rows = list(reader)
     cols = []
     names = []
-    types = []
 
-    for name, fchar, col in zip(heading, format, zip(*rows)):
-        type = None
-
-        if fchar=='-': # IGNORE
-            continue
-        elif fchar=='n': # NUMERIC
-            f = float
-            type = coltypes.Float
-        elif fchar=='d': # ISO DATE
-            f = datetime.parseisodate
-            type = coltypes.Date
-        elif fchar=='s': # SECONDS SINCE UNIX EPOCH
-            f = datetime.parsetimestamp
-            type = coltypes.DateTime
-        elif fchar=='m': # MILLISECONDS SINCE UNIX EPOCH
-            f = datetime.parsetimestamp_ms
-            type = coltypes.DateTime
-        elif fchar=='i': # INTEGER
-            f = int
-
-        if type is None:
-            type = coltypes.Other
-
-        col = list(col)
-        for index, value in enumerate(col):
-            try:
-                col[index] = f(value)
-            except:
-                e = sys.exc_info()[1] # This will also catch an exception that doesn't inherit from Exception
-                console.warn(f"Can't convert {col[index]} using {f}")
-                console.info(str(e))
-                col[index] = None
-
-#            # Infer formatter options
-#            if fchar == "n" and type(value) is str:
-#                precision = value.rfind(".")
-#                if precision > formatter_args.setdefault("precision", 0):
-#                    formatter_args["precision"] = precision
-
-        types.append(type())
+    for name, col in zip(heading, zip(*rows)):
         names.append(name)
         cols.append(col)
 
-    result = serie_from_data(cols, names, types, kwargs)
+    result = serie_from_data(cols, names, format, kwargs)
 #    if select:
 #        result = result.select(*select)
 
@@ -836,7 +827,12 @@ cdef Join join_engine(
     cdef list rightColumns = join_engine_remap_columns(colB, n, mappingB.data.as_uints)
 
     return Join.create(
-            Column.from_sequence(joinIndex, name=serA._index.name, type=serA._index.type),
+            Column.from_sequence(
+                joinIndex,
+                name=serA._index.name,
+                type=serA._index.type,
+                convert=False
+            ),
             tuple(leftColumns),
             tuple(rightColumns)
     )

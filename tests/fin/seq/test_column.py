@@ -244,16 +244,18 @@ class TestColumnMetadata(unittest.TestCase):
 
         self.assertIsInstance(c.type, coltypes.Other)
 
-    def test_user_formatter(self):
+    def test_user_type(self):
         """
         You may specify a type at column's creation time.
         """
-        def fct(*args):
-            pass
+        class T:
+            def from_sequence(self, sequence):
+                return tuple(sequence)
+        t = T()
 
-        c = Column.from_sequence([1,2,3], type=fct)
+        c = Column.from_sequence([1,2,3], type=t)
 
-        self.assertIs(c.type, fct)
+        self.assertIs(c.type, t)
 
 # ======================================================================
 # Mutations
