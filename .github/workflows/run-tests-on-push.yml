@@ -3,18 +3,27 @@ run-name: ${{ github.actor }} is running tests
 on: [push]
 jobs:
   run-it:
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:18.04
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.6.9'
-      - name: Install Cython
-        run: sudo apt-get install -y cython3
+      - uses: actions/checkout@v3
+      - name: Setup apt
+        run: apt-get update
+      - name: Install core dependencies
+        run: |
+          apt-get install -y python3 cython3 make
+          apt-get install -y python3-requests
+      - name: Check versions
+        run: |
+          python3 --version
+          cython3 --version
+      - name: Compiling
+        run: make compile
       - name: Running tests
         run: make tests
       - name: Install extra dependencies
-        run: sudo apt-get install -y gnuplot
+        run: apt-get install -y gnuplot
       - name: Running slow tests and examples
         run: make tests-all
 
