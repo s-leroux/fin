@@ -1,9 +1,9 @@
 """
 Plot 2D curves using GNUPlot
 """
+from fin.seq.serie import Serie
 from fin.seq import presentation
 from fin.seq.column import Column
-from fin.seq.serie import Serie
 import asyncio
 import math
 import collections
