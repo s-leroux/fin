@@ -1,0 +1,25 @@
+name: run-tests-on-push
+run-name: ${{ github.actor }} is running tests
+on: [push]
+jobs:
+  run-it:
+    runs-on: ubuntu-latest
+    container:
+      image: ubuntu:18.04
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup apt
+        run: apt-get update
+      - name: Install core dependencies
+        run: |
+          apt-get install -y python3 cython3 make
+          apt-get install -y python3-requests
+      - name: Check versions
+        run: |
+          python3 --version
+          cython3 --version
+      - name: Compiling
+        run: make compile
+      - name: Running tests
+        run: SLOW_TESTS=yes make tests
+
