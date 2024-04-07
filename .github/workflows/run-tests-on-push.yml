@@ -9,10 +9,12 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.6.9'
-      - name: Install dependecies
-        run: sudo apt-get install -y gnuplot
+      - name: Install Cython
+        run: sudo apt-get install -y cython3
       - name: Running tests
         run: make tests
-      - name: Running slow tests
+      - name: Install extra dependencies
+        run: sudo apt-get install -y gnuplot
+      - name: Running slow tests and examples
         run: make tests-all
 
