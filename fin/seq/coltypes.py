@@ -46,6 +46,14 @@ class Type:
         """
         return tuple(sequence)
 
+
+def _infer_precision_from_data(column):
+    precision = 2
+    for cell in column:
+        if type(cell) is str:
+            precision = max(precision, cell.rfind("."))
+
+    return precision
 class Float(Type):
     """ The type for a column containing floating-point numbers.
 
@@ -58,7 +66,7 @@ class Float(Type):
         try:
             precision = self._options["precision"]
         except KeyError:
-            precision = 2 # XXX We should infer that value from the column
+            precision = _infer_precision_from_data(column)
 
         return formatters.FloatFormatter(precision=precision)
 
