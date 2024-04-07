@@ -61,6 +61,7 @@ cdef void _init_particles(Model* model, Particle* particles, double* buffer):
             particle.velocity[j] = particle.velocity[j]*2-1
 
             particle.position[j] *= model.domains[j]._max-model.domains[j]._min
+            particle.position[j] += model.domains[j]._min
             particle.velocity[j] *= model.domains[j]._max-model.domains[j]._min
 
         particle += 1

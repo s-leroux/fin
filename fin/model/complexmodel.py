@@ -152,6 +152,19 @@ class ComplexModel:
 
         return params, domains, eqs
 
+    def solve(self, solver):
+        """ Shorthand for model.export() then solver.solver().
+
+            Return the result nicely wrapper in a dictionary.
+        """
+        params, domains, eqs = self.export()
+        score, values = solver.solve(domains, eqs)
+
+        return score, {
+                param["name"] : dict(description=param["description"], value=value)
+                    for param, value in zip(params, values)
+            }
+
     def __repr__(self):
         return "ComplexModel(" \
                 f"_eqs={self._eqs!r}," \

@@ -35,6 +35,18 @@ class TestSolvers(unittest.TestCase):
                     (lambda x, y : (x-2)+2*(y-3), [0, 1]),
                     ],
                 "solution": (2, 3),
+                },{
+                "desc": "Use case #3 (unsolvable)",
+                "domains": [
+                    (10,100),
+                    (20,40),
+                    ],
+                "eqs": [
+                    (lambda x, y : x, [0, 1]),
+                    (lambda x, y : y, [0, 1]),
+                    ],
+                "solution": (10, 20),
+                "score": 505,
                 }
         for testcase in testcases:
             desc = testcase["desc"]
@@ -46,9 +58,9 @@ class TestSolvers(unittest.TestCase):
                 with(self.subTest(desc=desc, solver=Solver)):
                     solver = Solver(*args)
                     score, result = solver.solve(domains, eqs)
-                    print(score, result)
+                    print(Solver, desc, score, result)
 
-                    self.assertLess(score, score_limit)
+                    self.assertLess(score, testcase.get("score", score_limit))
                     self.assertEqual(len(result), len(solution))
                     for a, b in zip(result, solution):
-                        self.assertAlmostEqual(a, b, delta=precision)
+                        self.assertAlmostEqual(a, b, delta=testcase.get("precision", precision))
