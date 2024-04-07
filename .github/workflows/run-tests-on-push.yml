@@ -21,9 +21,5 @@ jobs:
       - name: Compiling
         run: make compile
       - name: Running tests
-        run: make tests
-      - name: Install extra dependencies
-        run: apt-get install -y gnuplot
-      - name: Running slow tests and examples
-        run: make tests-all
+        run: SLOW_TESTS=yes make tests
 
