@@ -1,0 +1,10 @@
+name: run-tests-on-push
+run-name: ${{ github.actor }} is running tests
+on: [push]
+jobs:
+  run-it:
+    runs-on: ubuntu-18.04
+    steps:
+      - uses: actions/checkout@v4
+      - run: make tests
+
