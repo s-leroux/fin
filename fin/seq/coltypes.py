@@ -76,6 +76,9 @@ class Float(Type):
 class Integer(Type):
     """ The type for a column containing integer numbers.
     """
+    def new_formatter_for(self, column):
+        return formatters.IntegerFormatter()
+
     def from_sequence(self, sequence):
         return _from_sequence(sequence, int)
 
