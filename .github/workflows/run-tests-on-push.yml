@@ -6,5 +6,11 @@ jobs:
     runs-on: ubuntu-18.04
     steps:
       - uses: actions/checkout@v4
-      - run: make tests
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.6.9'
+      - name: Install dependecies
+        run: sudo apt-get install -y gnuplot
+      - name: Running tests
+        run: make tests
 
