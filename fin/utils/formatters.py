@@ -1,5 +1,8 @@
 from fin.utils import termcap
 
+# ======================================================================
+# Context
+# ======================================================================
 class Context(dict):
     def __init__(self, **kwargs):
         self['termcap'] = kwargs.get('termcap') or termcap.TermCap()
@@ -10,6 +13,9 @@ class Context(dict):
             termcap=termcap.TermCap.for_stdout(),
         )
 
+# ======================================================================
+# Composable formatters
+# ======================================================================
 def compose(parent, child):
     def _format(context, obj):
         return child(context, obj, parent)
@@ -20,6 +26,9 @@ class ComposableFormatter:
     def __add__(self, child):
         return compose(self, child)
 
+# ======================================================================
+# Color formatters
+# ======================================================================
 class ColorFormatter(ComposableFormatter):
     def __init__(self, color):
         self._color = color
@@ -48,6 +57,9 @@ def Green():
 def Gray():
     return ColorFormatter('gray')
 
+# ======================================================================
+# Flost formatters
+# ======================================================================
 class FloatFormatter(ComposableFormatter):
     def __init__(self, *, precision=2):
         self._precision = precision
@@ -89,6 +101,9 @@ class ColorFloatFormatter(FloatFormatter):
 
         return (color(text), llen, rlen)
 
+# ======================================================================
+# String formatters
+# ======================================================================
 class StringLeftFormatter(ComposableFormatter):
     def __call__(self, context, string):
         result = str(string)
