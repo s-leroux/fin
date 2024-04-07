@@ -24,7 +24,7 @@ cdef class Column:
     # ------------------------------------------------------------------
     cdef unsigned       _id
     cdef str            _name
-    cdef object         _formatter
+    cdef object         _type
 
     # ------------------------------------------------------------------
     # Accessors
@@ -33,7 +33,7 @@ cdef class Column:
     cdef array.array    get_f_values(self)
 
     cdef str            get_name(self)
-    cdef object         get_formatter(self)
+    cdef object         get_type(self)
 
     # ------------------------------------------------------------------
     # Cython-specific interface
