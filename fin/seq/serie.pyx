@@ -5,7 +5,7 @@ from cpython.object cimport Py_EQ, Py_NE
 import array
 
 from fin.utils.log import console
-from fin.utils.formatters import FloatFormatter, IntegerFormatter
+from fin.seq import coltypes
 from fin.seq.column cimport Column
 from fin.seq.presentation import Presentation
 
@@ -34,7 +34,7 @@ cdef Serie serie_bind(Column index, tuple columns, str name):
 
     return self
 
-cdef Serie serie_from_data(data, headings, formatters, dict kwargs):
+cdef Serie serie_from_data(data, headings, types, dict kwargs):
     """
     Create a serie from raw Python data (sequences).
     """
@@ -42,7 +42,7 @@ cdef Serie serie_from_data(data, headings, formatters, dict kwargs):
 
     # `data` can be an iterator: compute the columns first so we can later call `len()`
     columns = [
-        Column.from_sequence(column, name=heading, formatter=formatter) for heading, formatter, column in zip(headings, formatters, data)
+        Column.from_sequence(column, name=heading, type=type) for heading, type, column in zip(headings, types, data)
             ]
 
     if not len(columns):
@@ -57,8 +57,8 @@ cdef Serie serie_from_data(data, headings, formatters, dict kwargs):
 
     return Serie.create(*columns, name=name)
 
-cdef Serie serie_from_rows(headings, formatters, rows, dict kwargs):
-    return serie_from_data(zip(*rows), headings, formatters, kwargs)
+cdef Serie serie_from_rows(headings, types, rows, dict kwargs):
+    return serie_from_data(zip(*rows), headings, types, kwargs)
 
 import csv
 from fin import datetime
@@ -76,26 +76,30 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
     rows = list(reader)
     cols = []
     names = []
-    formatters = []
+    types = []
 
     for name, fchar, col in zip(heading, format, zip(*rows)):
-        formatter = None
-        formatter_args = {}
+        type = None
 
         if fchar=='-': # IGNORE
             continue
         elif fchar=='n': # NUMERIC
             f = float
-            formatter = FloatFormatter
+            type = coltypes.Float
         elif fchar=='d': # ISO DATE
             f = datetime.parseisodate
+            type = coltypes.Date
         elif fchar=='s': # SECONDS SINCE UNIX EPOCH
             f = datetime.parsetimestamp
+            type = coltypes.DateTime
         elif fchar=='m': # MILLISECONDS SINCE UNIX EPOCH
             f = datetime.parsetimestamp_ms
+            type = coltypes.DateTime
         elif fchar=='i': # INTEGER
-            formatter = IntegerFormatter
             f = int
+
+        if type is None:
+            type = coltypes.Other
 
         col = list(col)
         for index, value in enumerate(col):
@@ -107,17 +111,17 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
                 console.info(str(e))
                 col[index] = None
 
-            # Infer formatter options
-            if fchar == "n" and type(value) is str:
-                precision = value.rfind(".")
-                if precision > formatter_args.setdefault("precision", 0):
-                    formatter_args["precision"] = precision
+#            # Infer formatter options
+#            if fchar == "n" and type(value) is str:
+#                precision = value.rfind(".")
+#                if precision > formatter_args.setdefault("precision", 0):
+#                    formatter_args["precision"] = precision
 
-        formatters.append(formatter(**formatter_args) if formatter is not None else None)
+        types.append(type())
         names.append(name)
         cols.append(col)
 
-    result = serie_from_data(cols, names, formatters, kwargs)
+    result = serie_from_data(cols, names, types, kwargs)
 #    if select:
 #        result = result.select(*select)
 
@@ -309,15 +313,15 @@ cdef class Serie:
         return self
 
     @staticmethod
-    def from_data(columns, headings, formatters=None, **kwargs):
-        if formatters is None:
-            formatters = (None,)*len(headings)
+    def from_data(columns, headings, types=None, **kwargs):
+        if types is None:
+            types = (None,)*len(headings)
 
-        return serie_from_data(columns, headings, formatters, kwargs)
+        return serie_from_data(columns, headings, types, kwargs)
 
     @staticmethod
-    def from_rows(headings, formatter, rows, **kwargs):
-        return serie_from_rows(headings, formatter, rows, kwargs)
+    def from_rows(headings, type, rows, **kwargs):
+        return serie_from_rows(headings, type, rows, kwargs)
     # XXX Above: fix from_data() and from_rows() to have the parameters in the same order
 
     @staticmethod
@@ -832,7 +836,7 @@ cdef Join join_engine(
     cdef list rightColumns = join_engine_remap_columns(colB, n, mappingB.data.as_uints)
 
     return Join.create(
-            Column.from_sequence(joinIndex, name=serA._index.name, formatter=serA._index.formatter),
+            Column.from_sequence(joinIndex, name=serA._index.name, type=serA._index.type),
             tuple(leftColumns),
             tuple(rightColumns)
     )

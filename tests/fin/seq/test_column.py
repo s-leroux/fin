@@ -5,6 +5,7 @@ import array
 from testing import assertions
 
 from fin.seq import column
+from fin.seq import coltypes
 from fin.seq.column import Column
 
 # ======================================================================
@@ -235,24 +236,24 @@ class TestColumnMetadata(unittest.TestCase):
         c = Column.from_sequence([1,2,3], name="idx")
         self.assertRegex(c.name, "idx")
 
-    def test_default_formatter(self):
+    def test_default_type(self):
         """
-        By default, the formatter is set to None.
+        By default, the type is set to Other.
         """
         c = Column.from_sequence([1,2,3])
 
-        self.assertIs(c.formatter, None)
+        self.assertIsInstance(c.type, coltypes.Other)
 
     def test_user_formatter(self):
         """
-        You may specify a formatter at column's creation time.
+        You may specify a type at column's creation time.
         """
         def fct(*args):
             pass
 
-        c = Column.from_sequence([1,2,3], formatter=fct)
+        c = Column.from_sequence([1,2,3], type=fct)
 
-        self.assertIs(c.formatter, fct)
+        self.assertIs(c.type, fct)
 
 # ======================================================================
 # Mutations
