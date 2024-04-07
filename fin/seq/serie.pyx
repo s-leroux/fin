@@ -1,11 +1,8 @@
-import sys
-
 from cpython cimport array
 from cpython.object cimport Py_EQ, Py_NE
 import array
 
-from fin.utils.log import console
-from fin.utils.formatters import FloatFormatter, IntegerFormatter
+from fin.seq import coltypes
 from fin.seq.column cimport Column
 from fin.seq.presentation import Presentation
 
@@ -18,9 +15,42 @@ cdef array.array    double_array    = array.array("d", [])
 
 cdef str SERIE_DEFAULT_NAME = ""
 
+cdef IGNORE = object()
+
 # ======================================================================
 # Low-level helpers
 # ======================================================================
+cdef parse_types(object types):
+    if not isinstance(types, str):
+        return types
+
+    cdef str fstring = <str>types
+    types = []
+
+    for fchar in fstring:
+        if fchar=='-': # IGNORE
+            type = IGNORE
+        elif fchar=='n': # NUMERIC
+#            f = float
+            type = coltypes.Float()
+        elif fchar=='d': # ISO DATE
+#            f = datetime.parseisodate
+            type = coltypes.Date(from_string=datetime.parseisodate)
+        elif fchar=='s': # SECONDS SINCE UNIX EPOCH
+#            f = datetime.parsetimestamp
+            type = coltypes.DateTime(from_string=datetime.parsetimestamp)
+        elif fchar=='m': # MILLISECONDS SINCE UNIX EPOCH
+#            f = datetime.parsetimestamp_ms
+            type = coltypes.DateTime(from_string=datetime.parsetimestamp_ms)
+        elif fchar=='i': # INTEGER
+#            f = int
+            type = coltypes.Integer()
+        else:
+            raise ValueError(f"Invalid column type specifier {fchar!r} found in {format!r}")
+
+        types.append(type)
+
+    return types
 
 # ----------------------------------------------------------------------
 # Factory functions
@@ -34,15 +64,16 @@ cdef Serie serie_bind(Column index, tuple columns, str name):
 
     return self
 
-cdef Serie serie_from_data(data, headings, formatters, dict kwargs):
+cdef Serie serie_from_data(data, headings, types, dict kwargs):
     """
     Create a serie from raw Python data (sequences).
     """
     name = kwargs.get("name", SERIE_DEFAULT_NAME)
+    types = parse_types(types)
 
     # `data` can be an iterator: compute the columns first so we can later call `len()`
     columns = [
-        Column.from_sequence(column, name=heading, formatter=formatter) for heading, formatter, column in zip(headings, formatters, data)
+        Column.from_sequence(column, name=heading, type=type) for heading, type, column in zip(headings, types, data) if type is not IGNORE
             ]
 
     if not len(columns):
@@ -57,8 +88,8 @@ cdef Serie serie_from_data(data, headings, formatters, dict kwargs):
 
     return Serie.create(*columns, name=name)
 
-cdef Serie serie_from_rows(headings, formatters, rows, dict kwargs):
-    return serie_from_data(zip(*rows), headings, formatters, kwargs)
+cdef Serie serie_from_rows(headings, types, rows, dict kwargs):
+    return serie_from_data(zip(*rows), headings, types, kwargs)
 
 import csv
 from fin import datetime
@@ -76,48 +107,12 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
     rows = list(reader)
     cols = []
     names = []
-    formatters = []
 
-    for name, fchar, col in zip(heading, format, zip(*rows)):
-        formatter = None
-        formatter_args = {}
-
-        if fchar=='-': # IGNORE
-            continue
-        elif fchar=='n': # NUMERIC
-            f = float
-            formatter = FloatFormatter
-        elif fchar=='d': # ISO DATE
-            f = datetime.parseisodate
-        elif fchar=='s': # SECONDS SINCE UNIX EPOCH
-            f = datetime.parsetimestamp
-        elif fchar=='m': # MILLISECONDS SINCE UNIX EPOCH
-            f = datetime.parsetimestamp_ms
-        elif fchar=='i': # INTEGER
-            formatter = IntegerFormatter
-            f = int
-
-        col = list(col)
-        for index, value in enumerate(col):
-            try:
-                col[index] = f(value)
-            except:
-                e = sys.exc_info()[1] # This will also catch an exception that doesn't inherit from Exception
-                console.warn(f"Can't convert {col[index]} using {f}")
-                console.info(str(e))
-                col[index] = None
-
-            # Infer formatter options
-            if fchar == "n" and type(value) is str:
-                precision = value.rfind(".")
-                if precision > formatter_args.setdefault("precision", 0):
-                    formatter_args["precision"] = precision
-
-        formatters.append(formatter(**formatter_args) if formatter is not None else None)
+    for name, col in zip(heading, zip(*rows)):
         names.append(name)
         cols.append(col)
 
-    result = serie_from_data(cols, names, formatters, kwargs)
+    result = serie_from_data(cols, names, format, kwargs)
 #    if select:
 #        result = result.select(*select)
 
@@ -309,15 +304,15 @@ cdef class Serie:
         return self
 
     @staticmethod
-    def from_data(columns, headings, formatters=None, **kwargs):
-        if formatters is None:
-            formatters = (None,)*len(headings)
+    def from_data(columns, headings, types=None, **kwargs):
+        if types is None:
+            types = (None,)*len(headings)
 
-        return serie_from_data(columns, headings, formatters, kwargs)
+        return serie_from_data(columns, headings, types, kwargs)
 
     @staticmethod
-    def from_rows(headings, formatter, rows, **kwargs):
-        return serie_from_rows(headings, formatter, rows, kwargs)
+    def from_rows(headings, type, rows, **kwargs):
+        return serie_from_rows(headings, type, rows, kwargs)
     # XXX Above: fix from_data() and from_rows() to have the parameters in the same order
 
     @staticmethod
@@ -832,7 +827,12 @@ cdef Join join_engine(
     cdef list rightColumns = join_engine_remap_columns(colB, n, mappingB.data.as_uints)
 
     return Join.create(
-            Column.from_sequence(joinIndex, name=serA._index.name, formatter=serA._index.formatter),
+            Column.from_sequence(
+                joinIndex,
+                name=serA._index.name,
+                type=serA._index.type,
+                convert=False
+            ),
             tuple(leftColumns),
             tuple(rightColumns)
     )

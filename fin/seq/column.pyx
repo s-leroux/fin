@@ -3,6 +3,7 @@ from cpython.object cimport Py_EQ, Py_NE
 from fin.mathx cimport NaN, isnan
 
 import array
+from fin.seq import coltypes
 
 # ======================================================================
 # Globals
@@ -29,7 +30,7 @@ cdef Column new_column_with_meta(Column other):
     cdef Column result = Column()
     # _id is filled by __cinit__
     result._name = other._name
-    result._formatter = other._formatter
+    result._type = other._type
 
     return result
 
@@ -104,8 +105,8 @@ cdef Column add_column_column(Column a, Column b):
 
     cdef Column result = new_column_with_meta(a)
     result._name = f"({a.get_name()}+{b.get_name()})"
-    if result._formatter is None:
-        result._formatter = b._formatter
+    if result._type is None:
+        result._type = b._type
 
     result._f_values = add_vector_vector(
             lenA,
@@ -174,8 +175,8 @@ cdef Column mul_column_column(Column a, Column b):
 
     cdef Column result = new_column_with_meta(a)
     result._name = f"({a.get_name()}*{b.get_name()})"
-    if result._formatter is None:
-        result._formatter = b._formatter
+    if result._type is None:
+        result._type = b._type
 
     result._f_values = mul_vector_vector(
             lenA,
@@ -244,8 +245,8 @@ cdef Column div_column_column(Column a, Column b):
 
     cdef Column result = new_column_with_meta(a)
     result._name = f"({a.get_name()}/{b.get_name()})"
-    if result._formatter is None:
-        result._formatter = b._formatter
+    if result._type is None:
+        result._type = b._type
 
     result._f_values = div_vector_vector(
             lenA,
@@ -356,11 +357,13 @@ cdef class Column:
         self._id = _id
         _id += 1
 
-    def __init__(self, *, name=None, formatter=None):
+    def __init__(self, *, name=None, type=None):
         if name is not None:
             self._name = str(name)
-        if formatter is not None:
-            self._formatter = formatter
+        if type is not None:
+            self._type = type
+        else:
+            self._type = coltypes.Other()
 
     # ------------------------------------------------------------------
     # Factory methods
@@ -379,12 +382,12 @@ cdef class Column:
         return column
 
     @staticmethod
-    def from_sequence(sequence, **kwargs):
+    def from_sequence(sequence, *, convert=True, **kwargs):
         """
         Create a Column from a sequence of Python objects.
         """
         cdef Column column = Column(**kwargs)
-        column._py_values = tuple(sequence)
+        column._py_values = column._type.from_sequence(sequence) if convert else tuple(sequence)
 
         return column
 
@@ -402,7 +405,7 @@ cdef class Column:
         return column
 
     @staticmethod
-    def from_callable(fct, *columns, name=None, formatter=None, **kwargs):
+    def from_callable(fct, *columns, name=None, type=None, **kwargs):
         if name is None:
             try:
                 params = [ column.name for column in columns ]
@@ -411,11 +414,11 @@ cdef class Column:
                 # A column is not an instance of Column!
                 name = "?"
 
-        if formatter is None:
+        if type is None:
             for column in columns:
                 try:
-                    formatter = column.formatter
-                    if formatter is not None:
+                    type = column.type
+                    if type is not None:
                         break
                 except AttributeError:
                     # A column is not an instance of Column!
@@ -424,7 +427,7 @@ cdef class Column:
         return Column.from_sequence(
                 [fct(*row) for row in zip(*columns)],
                 name = name,
-                formatter = formatter,
+                type = type,
                 **kwargs
         )
 
@@ -484,10 +487,14 @@ cdef class Column:
 
     @property
     def formatter(self):
-        return self.get_formatter()
+        return self._type.formatter(self)
 
-    cdef object get_formatter(self):
-        return self._formatter
+    @property
+    def type(self):
+        return self.get_type()
+
+    cdef object get_type(self):
+        return self._type
 
 
     def metadata(self, name, default=None):
@@ -526,15 +533,15 @@ cdef class Column:
         parts = [ repr(self.py_values) ]
         if self._name:
             parts.append(f"name={self._name!r}")
-        if self._formatter:
-            parts.append(f"formatter={self._formatter!r}")
+        if self._type:
+            parts.append(f"type={self._type!r}")
 
         return f"Column({', '.join(parts)})"
 
     def __len__(self):
-        if self._f_values:
+        if self._f_values is not None:
             return len(self._f_values)
-        if self._py_values:
+        if self._py_values is not None:
             return len(self._py_values)
 
         raise NotImplementedError()

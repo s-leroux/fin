@@ -37,7 +37,7 @@ cdef class Functor1:
                 &src1.get_f_values().data.as_doubles[0]
                 )
 
-        return Column.from_float_array(dst1, name=self.make_name(src1), formatter=src1._formatter)
+        return Column.from_float_array(dst1, name=self.make_name(src1), type=src1._type)
 
 cdef class Functor1_3:
     """
@@ -75,9 +75,9 @@ cdef class Functor1_3:
         names = self.make_names(src1);
 
         return (
-                Column.from_float_array(dst1, name=names[0], formatter=src1._formatter),
-                Column.from_float_array(dst2, name=names[1], formatter=src1._formatter),
-                Column.from_float_array(dst3, name=names[2], formatter=src1._formatter),
+                Column.from_float_array(dst1, name=names[0], type=src1._type),
+                Column.from_float_array(dst2, name=names[1], type=src1._type),
+                Column.from_float_array(dst3, name=names[2], type=src1._type),
                 )
 
 cdef class Functor2:
@@ -104,7 +104,7 @@ cdef class Functor2:
                 &src2.get_f_values().data.as_doubles[0],
                 )
 
-        return Column.from_float_array(dst1, name=self.make_name(src1, src2), formatter=src1._formatter)
+        return Column.from_float_array(dst1, name=self.make_name(src1, src2), type=src1._type)
 
 cdef class Functor2_3:
     """
@@ -143,9 +143,9 @@ cdef class Functor2_3:
         names = self.make_names(src1, src2);
 
         return [
-                Column.from_float_array(dst1, name=names[0], formatter=src1._formatter),
-                Column.from_float_array(dst2, name=names[1], formatter=src1._formatter),
-                Column.from_float_array(dst3, name=names[2], formatter=src1._formatter),
+                Column.from_float_array(dst1, name=names[0], type=src1._type),
+                Column.from_float_array(dst2, name=names[1], type=src1._type),
+                Column.from_float_array(dst3, name=names[2], type=src1._type),
                 ]
 
 cdef class Functor3:
@@ -173,7 +173,7 @@ cdef class Functor3:
                 &src3.get_f_values().data.as_doubles[0],
                 )
 
-        return Column.from_float_array(dst1, name=self.make_name(src1, src2, src3), formatter=src1._formatter)
+        return Column.from_float_array(dst1, name=self.make_name(src1, src2, src3), type=src1._type)
 
 cdef class FunctorN:
     """
@@ -203,7 +203,7 @@ cdef class FunctorN:
 
         self.eval(l, &dst1.data.as_doubles[0], m, v)
 
-        return Column.from_float_array(dst1, name=self.make_name(seqs), formatter=seqs[0]._formatter)
+        return Column.from_float_array(dst1, name=self.make_name(seqs), type=seqs[0]._type)
 
 cdef class RowFunctor1(Functor1):
     """
