@@ -117,6 +117,24 @@ class TestSerie(unittest.TestCase):
         self.assertEqual(res.columns[1], c3)
         self.assertEqual(res.columns[2], c2)
 
+    def test_get_rows(self):
+        """
+        You can use the subscript notation to extract a sub-serie.
+        """
+        c1 = column.Column.from_sequence(range(10), name="a")
+        c2 = column.Column.from_callable(lambda x : x*10, c1, name="b")
+        c3 = column.Column.from_callable(lambda x : x*10, c2, name="c")
+        cols = (c1, c2, c3)
+
+        ser = serie.Serie.create(*cols)
+        res = ser[...,2:4]
+
+        self.assertIsInstance(res, serie.Serie)
+        self.assertEqual(res.index, c1[2:4])
+        self.assertEqual(len(res.columns), 2)
+        self.assertEqual(res.columns[0], c2[2:4])
+        self.assertEqual(res.columns[1], c3[2:4])
+
     def test_clear(self):
         """
         You can use the clear() method to return a serie containing only the index.

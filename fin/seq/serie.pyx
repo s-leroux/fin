@@ -167,6 +167,41 @@ cdef Serie serie_lstrip(Serie self, tuple exprs):
 # ----------------------------------------------------------------------
 # Accessors
 # ----------------------------------------------------------------------
+cdef Serie serie_get_items(Serie self, tuple selector):
+    """ Return a new serie containing a subset of the columns and rows of the receiver.
+
+        The ellipsis(...) notation for row selection is EXPERIMENTAL.
+    """
+    cdef list columns = [ self._index ]
+    it = iter(selector)
+    for atom in it:
+        t = type(atom)
+        if t is int:
+            columns.append(serie_get_column_by_index(self, atom))
+        elif t is str:
+            columns.append(serie_get_column_by_name(self, atom))
+        elif atom is Ellipsis:
+            if len(columns) == 1:
+                # Only he index; default to all columns
+                columns += self._columns
+
+            columns = columns_select_rows(columns, tuple(it))
+            break
+        else:
+            raise TypeError(f"Column indices cannot be {t}")
+
+    return serie_bind(
+            columns[0],
+            tuple(columns[1:]),
+            self.name
+            )
+
+cdef columns_select_rows(columns, tuple selector):
+    if len(selector) != 1:
+        raise IndexError(f"Row indices must be integers or slices, not {selector}")
+
+    return [ column[selector[0]] for column in columns ]
+
 cdef inline Column serie_get_column_by_index(Serie self, int idx):
     cdef int col_count
     if idx < 0:
@@ -398,15 +433,14 @@ cdef class Serie:
     # Subscript
     # ------------------------------------------------------------------
     def __getitem__(self, selector):
-        t = type(selector)
-        if t is tuple:
-            return self.c_get_items(selector)
-        elif t is int:
-            return self.c_get_item_by_index(selector)
-        elif t is str:
-            return self.c_get_item_by_name(selector)
-        else:
-            raise TypeError(f"serie indices cannot be {t}")
+        """ Return a new serie containing a subset of the columns and rows of the receiver.
+
+            The ellipsis(...) notation for row selection is EXPERIMENTAL.
+        """
+        if type(selector) is not tuple:
+            selector = ( selector, )
+
+        return serie_get_items(self, selector)
 
     cdef Serie c_get_items(self, tuple seq):
         # Should we implement this using a recursive-descend parser to allow nested tuples?

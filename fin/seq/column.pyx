@@ -527,7 +527,7 @@ cdef class Column:
             if op == Py_NE:
                 return self.py_values != other.py_values
 
-        raise NotImplementedError()
+        raise NotImplementedError(f"Cannot compare {self!r} with {other!r}")
 
     def __repr__(self):
         parts = [ repr(self.py_values) ]
