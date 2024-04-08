@@ -357,7 +357,30 @@ class TestSerieStrip(unittest.TestCase):
 
 
 class TestSerieSelect(unittest.TestCase):
-    def test_select(self):
+    def test_select_single(self):
+        cols = tuple(zip(*(
+            (11,21,31,41,51,),
+            (12,22,32,42,52,),
+            (13,23,33,43,53,),
+            (14,24,34,44,54,),
+            (15,25,35,45,55,),
+            (16,26,36,46,56,),
+            (17,27,37,47,57,),
+            (18,28,38,48,58,),
+            (19,29,39,49,59,),
+        )))
+
+        a = serie.Serie.from_data(cols, "ABCDE")
+        b = a.select(
+                "B",
+                )
+
+        self.assertEqual(b.rowcount, a.rowcount)
+        self.assertSequenceEqual(b.index, a.index)
+        self.assertEqual(len(b.columns), 1)
+        self.assertSequenceEqual(b.columns[0].py_values, cols[1])
+
+    def test_select_multi(self):
         cols = tuple(zip(*(
             (11,21,31,41,51,),
             (12,22,32,42,52,),
