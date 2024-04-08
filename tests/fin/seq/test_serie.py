@@ -3,6 +3,7 @@ import unittest
 from fin.seq import serie
 from fin.seq import column
 from fin.seq import fc
+from fin.seq import ag
 
 # ======================================================================
 # Core Serie functionalities
@@ -406,7 +407,50 @@ class TestSerieSelect(unittest.TestCase):
         self.assertSequenceEqual(b.columns[0].py_values, cols[0])
         self.assertSequenceEqual(b.columns[1].py_values, [x+y for x,y in zip(cols[1], cols[2])])
         self.assertSequenceEqual(b.columns[2].py_values, (42,)*a.rowcount)
-        
+
+
+class TestSerieGroupBy(unittest.TestCase):
+    def setUp(self):
+        self.cols = tuple(zip(*(
+            (11,99,10,41,51,),
+            (12,99,10,42,52,),
+            (13,99,00,43,53,),
+            (14,00,00,44,54,),
+            (15,99,00,45,55,),
+            (16,99,10,46,56,),
+            (17,00,10,47,57,),
+            (18,00,00,48,58,),
+            (19,00,00,49,59,),
+        )))
+
+        self.serie = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_get_strips(self):
+        serie = self.serie.select("B")
+        strips = serie.get_strips()
+
+        self.assertSequenceEqual(strips[:4], (3, 4, 6, 9))
+
+    def test_group_by_column_name(self):
+        a = self.serie
+        cols = self.cols
+        b = a.group_by(
+                "B",
+                (ag.first, "C"),
+                )
+
+        self.assertEqual(b.rowcount, 4)
+
+    def test_group_by_expr(self):
+        a = self.serie
+        cols = self.cols
+        b = a.group_by(
+                (fc.add, "B", "C"),
+                (ag.first, "C"),
+                )
+        print(b)
+        self.assertEqual(b.rowcount, 7)
+        self.assertEqual(len(b.columns), 1)
 
 
 # ======================================================================

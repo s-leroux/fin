@@ -3,6 +3,7 @@ from cpython.object cimport Py_EQ, Py_NE
 import array
 
 from fin.seq import coltypes
+from fin.mathx cimport ualloc
 from fin.seq.column cimport Column
 from fin.seq.presentation import Presentation
 
@@ -162,7 +163,75 @@ cdef Serie serie_lstrip(Serie self, tuple exprs):
             self.name
             )
 
+cdef int columns_get_strips(tuple columns, unsigned* buffer) except -1:
+    """ Fill a buffer with the index of the next strip of data.
 
+        A strip is a sequence of identical rows. The index column is *not*
+        considered when comparing strips since by definition all the index
+        values are unique.
+
+        The buffer is assumed to be large enough to hold all the strip limit indices.
+        At worst, there is `(rowcount+1)` indices.
+    """
+    rows = zip(*[col.py_values for col in columns])
+    cdef unsigned idx = 0
+    cdef tuple prev = None
+    cdef tuple row
+
+    for row in rows:
+        if prev is None:
+            prev = row
+        elif row != prev:
+            prev = row
+            buffer[0] = idx
+            buffer += 1
+
+        idx += 1
+
+    buffer[0] = idx
+
+cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
+    # Build the group column(s)
+    cdef tuple group_cols = serie_evaluate_item(self, expr)
+
+    # Build the projection for aggregate functions parameters
+    cdef list aggregate_fcts = []
+    cdef list aggregate_sub_series = []
+    for aggregate_fct, *aggregate_params in aggregate_expr:
+        aggregate_fcts.append(aggregate_fct)
+        aggregate_sub_series.append(serie_select(self, tuple(aggregate_params), None))
+        print(aggregate_sub_series)
+
+    # Keep track of headings and types
+    headings = [ self._index._name ]
+    types = [ self._index._type ]
+    cdef Column column
+    for aggregate_sub_serie in aggregate_sub_series:
+        for column in aggregate_sub_serie.columns:
+            headings.append(column._name)
+            types.append(column._type)
+
+    # Iterate over rows to group identical values:
+    cdef array.array arr = ualloc(self.rowcount+1)
+    cdef unsigned *ptr = arr.data.as_uints
+    columns_get_strips(group_cols, ptr)
+    print(group_cols)
+
+    cdef list rows = []
+    cdef list row
+    cdef unsigned start = 0
+    while start < self.rowcount:
+        end = ptr[0]
+
+        row = [ self._index.py_values[start] ] # XXX Hard-coded aggregate for the index
+        for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
+            row += aggregate_fct(*[column.py_values[start:end] for column in aggregate_sub_serie.columns])
+        rows.append(row)
+
+        start = end
+        ptr += 1
+
+    return serie_from_rows(headings, types, rows, {})
 
 # ----------------------------------------------------------------------
 # Accessors
@@ -190,6 +259,10 @@ cdef inline Column serie_get_column_by_name(Serie self, str name):
             return column
 
     raise KeyError(name)
+
+cdef inline serie_row_iterator(Serie self):
+    cdef list cols = [self._index.py_values] + [col.py_values for col in self._columns]
+    return zip(*cols)
 
 cdef inline tuple wrap_in_tuple(tuple_or_column):
     if type(tuple_or_column) is tuple:
@@ -332,6 +405,9 @@ cdef class Serie:
     def lstrip(self, *columns):
         return serie_lstrip(self, columns)
 
+    def group_by(self, expr, *aggregate_fct):
+        return serie_group_by(self, expr, aggregate_fct)
+
     # ------------------------------------------------------------------
     # Column expression evaluation
     # ------------------------------------------------------------------
@@ -357,8 +433,7 @@ cdef class Serie:
         """
         Return an *iterator* over the serie rows.
         """
-        cols = [self._index.py_values] + [col.py_values for col in self._columns]
-        return zip(*cols)
+        return serie_row_iterator(self)
 
     @property
     def headings(self):
@@ -438,6 +513,14 @@ cdef class Serie:
         EXPERIMENTAL. Change name?
         """
         return serie_bind(self.index, (), "Empty")
+
+    def get_strips(self):
+        """ For testing purposes only!
+        """
+        cdef array.array arr = ualloc(self.rowcount+1)
+        columns_get_strips(self._columns, arr.data.as_uints)
+
+        return arr
 
     # ------------------------------------------------------------------
     # Comparison

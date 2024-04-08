@@ -102,6 +102,7 @@ cpdef double cdf(double x, double mu=0.0, double sigma=1.0):
 # ======================================================================
 cdef array.array double_array_template = array.array('d', [])
 cdef array.array int_array_template = array.array('i', [])
+cdef array.array unsigned_array_template = array.array('I', [])
 cdef array.array byte_array_template = array.array('b', [])
 
 cdef inline double[::1] alloc(unsigned n, double init_value = NaN):
@@ -139,6 +140,19 @@ cdef inline array.array ialloc(unsigned n, int init_value = 0):
     if init_value != 0:
         for i in range(n):
             arr.data.as_ints[i] = init_value # XXX Use memset ?
+
+    return arr
+
+cdef inline array.array ualloc(unsigned n, unsigned init_value = 0):
+    """
+    Allocate a contiguous array of n unsigned integers.
+    Return the array.
+    """
+    cdef array.array arr = array.clone(unsigned_array_template, n, zero=(init_value==0))
+    cdef unsigned i
+    if init_value != 0:
+        for i in range(n):
+            arr.data.as_uints[i] = init_value # XXX Use memset ?
 
     return arr
 
