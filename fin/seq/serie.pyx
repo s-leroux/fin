@@ -233,6 +233,17 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
 
     return serie_from_rows(headings, types, rows, {})
 
+cdef serie_sort_by(Serie self, tuple exprs):
+    new_index = tuple(zip(*serie_evaluate_items(self, exprs)))
+    sort_order = sorted(range(self.rowcount), key=new_index.__getitem__)
+    print(sort_order)
+
+    return serie_bind(
+            self.index.remap(sort_order),
+            tuple(column.remap(sort_order) for column in self._columns),
+            self.name
+            )
+
 # ----------------------------------------------------------------------
 # Accessors
 # ----------------------------------------------------------------------
@@ -397,7 +408,7 @@ cdef class Serie:
         return serie_bind(index, columns, name)
 
     # ------------------------------------------------------------------
-    # Projections
+    # Predicates
     # ------------------------------------------------------------------
     def select(self, *columns, name=None):
         return serie_select(self, columns, name)
@@ -407,6 +418,9 @@ cdef class Serie:
 
     def group_by(self, expr, *aggregate_fct):
         return serie_group_by(self, expr, aggregate_fct)
+
+    def sort_by(self, expr, *exprs):
+        return serie_sort_by(self, (expr, *exprs))
 
     # ------------------------------------------------------------------
     # Column expression evaluation

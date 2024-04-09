@@ -452,6 +452,35 @@ class TestSerieGroupBy(unittest.TestCase):
         self.assertEqual(b.rowcount, 7)
         self.assertEqual(len(b.columns), 1)
 
+class TestSerieSortBy(unittest.TestCase):
+    def setUp(self):
+        self.cols = tuple(zip(*(
+            (11,29,30,49,51,),
+            (12,28,30,48,52,),
+            (13,27,39,43,53,),
+            (14,26,39,42,54,),
+            (15,25,30,47,55,),
+            (16,24,30,46,56,),
+            (17,23,30,45,57,),
+            (18,22,39,41,58,),
+            (19,21,30,44,59,),
+        )))
+
+        self.serie = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_sort_identity(self):
+        a = self.serie
+        b = a.sort_by("A")
+
+        self.assertEqual(b, a)
+
+    def test_sort_by(self):
+        a = self.serie
+        b = a.sort_by("B")
+
+        print(b)
+        self.assertSequenceEqual(b.columns[0].py_values, range(21,30))
+
 
 # ======================================================================
 # Output
