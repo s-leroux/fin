@@ -53,15 +53,74 @@ cdef parse_types(object types):
 
     return types
 
+cdef bint check_index(Column index) except -1:
+    """ Check that a column satisfies the prerequisites for an index.
+
+        An index must have values sorted in a strictly ascending order.
+    """
+
+    it = iter(index.get_py_values())
+    try:
+        prev = next(it)
+    except StopIteration:
+        raise TypeError(f"Zero-length index are not supported")
+
+    for item in it:
+        if not item > prev:
+            raise TypeError(f"Non monotonic index detected {prev} -> {item}")
+        prev = item
+
+    return True
+
 # ----------------------------------------------------------------------
 # Factory functions
 # ----------------------------------------------------------------------
 cdef Serie serie_bind(Column index, tuple columns, str name):
+    """ Assign pre-existing Columns to a serie.
+    """
+    check_index(index)
+
     cdef Serie self = Serie.__new__(Serie)
     self._index = index
     self._columns = columns
     self.rowcount = len(index)
     self.name = name if name is not None else SERIE_DEFAULT_NAME
+
+    return self
+
+cdef Serie serie_create(exprs, str name):
+    """ Recursively evaluate `exprs` to create a serie.
+    """
+    it = iter(exprs)
+
+    try:
+        index = next(it)
+    except StopIteration:
+        raise ValueError(f"A serie must have at least one column")
+
+    cdef Serie self = Serie.__new__(Serie)
+    self._index = None
+    self._columns = ()
+    self.rowcount = 0 # < rowcount is set to zero during index creation
+    self.name = str(name) if name is not None else SERIE_DEFAULT_NAME
+
+    cdef tuple index_evaluation = serie_evaluate_item(self, index)
+
+    # Validity checks for the index column:
+    if len(index_evaluation) != 1:
+        raise ValueError(f"Index should evaluate to a single column (here {len(index_evaluation)})")
+    if not len(index_evaluation[0]):
+        raise TypeError(f"Zero-length index are not supported")
+
+    # Ok. Initialize the core properties and start "recursive" evaluation of the
+    # remaining column expressions.
+    self._index = index_evaluation[0]
+    self.rowcount = len(self._index)
+
+    check_index(self._index)
+
+    for expr in it:
+        self._columns += serie_evaluate_item(self, expr)
 
     return self
 
@@ -87,7 +146,7 @@ cdef Serie serie_from_data(data, headings, types, dict kwargs):
             if len(col) != rowcount:
                 raise ValueError(f"All columns must have the same length.")
 
-    return Serie.create(*columns, name=name)
+    return serie_create(columns, name=name) # XXX Why not using `serie_bind` here?
 
 cdef Serie serie_from_rows(headings, types, rows, dict kwargs):
     return serie_from_data(zip(*rows), headings, types, kwargs)
@@ -121,7 +180,7 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
 
 
 # ----------------------------------------------------------------------
-# Projections
+# Predicates
 # ----------------------------------------------------------------------
 cdef Serie serie_select(Serie self, tuple exprs, str name):
     """
@@ -200,11 +259,10 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     for aggregate_fct, *aggregate_params in aggregate_expr:
         aggregate_fcts.append(aggregate_fct)
         aggregate_sub_series.append(serie_select(self, tuple(aggregate_params), None))
-        print(aggregate_sub_series)
 
     # Keep track of headings and types
-    headings = [ self._index._name ]
-    types = [ self._index._type ]
+    headings = [ ]
+    types = [ ]
     cdef Column column
     for aggregate_sub_serie in aggregate_sub_series:
         for column in aggregate_sub_serie.columns:
@@ -215,7 +273,6 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     cdef array.array arr = ualloc(self.rowcount+1)
     cdef unsigned *ptr = arr.data.as_uints
     columns_get_strips(group_cols, ptr)
-    print(group_cols)
 
     cdef list rows = []
     cdef list row
@@ -223,7 +280,7 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     while start < self.rowcount:
         end = ptr[0]
 
-        row = [ self._index.py_values[start] ] # XXX Hard-coded aggregate for the index
+        row = [ ]
         for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
             row += aggregate_fct(*[column.py_values[start:end] for column in aggregate_sub_serie.columns])
         rows.append(row)
@@ -236,7 +293,6 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
 cdef serie_sort_by(Serie self, tuple exprs):
     new_index = tuple(zip(*serie_evaluate_items(self, exprs)))
     sort_order = sorted(range(self.rowcount), key=new_index.__getitem__)
-    print(sort_order)
 
     return serie_bind(
             self.index.remap(sort_order),
@@ -364,28 +420,8 @@ cdef class Serie:
     # Factory methods
     # ------------------------------------------------------------------
     @staticmethod
-    def create(index, *columns, name=None):
-        cdef Serie self = Serie.__new__(Serie)
-        cdef tuple index_evaluation = serie_evaluate_item(self, index)
-
-        # Validity checks for the index column:
-        if len(index_evaluation) != 1:
-            raise ValueError(f"Index should evaluate to a single column (here {len(index_evaluation)})")
-        if not len(index_evaluation[0]):
-            raise TypeError(f"Zero-length index are not supported")
-
-        # Ok. Initialize the core properties and start "recursive" evaluation of the
-        # remaining column expressions.
-        self._index = index_evaluation[0]
-        self.rowcount = len(self._index)
-        self.name = str(name) if name is not None else SERIE_DEFAULT_NAME
-
-        self._columns = ()
-        while columns:
-            head, *columns = columns
-            self._columns += serie_evaluate_item(self, head)
-
-        return self
+    def create(*columns, name=None):
+        return serie_create(columns, name)
 
     @staticmethod
     def from_data(columns, headings, types=None, **kwargs):

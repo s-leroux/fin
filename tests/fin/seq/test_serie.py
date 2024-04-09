@@ -436,6 +436,7 @@ class TestSerieGroupBy(unittest.TestCase):
         cols = self.cols
         b = a.group_by(
                 "B",
+                (ag.first, "A"),
                 (ag.first, "C"),
                 )
 
@@ -446,9 +447,9 @@ class TestSerieGroupBy(unittest.TestCase):
         cols = self.cols
         b = a.group_by(
                 (fc.add, "B", "C"),
+                (ag.first, "A"),
                 (ag.first, "C"),
                 )
-        print(b)
         self.assertEqual(b.rowcount, 7)
         self.assertEqual(len(b.columns), 1)
 
@@ -478,7 +479,6 @@ class TestSerieSortBy(unittest.TestCase):
         a = self.serie
         b = a.sort_by("B")
 
-        print(b)
         self.assertSequenceEqual(b.columns[0].py_values, range(21,30))
 
 
