@@ -60,7 +60,6 @@ cdef parse_types(object types):
 # ----------------------------------------------------------------------
 cdef Serie serie_bind(Column index, tuple columns, str name):
     cdef Serie self = Serie.__new__(Serie)
-    self._index = index
     self._columns = (index, *columns)
     self.rowcount = len(index)
     self.name = name if name is not None else SERIE_DEFAULT_NAME
@@ -137,7 +136,7 @@ cdef Serie serie_select(Serie self, tuple exprs, str name):
 
     cdef tuple columns = serie_evaluate_items(self, exprs);
 
-    return serie_bind(self._index, columns, name)
+    return serie_bind(self.columns[0], columns, name)
 
 cdef Serie serie_lstrip(Serie self, tuple exprs):
     """
@@ -301,7 +300,7 @@ cdef tuple serie_evaluate_item(Serie self, expr):
         return ( expr, )
     if t is Serie:
         join = c_left_outer_join(self, expr, False)
-        if join.index != self._index:
+        if join.index != self._columns[0]:
             raise ValueError(f"Cannot insert serie: indices differ.")
         return join.right
     if t is str:
@@ -380,7 +379,6 @@ cdef class Serie:
 
         # Initialize the core properties and start "recursive" evaluation of the
         # remaining column expressions.
-        self._index = index
         self.rowcount = len(index)
         self.name = str(name) if name is not None else SERIE_DEFAULT_NAME
 
@@ -440,7 +438,7 @@ cdef class Serie:
     # ------------------------------------------------------------------
     @property
     def index(self):
-        return self._index
+        return self._columns[0]
 
     @property
     def columns(self):
@@ -516,13 +514,13 @@ cdef class Serie:
             else:
                 raise TypeError(f"serie indices cannot be {t}")
 
-        return serie_bind(self._index, tuple(columns), self.name)
+        return serie_bind(self._columns[0], tuple(columns), self.name)
 
     cdef Serie c_get_item_by_index(self, int idx):
-        return serie_bind(self._index, (serie_get_column_by_index(self, idx),), self.name)
+        return serie_bind(self._columns[0], (serie_get_column_by_index(self, idx),), self.name)
 
     cdef Serie c_get_item_by_name(self, str name):
-        return serie_bind(self._index, (serie_get_column_by_name(self, name),), self.name)
+        return serie_bind(self._columns[0], (serie_get_column_by_name(self, name),), self.name)
 
     def clear(self):
         """
@@ -530,7 +528,7 @@ cdef class Serie:
 
         EXPERIMENTAL. Change name?
         """
-        return serie_bind(self.index, (), "Empty")
+        return serie_bind(self._columns[0], (), "Empty")
 
     def get_strips(self):
         """ For testing purposes only!
@@ -581,7 +579,7 @@ cdef class Serie:
 #    cdef Serie c_add_scalar(self, double other):
 #        cdef Column column
 #        new = [column.c_add_scalar(other) for column in self._columns]
-#        return serie_bind(self._index, tuple(new), "Add")
+#        return serie_bind(self._columns[0], tuple(new), "Add")
 #
 #    cdef Serie c_add_serie(self, Serie other):
 #        cdef Join join = c_inner_join(self, other, rename=False)
@@ -605,8 +603,8 @@ cdef class Serie:
             return serie_bind(join.index, (*join.left, *join.right), f"{self.name} & {other.name}")
         elif isinstance(other, (int, float)):
             return serie_bind(
-                    that._index,
-                    (*that._columns, Column.from_constant(len(that.index), other)),
+                    that._columns[0],
+                    (*that._columns, Column.from_constant(that.rowcount, other)),
                     f"{self.name} & {other}"
             )
         else:
@@ -625,7 +623,7 @@ cdef class Serie:
         elif isinstance(other, (int, float)):
             # XXX Is this correct for `serie FULL OUTER JOIN constant`?
             return serie_bind(
-                    that._index,
+                    that._columns[0],
                     (*that._columns, Column.from_constant(len(that.index), other)),
                     f"{self.name} | {other}"
             )
@@ -869,8 +867,8 @@ cdef Join join_engine(
     """
     Create a join from two series.
     """
-    cdef tuple indexA = serA._index.get_py_values()
-    cdef tuple indexB = serB._index.get_py_values()
+    cdef tuple indexA = serA._columns[0].get_py_values()
+    cdef tuple indexB = serB._columns[0].get_py_values()
 
     cdef unsigned lenA = len(indexA)
     cdef unsigned lenB = len(indexB)
@@ -928,8 +926,8 @@ cdef Join join_engine(
     return Join.create(
             Column.from_sequence(
                 joinIndex,
-                name=serA._index.name,
-                type=serA._index.type,
+                name=serA._columns[0].name,
+                type=serA._columns[0].type,
                 convert=False
             ),
             tuple(leftColumns),

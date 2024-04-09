@@ -4,7 +4,6 @@ from fin.seq.column cimport Column
 # Serie class
 # ======================================================================
 cdef class Serie:
-    cdef Column  _index
     cdef tuple   _columns
     cdef unsigned rowcount
     cdef str      name
