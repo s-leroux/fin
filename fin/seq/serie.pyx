@@ -290,13 +290,28 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
 
     return serie_from_rows(headings, types, rows, {})
 
-cdef serie_sort_by(Serie self, tuple exprs):
-    new_index = tuple(zip(*serie_evaluate_items(self, exprs)))
+cdef Serie serie_sort_by(Serie self, str name):
+    """ Create a new serie sorted by the column named `name`.
+    """
+    # trivial case
+    if self._index._name == name:
+        return self
+
+    # General case
+    cdef Column new_index = None
+    cdef Column column
+    cdef list   new_columns = [ self._index ]
+    for column in self._columns:
+        if column._name == name:
+            new_index = column
+        else:
+            new_columns.append(column)
+
     sort_order = sorted(range(self.rowcount), key=new_index.__getitem__)
 
     return serie_bind(
-            self.index.remap(sort_order),
-            tuple(column.remap(sort_order) for column in self._columns),
+            new_index.remap(sort_order),
+            tuple(column.remap(sort_order) for column in new_columns),
             self.name
             )
 
@@ -455,8 +470,8 @@ cdef class Serie:
     def group_by(self, expr, *aggregate_fct):
         return serie_group_by(self, expr, aggregate_fct)
 
-    def sort_by(self, expr, *exprs):
-        return serie_sort_by(self, (expr, *exprs))
+    def sort_by(self, name):
+        return serie_sort_by(self, name)
 
     # ------------------------------------------------------------------
     # Column expression evaluation

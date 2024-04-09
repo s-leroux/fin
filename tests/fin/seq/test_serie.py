@@ -479,7 +479,8 @@ class TestSerieSortBy(unittest.TestCase):
         a = self.serie
         b = a.sort_by("B")
 
-        self.assertSequenceEqual(b.columns[0].py_values, range(21,30))
+        self.assertSequenceEqual(b.headings, "BACDE")
+        self.assertSequenceEqual(b.index.py_values, range(21,30))
 
 
 # ======================================================================
