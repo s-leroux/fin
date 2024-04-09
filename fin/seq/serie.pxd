@@ -12,8 +12,8 @@ cdef class Serie:
     # ------------------------------------------------------------------
     # Arithmetic operators
     # ------------------------------------------------------------------
-    cdef Serie c_add_scalar(self, double other)
-    cdef Serie c_add_serie(self, Serie other)
+#    cdef Serie c_add_scalar(self, double other)
+#    cdef Serie c_add_serie(self, Serie other)
 
     # ------------------------------------------------------------------
     # Subscript

@@ -113,8 +113,7 @@ class Presentation:
         opt_heading = self._options.get("heading", True)
 
         columns = []
-        heading = [] if not opt_heading else [ DEFAULT_FORMATTER(context, serie.index.name) ]
-        columns.append([DEFAULT_FORMATTER(context, cell) for cell in serie.index])
+        heading = []
         for column in serie.columns:
             if opt_heading:
                 heading.append(DEFAULT_FORMATTER(context, column.name))

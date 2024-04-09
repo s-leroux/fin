@@ -2,6 +2,8 @@ from cpython cimport array
 from cpython.object cimport Py_EQ, Py_NE
 import array
 
+from fin.utils.log import console
+
 from fin.seq import coltypes
 from fin.mathx cimport ualloc
 from fin.seq.column cimport Column
@@ -59,7 +61,7 @@ cdef parse_types(object types):
 cdef Serie serie_bind(Column index, tuple columns, str name):
     cdef Serie self = Serie.__new__(Serie)
     self._index = index
-    self._columns = columns
+    self._columns = (index, *columns)
     self.rowcount = len(index)
     self.name = name if name is not None else SERIE_DEFAULT_NAME
 
@@ -68,6 +70,8 @@ cdef Serie serie_bind(Column index, tuple columns, str name):
 cdef Serie serie_from_data(data, headings, types, dict kwargs):
     """
     Create a serie from raw Python data (sequences).
+
+    The first data column is assumed to be the index.
     """
     name = kwargs.get("name", SERIE_DEFAULT_NAME)
     types = parse_types(types)
@@ -125,26 +129,27 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
 # ----------------------------------------------------------------------
 cdef Serie serie_select(Serie self, tuple exprs, str name):
     """
-    Build a new serie with the same index and evaluate column expressions for the data columns.
-    """
-    cdef Serie result = serie_bind(self.index, (), name)
-    if len(exprs) > 0:
-        result._columns = serie_evaluate_items(self, exprs)
+    Build a new serie with by evaluating column expressions in the context of the receiver.
 
-    return result
+    The newly created series has the same number of rows than the receiver and
+    they share the same index.
+    """
+
+    cdef tuple columns = serie_evaluate_items(self, exprs);
+
+    return serie_bind(self._index, columns, name)
 
 cdef Serie serie_lstrip(Serie self, tuple exprs):
     """
     Return a a new table with rows at the start containing None removed.
 
-    If columns is not empty is is assumed to be a sequence of column names.
-    In that case, only those columns are checked.
-    If columns is empty all the serie columns are checked.
+    If exprs is empty, the column selection defaults to all columns *except* the
+    index if present in the data columns.
     """
     cdef tuple columns
 
     if len(exprs) == 0:
-        columns = self._columns
+        columns = tuple([column for idx, column in enumerate(self._columns) if idx != 0])
     else:
         columns = serie_evaluate_items(self, exprs)
 
@@ -158,8 +163,8 @@ cdef Serie serie_lstrip(Serie self, tuple exprs):
 
     end = self.rowcount
     return serie_bind(
-            self.index[i:end],
-            tuple(column[i:end] for column in self._columns),
+            self._columns[0][i:end],
+            tuple(column[i:end] for idx, column in enumerate(self._columns) if idx != 0),
             self.name
             )
 
@@ -174,6 +179,7 @@ cdef int columns_get_strips(tuple columns, unsigned* buffer) except -1:
         At worst, there is `(rowcount+1)` indices.
     """
     rows = zip(*[col.py_values for col in columns])
+
     cdef unsigned idx = 0
     cdef tuple prev = None
     cdef tuple row
@@ -199,15 +205,14 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     cdef list aggregate_sub_series = []
     for aggregate_fct, *aggregate_params in aggregate_expr:
         aggregate_fcts.append(aggregate_fct)
-        aggregate_sub_series.append(serie_select(self, tuple(aggregate_params), None))
-        print(aggregate_sub_series)
+        aggregate_sub_series.append(serie_evaluate_items(self, tuple(aggregate_params)))
 
     # Keep track of headings and types
-    headings = [ self._index._name ]
-    types = [ self._index._type ]
+    headings = [ ]
+    types = [ ]
     cdef Column column
     for aggregate_sub_serie in aggregate_sub_series:
-        for column in aggregate_sub_serie.columns:
+        for column in aggregate_sub_serie:
             headings.append(column._name)
             types.append(column._type)
 
@@ -215,7 +220,6 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     cdef array.array arr = ualloc(self.rowcount+1)
     cdef unsigned *ptr = arr.data.as_uints
     columns_get_strips(group_cols, ptr)
-    print(group_cols)
 
     cdef list rows = []
     cdef list row
@@ -223,9 +227,9 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     while start < self.rowcount:
         end = ptr[0]
 
-        row = [ self._index.py_values[start] ] # XXX Hard-coded aggregate for the index
+        row = [ ]
         for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
-            row += aggregate_fct(*[column.py_values[start:end] for column in aggregate_sub_serie.columns])
+            row += aggregate_fct(*[column.py_values[start:end] for column in aggregate_sub_serie])
         rows.append(row)
 
         start = end
@@ -234,12 +238,15 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     return serie_from_rows(headings, types, rows, {})
 
 cdef serie_sort_by(Serie self, tuple exprs):
-    new_index = tuple(zip(*serie_evaluate_items(self, exprs)))
+    cdef tuple indices = serie_evaluate_items(self, exprs)
+    if len(indices) != 1: # Only 1-column index are supported for now
+        raise ValueError(f"The index can only have one column")
+    cdef Column new_index = indices[0]
+
     sort_order = sorted(range(self.rowcount), key=new_index.__getitem__)
-    print(sort_order)
 
     return serie_bind(
-            self.index.remap(sort_order),
+            new_index.remap(sort_order),
             tuple(column.remap(sort_order) for column in self._columns),
             self.name
             )
@@ -251,19 +258,13 @@ cdef inline Column serie_get_column_by_index(Serie self, int idx):
     cdef int col_count
     if idx < 0:
         col_count = len(self._columns)
-        idx += col_count+1
+        idx += col_count
         if idx < 0:
-            raise IndexError("serie index out of range")
+            raise IndexError(f"Column index {idx} out of range")
 
-    if idx == 0:
-        return self._index
-    else:
-        return self._columns[idx-1]
+    return self._columns[idx]
 
 cdef inline Column serie_get_column_by_name(Serie self, str name):
-    if name == self._index.name:
-        return self._index
-
     cdef Column column
     for column in self._columns:
         if column.name == name:
@@ -272,7 +273,7 @@ cdef inline Column serie_get_column_by_name(Serie self, str name):
     raise KeyError(name)
 
 cdef inline serie_row_iterator(Serie self):
-    cdef list cols = [self._index.py_values] + [col.py_values for col in self._columns]
+    cdef list cols = [col.py_values for col in self._columns]
     return zip(*cols)
 
 cdef inline tuple wrap_in_tuple(tuple_or_column):
@@ -332,7 +333,7 @@ def serie_evaluate_expr(Serie self, head, *tail):
                 head = result[0]
                 tail = result[1:]
             elif t is Serie:
-                head, *tail = (<Serie>result)._columns
+                head, *tail = (<Serie>result)._columns[1:]
             else:
                 raise TypeError(f"Column functions should return a Column or a tuple of Columns ({type(result)}) found)")
         else:
@@ -353,7 +354,7 @@ cdef inline tuple serie_evaluate_items(Serie self, tuple items):
 # ======================================================================
 cdef class Serie:
     """
-    A Serie is an index and a list of columns, all of same length.
+    A Serie is a list of columns, all of same length.
 
     The index is assumed to be sorted in ascending order (strictly?).
     """
@@ -364,25 +365,28 @@ cdef class Serie:
     # Factory methods
     # ------------------------------------------------------------------
     @staticmethod
-    def create(index, *columns, name=None):
+    def create(first_expr, *exprs, name=None):
+        """ Create a new Serie instance.
+
+            The first argument is an expression that evaluates to the serie index.
+            The index is also usedd as the first data column.
+        """
         cdef Serie self = Serie.__new__(Serie)
-        cdef tuple index_evaluation = serie_evaluate_item(self, index)
+        self.rowcount = 0
+        cdef tuple indices = serie_evaluate_item(self, first_expr)
+        if len(indices) != 1:
+            raise ValueError(f"The index can only have one column")
+        cdef Column index = indices[0]
 
-        # Validity checks for the index column:
-        if len(index_evaluation) != 1:
-            raise ValueError(f"Index should evaluate to a single column (here {len(index_evaluation)})")
-        if not len(index_evaluation[0]):
-            raise TypeError(f"Zero-length index are not supported")
-
-        # Ok. Initialize the core properties and start "recursive" evaluation of the
+        # Initialize the core properties and start "recursive" evaluation of the
         # remaining column expressions.
-        self._index = index_evaluation[0]
-        self.rowcount = len(self._index)
+        self._index = index
+        self.rowcount = len(index)
         self.name = str(name) if name is not None else SERIE_DEFAULT_NAME
 
-        self._columns = ()
-        while columns:
-            head, *columns = columns
+        self._columns = ( index, )
+        while exprs:
+            head, *exprs = exprs
             self._columns += serie_evaluate_item(self, head)
 
         return self
@@ -454,7 +458,7 @@ cdef class Serie:
         """
         Return a sequence containing the column's names.
         """
-        return [self._index.name] + [col.name for col in self._columns]
+        return [col.name for col in self._columns]
 
     @property
     def rowcount(self):
@@ -532,7 +536,7 @@ cdef class Serie:
         """ For testing purposes only!
         """
         cdef array.array arr = ualloc(self.rowcount+1)
-        columns_get_strips(self._columns, arr.data.as_uints)
+        columns_get_strips(self._columns[1:], arr.data.as_uints)
 
         return arr
 
@@ -556,8 +560,6 @@ cdef class Serie:
             return False
         if serA.name != serB.name:
             return False
-        if serA._index != serB._index:
-            return False
 
         return serA._columns == serB._columns
 
@@ -565,28 +567,28 @@ cdef class Serie:
     # ------------------------------------------------------------------
     # Arithmetic operators
     # ------------------------------------------------------------------
-    def __add__(self, other):
-        """
-        Addition.
-        """
-        if isinstance(other, (int, float)):
-            return (<Serie>self).c_add_scalar(other)
-        elif isinstance(other, Serie):
-            return (<Serie>self).c_add_serie(other)
-        else:
-            return NotImplemented
-
-    cdef Serie c_add_scalar(self, double other):
-        cdef Column column
-        new = [column.c_add_scalar(other) for column in self._columns]
-        return serie_bind(self._index, tuple(new), "Add")
-
-    cdef Serie c_add_serie(self, Serie other):
-        cdef Join join = c_inner_join(self, other, rename=False)
-        cdef Column a, b
-        cdef list new = [ a + b for a in join.left for b in join.right ]
-
-        return serie_bind(join.index, tuple(new), "Add")
+#    def __add__(self, other):
+#        """
+#        Addition.
+#        """
+#        if isinstance(other, (int, float)):
+#            return (<Serie>self).c_add_scalar(other)
+#        elif isinstance(other, Serie):
+#            return (<Serie>self).c_add_serie(other)
+#        else:
+#            return NotImplemented
+#
+#    cdef Serie c_add_scalar(self, double other):
+#        cdef Column column
+#        new = [column.c_add_scalar(other) for column in self._columns]
+#        return serie_bind(self._index, tuple(new), "Add")
+#
+#    cdef Serie c_add_serie(self, Serie other):
+#        cdef Join join = c_inner_join(self, other, rename=False)
+#        cdef Column a, b
+#        cdef list new = [ a + b for a in join.left for b in join.right ]
+#
+#        return serie_bind(join.index, tuple(new), "Add")
 
     # ------------------------------------------------------------------
     # Joins operators
@@ -600,7 +602,7 @@ cdef class Serie:
 
         if isinstance(other, Serie):
             join = c_inner_join(that, other, True)
-            return serie_bind(join.index, (join.left+join.right), f"{self.name} & {other.name}")
+            return serie_bind(join.index, (*join.left, *join.right), f"{self.name} & {other.name}")
         elif isinstance(other, (int, float)):
             return serie_bind(
                     that._index,
@@ -619,7 +621,7 @@ cdef class Serie:
 
         if isinstance(other, Serie):
             join = c_full_outer_join(that, other, True)
-            return serie_bind(join.index, (join.left+join.right), f"{self.name} | {other.name}")
+            return serie_bind(join.index, (*join.left, *join.right), f"{self.name} | {other.name}")
         elif isinstance(other, (int, float)):
             # XXX Is this correct for `serie FULL OUTER JOIN constant`?
             return serie_bind(
@@ -903,8 +905,8 @@ cdef Join join_engine(
     # 1. `rename` is true
     # 2. the serie has a non-empty name
     cdef str prefix
-    cdef list colA = list(serA._columns)
-    cdef list colB = list(serB._columns)
+    cdef list colA = list(serA._columns[1:])
+    cdef list colB = list(serB._columns[1:])
     if rename:
         prefix = serA.name
         if len(prefix) > 0:
