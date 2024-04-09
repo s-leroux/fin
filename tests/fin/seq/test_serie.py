@@ -377,9 +377,8 @@ class TestSerieSelect(unittest.TestCase):
                 )
 
         self.assertEqual(b.rowcount, a.rowcount)
-        self.assertSequenceEqual(b.index, a.index)
-        self.assertEqual(len(b.columns), 1)
-        self.assertSequenceEqual(b.columns[0].py_values, cols[1])
+        self.assertSequenceEqual(b.index.py_values, cols[1])
+        self.assertEqual(len(b.columns), 0)
 
     def test_select_multi(self):
         cols = tuple(zip(*(
@@ -403,10 +402,10 @@ class TestSerieSelect(unittest.TestCase):
 
         self.assertEqual(b.rowcount, a.rowcount)
         self.assertSequenceEqual(b.index, a.index)
-        self.assertEqual(len(b.columns), 3)
-        self.assertSequenceEqual(b.columns[0].py_values, cols[0])
-        self.assertSequenceEqual(b.columns[1].py_values, [x+y for x,y in zip(cols[1], cols[2])])
-        self.assertSequenceEqual(b.columns[2].py_values, (42,)*a.rowcount)
+        self.assertEqual(len(b.columns), 2)
+        self.assertSequenceEqual(b.index.py_values, cols[0])
+        self.assertSequenceEqual(b.columns[0].py_values, [x+y for x,y in zip(cols[1], cols[2])])
+        self.assertSequenceEqual(b.columns[1].py_values, (42,)*a.rowcount)
 
 
 class TestSerieGroupBy(unittest.TestCase):
@@ -426,7 +425,7 @@ class TestSerieGroupBy(unittest.TestCase):
         self.serie = serie.Serie.from_data(self.cols, "ABCDE")
 
     def test_get_strips(self):
-        serie = self.serie.select("B")
+        serie = self.serie.select("A", "B")
         strips = serie.get_strips()
 
         self.assertSequenceEqual(strips[:4], (3, 4, 6, 9))

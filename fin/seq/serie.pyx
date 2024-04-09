@@ -186,11 +186,15 @@ cdef Serie serie_select(Serie self, tuple exprs, str name):
     """
     Build a new serie with the same index and evaluate column expressions for the data columns.
     """
-    cdef Serie result = serie_bind(self.index, (), name)
-    if len(exprs) > 0:
-        result._columns = serie_evaluate_items(self, exprs)
+    if len(exprs) == 0:
+        raise ValueError(f"A serie must have at least one column")
 
-    return result
+    cdef tuple columns = serie_evaluate_items(self, exprs)
+    # XXX Above: interesting corner case if the first expr return several columns.
+    #            Is this a valid use case? What should we use as the index in that case?
+
+
+    return serie_bind(columns[0], columns[1:], name)
 
 cdef Serie serie_lstrip(Serie self, tuple exprs):
     """
@@ -258,14 +262,14 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     cdef list aggregate_sub_series = []
     for aggregate_fct, *aggregate_params in aggregate_expr:
         aggregate_fcts.append(aggregate_fct)
-        aggregate_sub_series.append(serie_select(self, tuple(aggregate_params), None))
+        aggregate_sub_series.append(serie_evaluate_items(self, tuple(aggregate_params)))
 
     # Keep track of headings and types
     headings = [ ]
     types = [ ]
     cdef Column column
     for aggregate_sub_serie in aggregate_sub_series:
-        for column in aggregate_sub_serie.columns:
+        for column in aggregate_sub_serie:
             headings.append(column._name)
             types.append(column._type)
 
@@ -282,7 +286,7 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
 
         row = [ ]
         for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
-            row += aggregate_fct(*[column.py_values[start:end] for column in aggregate_sub_serie.columns])
+            row += aggregate_fct(*[column.py_values[start:end] for column in aggregate_sub_serie])
         rows.append(row)
 
         start = end
@@ -461,8 +465,8 @@ cdef class Serie:
     # ------------------------------------------------------------------
     # Predicates
     # ------------------------------------------------------------------
-    def select(self, *columns, name=None):
-        return serie_select(self, columns, name)
+    def select(self, *exprs, name=None):
+        return serie_select(self, exprs, name)
 
     def lstrip(self, *columns):
         return serie_lstrip(self, columns)
