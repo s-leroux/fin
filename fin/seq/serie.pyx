@@ -196,6 +196,14 @@ cdef Serie serie_select(Serie self, tuple exprs, str name):
 
     return serie_bind(columns[0], columns[1:], name)
 
+cdef Serie serie_extend(Serie self, tuple exprs):
+    cdef Serie result = serie_bind(self._index, self._columns, self.name)
+
+    for expr in exprs:
+        result._columns += serie_evaluate_item(result, expr)
+
+    return result
+
 cdef Serie serie_lstrip(Serie self, tuple exprs):
     """
     Return a a new table with rows at the start containing None removed.
@@ -467,6 +475,9 @@ cdef class Serie:
     # ------------------------------------------------------------------
     def select(self, *exprs, name=None):
         return serie_select(self, exprs, name)
+
+    def extend(self, *exprs):
+        return serie_extend(self, exprs)
 
     def lstrip(self, *columns):
         return serie_lstrip(self, columns)

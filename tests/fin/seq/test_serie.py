@@ -356,10 +356,9 @@ class TestSerieStrip(unittest.TestCase):
         self.assertEqual(res.columns[0].py_values, cols[1][3:])
 
 
-
 class TestSerieSelect(unittest.TestCase):
-    def test_select_single(self):
-        cols = tuple(zip(*(
+    def setUp(self):
+        self.cols = tuple(zip(*(
             (11,21,31,41,51,),
             (12,22,32,42,52,),
             (13,23,33,43,53,),
@@ -371,7 +370,12 @@ class TestSerieSelect(unittest.TestCase):
             (19,29,39,49,59,),
         )))
 
-        a = serie.Serie.from_data(cols, "ABCDE")
+        self.serie = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_select_single(self):
+        a = self.serie
+        cols = self.cols
+
         b = a.select(
                 "B",
                 )
@@ -381,19 +385,9 @@ class TestSerieSelect(unittest.TestCase):
         self.assertEqual(len(b.columns), 0)
 
     def test_select_multi(self):
-        cols = tuple(zip(*(
-            (11,21,31,41,51,),
-            (12,22,32,42,52,),
-            (13,23,33,43,53,),
-            (14,24,34,44,54,),
-            (15,25,35,45,55,),
-            (16,26,36,46,56,),
-            (17,27,37,47,57,),
-            (18,28,38,48,58,),
-            (19,29,39,49,59,),
-        )))
+        a = self.serie
+        cols = self.cols
 
-        a = serie.Serie.from_data(cols, "ABCDE")
         b = a.select(
                 "A",
                 (fc.add, "B", "C"),
@@ -406,6 +400,35 @@ class TestSerieSelect(unittest.TestCase):
         self.assertSequenceEqual(b.index.py_values, cols[0])
         self.assertSequenceEqual(b.columns[0].py_values, [x+y for x,y in zip(cols[1], cols[2])])
         self.assertSequenceEqual(b.columns[1].py_values, (42,)*a.rowcount)
+
+
+class TestSerieExtend(unittest.TestCase):
+    def setUp(self):
+        self.cols = tuple(zip(*(
+            (11,21,31,41,51,),
+            (12,22,32,42,52,),
+            (13,23,33,43,53,),
+            (14,24,34,44,54,),
+            (15,25,35,45,55,),
+            (16,26,36,46,56,),
+            (17,27,37,47,57,),
+            (18,28,38,48,58,),
+            (19,29,39,49,59,),
+        )))
+
+        self.serie = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_extend(self):
+        a = self.serie
+        cols = self.cols
+
+        b = a.extend(
+                (fc.named("F"), fc.range(61,70)),
+                )
+
+        self.assertEqual(b.rowcount, a.rowcount)
+        self.assertEqual(len(b.columns), len(a.columns)+1)
+        self.assertSequenceEqual(b.columns[-1].py_values, range(61, 70))
 
 
 class TestSerieGroupBy(unittest.TestCase):
