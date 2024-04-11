@@ -289,11 +289,6 @@ cdef array.array neg(unsigned count, const double* values):
 # ----------------------------------------------------------------------
 # Column remapping
 # ----------------------------------------------------------------------
-
-"""
-Magic number for missing values in `remap()`
-"""
-
 cdef array.array remap_from_f_values(double* values, unsigned count, const unsigned* mapping):
     """
     Remap an array of double using the indices provided in `mapping`.
