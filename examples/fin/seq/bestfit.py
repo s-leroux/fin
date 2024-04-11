@@ -24,6 +24,7 @@ print(repr(ta))
 print(repr(tb))
 print(repr(t))
 t = t.select(
+        "Date",
         "QQQ:Adj Close",
         "SPY:Adj Close",
         (fc.named("BEST FIT"), fc.best_fit, keyX, keyY)
