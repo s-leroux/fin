@@ -4,7 +4,7 @@ from .statx import *
 
 from fin.seq.column import Column
 from fin.seq.fc.windows import naive_window
-from fin.seq.fc import projections
+from fin.seq.fc import proj
 
 # ======================================================================
 # Statistics
@@ -47,11 +47,11 @@ def volatility(n, tau=1/252):
     def _volatility(serie, values):
         rowcount = serie.rowcount
         # 1. Continuously compounded return for each period
-        ui = projections.map_change(lambda curr, prev: log(curr/prev))(serie, values)
+        ui = proj.map_change(lambda curr, prev: log(curr/prev))(serie, values)
         # 2. Standard deviation
         result = stddev(serie, ui)
         # 3. Annualized values
-        return projections.map(vol)(serie, result)
+        return proj.map(vol)(serie, result)
 
     return _volatility
 
