@@ -11,6 +11,7 @@ Usage:
 client = Client()
 t = client.historical_data("^FCHI", CalendarDateDelta(days=20))
 t = t.select(
+        "Date",
         "High",
         "Low",
         "Close",
@@ -18,5 +19,5 @@ t = t.select(
     )
 print(t)
 
-t = client.historical_data("^FCHI", CalendarDateDelta(days=20)).select("Close")
+t = client.historical_data("^FCHI", CalendarDateDelta(days=20))["Close"]
 print(t)

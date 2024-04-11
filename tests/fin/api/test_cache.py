@@ -17,4 +17,6 @@ class TestCache(unittest.TestCase):
             t1 = self.client.historical_data(self.ticker, duration, end)
             t2 = self.client.historical_data(self.ticker, duration, end)
 
-            self.assertEqual(t1, t2)
+            # Compare string representation as we may have rounding errors
+            # beyond the precision
+            self.assertEqual(str(t1), str(t2))

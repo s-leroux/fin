@@ -3,6 +3,7 @@ from cpython.object cimport Py_EQ, Py_NE
 import array
 
 from fin.seq import coltypes
+from fin.mathx cimport ualloc
 from fin.seq.column cimport Column
 from fin.seq.presentation import Presentation
 
@@ -52,15 +53,74 @@ cdef parse_types(object types):
 
     return types
 
+cdef bint check_index(Column index) except -1:
+    """ Check that a column satisfies the prerequisites for an index.
+
+        An index must have values sorted in a strictly ascending order.
+    """
+
+    it = iter(index.get_py_values())
+    try:
+        prev = next(it)
+    except StopIteration:
+        raise TypeError(f"Zero-length index are not supported")
+
+    for item in it:
+        if not item > prev:
+            raise TypeError(f"Non monotonic index detected {prev} -> {item}")
+        prev = item
+
+    return True
+
 # ----------------------------------------------------------------------
 # Factory functions
 # ----------------------------------------------------------------------
 cdef Serie serie_bind(Column index, tuple columns, str name):
+    """ Assign pre-existing Columns to a serie.
+    """
+    check_index(index)
+
     cdef Serie self = Serie.__new__(Serie)
     self._index = index
     self._columns = columns
     self.rowcount = len(index)
     self.name = name if name is not None else SERIE_DEFAULT_NAME
+
+    return self
+
+cdef Serie serie_create(exprs, str name):
+    """ Recursively evaluate `exprs` to create a serie.
+    """
+    it = iter(exprs)
+
+    try:
+        index = next(it)
+    except StopIteration:
+        raise ValueError(f"A serie must have at least one column")
+
+    cdef Serie self = Serie.__new__(Serie)
+    self._index = None
+    self._columns = ()
+    self.rowcount = 0 # < rowcount is set to zero during index creation
+    self.name = str(name) if name is not None else SERIE_DEFAULT_NAME
+
+    cdef tuple index_evaluation = serie_evaluate_item(self, index)
+
+    # Validity checks for the index column:
+    if len(index_evaluation) != 1:
+        raise ValueError(f"Index should evaluate to a single column (here {len(index_evaluation)})")
+    if not len(index_evaluation[0]):
+        raise TypeError(f"Zero-length index are not supported")
+
+    # Ok. Initialize the core properties and start "recursive" evaluation of the
+    # remaining column expressions.
+    self._index = index_evaluation[0]
+    self.rowcount = len(self._index)
+
+    check_index(self._index)
+
+    for expr in it:
+        self._columns += serie_evaluate_item(self, expr)
 
     return self
 
@@ -86,18 +146,19 @@ cdef Serie serie_from_data(data, headings, types, dict kwargs):
             if len(col) != rowcount:
                 raise ValueError(f"All columns must have the same length.")
 
-    return Serie.create(*columns, name=name)
+    return serie_create(columns, name=name) # XXX Why not using `serie_bind` here?
 
 cdef Serie serie_from_rows(headings, types, rows, dict kwargs):
     return serie_from_data(zip(*rows), headings, types, kwargs)
 
 import csv
 from fin import datetime
-cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict kwargs):
+cdef Serie serie_from_csv(iterator, str formats, fieldnames, str delimiter, dict kwargs):
     """
     Create a new serie by iterating over CSV data rows.
     """
     rows = []
+    types = parse_types(formats)
     reader = csv.reader(iterator, delimiter=delimiter)
     if fieldnames is not None:
         heading = [str(fieldname) for fieldname in fieldnames]
@@ -108,11 +169,11 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
     cols = []
     names = []
 
-    for name, col in zip(heading, zip(*rows)):
+    for name, tps, col in zip(heading, types, zip(*rows)):
         names.append(name)
-        cols.append(col)
+        cols.append(tps.parse_string_sequence(col))
 
-    result = serie_from_data(cols, names, format, kwargs)
+    result = serie_from_data(cols, names, types, kwargs)
 #    if select:
 #        result = result.select(*select)
 
@@ -120,17 +181,60 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
 
 
 # ----------------------------------------------------------------------
-# Projections
+# Predicates
 # ----------------------------------------------------------------------
 cdef Serie serie_select(Serie self, tuple exprs, str name):
     """
     Build a new serie with the same index and evaluate column expressions for the data columns.
     """
-    cdef Serie result = serie_bind(self.index, (), name)
-    if len(exprs) > 0:
-        result._columns = serie_evaluate_items(self, exprs)
+    if len(exprs) == 0:
+        raise ValueError(f"A serie must have at least one column")
+
+    cdef tuple columns = serie_evaluate_items(self, exprs)
+    # XXX Above: interesting corner case if the first expr return several columns.
+    #            Is this a valid use case? What should we use as the index in that case?
+
+
+    return serie_bind(columns[0], columns[1:], name)
+
+cdef Serie serie_extend(Serie self, tuple exprs):
+    cdef Serie result = serie_bind(self._index, self._columns, self.name)
+
+    for expr in exprs:
+        result._columns += serie_evaluate_item(result, expr)
 
     return result
+
+cdef Serie serie_where(Serie self, tuple exprs):
+    cdef tuple conds = serie_evaluate_items(self, exprs)
+
+    cdef array.array mapping_arr = ualloc(self.rowcount)
+    cdef unsigned* mapping = mapping_arr.data.as_uints
+    cdef unsigned end = self.rowcount
+
+    # Initialize the mapping table
+    cdef unsigned i = 0
+    for i in range(end):
+        mapping[i]=i
+
+    cdef unsigned src, dst
+    cdef Column cond
+    for cond in conds:
+        dst = 0
+        for src in range(end):
+            if cond[mapping[src]]:
+                mapping[dst] = mapping[src]
+                dst += 1
+        end = dst
+        if end == 0:
+            break # No remaining rows
+
+    cdef Column column
+    return serie_bind(
+            self._index.c_remap(end, mapping),
+            tuple([column.c_remap(end, mapping) for column in self._columns]),
+            self.name
+            )
 
 cdef Serie serie_lstrip(Serie self, tuple exprs):
     """
@@ -162,7 +266,98 @@ cdef Serie serie_lstrip(Serie self, tuple exprs):
             self.name
             )
 
+cdef int columns_get_strips(tuple columns, unsigned* buffer) except -1:
+    """ Fill a buffer with the index of the next strip of data.
 
+        A strip is a sequence of identical rows. The index column is *not*
+        considered when comparing strips since by definition all the index
+        values are unique.
+
+        The buffer is assumed to be large enough to hold all the strip limit indices.
+        At worst, there is `(rowcount+1)` indices.
+    """
+    rows = zip(*[col.py_values for col in columns])
+    cdef unsigned idx = 0
+    cdef tuple prev = None
+    cdef tuple row
+
+    for row in rows:
+        if prev is None:
+            prev = row
+        elif row != prev:
+            prev = row
+            buffer[0] = idx
+            buffer += 1
+
+        idx += 1
+
+    buffer[0] = idx
+
+cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
+    # Build the group column(s)
+    cdef tuple group_cols = serie_evaluate_item(self, expr)
+
+    # Build the projection for aggregate functions parameters
+    cdef list aggregate_fcts = []
+    cdef list aggregate_sub_series = []
+    for aggregate_fct, *aggregate_params in aggregate_expr:
+        aggregate_fcts.append(aggregate_fct)
+        aggregate_sub_series.append(serie_evaluate_expr(self, *aggregate_params))
+
+    # Keep track of headings and types
+    headings = [ ]
+    types = [ ]
+    cdef Column column
+    for aggregate_sub_serie in aggregate_sub_series:
+        for column in aggregate_sub_serie:
+            headings.append(column._name)
+            types.append(column._type)
+
+    # Iterate over rows to group identical values:
+    cdef array.array arr = ualloc(self.rowcount+1)
+    cdef unsigned *ptr = arr.data.as_uints
+    columns_get_strips(group_cols, ptr)
+
+    cdef list rows = []
+    cdef list row
+    cdef unsigned start = 0
+    while start < self.rowcount:
+        end = ptr[0]
+
+        row = [ ]
+        for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
+            row += aggregate_fct(*[column.py_values[start:end] for column in aggregate_sub_serie])
+        rows.append(row)
+
+        start = end
+        ptr += 1
+
+    return serie_from_rows(headings, types, rows, {})
+
+cdef Serie serie_sort_by(Serie self, str name):
+    """ Create a new serie sorted by the column named `name`.
+    """
+    # trivial case
+    if self._index._name == name:
+        return self
+
+    # General case
+    cdef Column new_index = None
+    cdef Column column
+    cdef list   new_columns = [ self._index ]
+    for column in self._columns:
+        if column._name == name:
+            new_index = column
+        else:
+            new_columns.append(column)
+
+    sort_order = sorted(range(self.rowcount), key=new_index.__getitem__)
+
+    return serie_bind(
+            new_index.remap(sort_order),
+            tuple(column.remap(sort_order) for column in new_columns),
+            self.name
+            )
 
 # ----------------------------------------------------------------------
 # Accessors
@@ -190,6 +385,10 @@ cdef inline Column serie_get_column_by_name(Serie self, str name):
             return column
 
     raise KeyError(name)
+
+cdef inline serie_row_iterator(Serie self):
+    cdef list cols = [self._index.py_values] + [col.py_values for col in self._columns]
+    return zip(*cols)
 
 cdef inline tuple wrap_in_tuple(tuple_or_column):
     if type(tuple_or_column) is tuple:
@@ -280,28 +479,8 @@ cdef class Serie:
     # Factory methods
     # ------------------------------------------------------------------
     @staticmethod
-    def create(index, *columns, name=None):
-        cdef Serie self = Serie.__new__(Serie)
-        cdef tuple index_evaluation = serie_evaluate_item(self, index)
-
-        # Validity checks for the index column:
-        if len(index_evaluation) != 1:
-            raise ValueError(f"Index should evaluate to a single column (here {len(index_evaluation)})")
-        if not len(index_evaluation[0]):
-            raise TypeError(f"Zero-length index are not supported")
-
-        # Ok. Initialize the core properties and start "recursive" evaluation of the
-        # remaining column expressions.
-        self._index = index_evaluation[0]
-        self.rowcount = len(self._index)
-        self.name = str(name) if name is not None else SERIE_DEFAULT_NAME
-
-        self._columns = ()
-        while columns:
-            head, *columns = columns
-            self._columns += serie_evaluate_item(self, head)
-
-        return self
+    def create(*columns, name=None):
+        return serie_create(columns, name)
 
     @staticmethod
     def from_data(columns, headings, types=None, **kwargs):
@@ -324,13 +503,25 @@ cdef class Serie:
         return serie_bind(index, columns, name)
 
     # ------------------------------------------------------------------
-    # Projections
+    # Predicates
     # ------------------------------------------------------------------
-    def select(self, *columns, name=None):
-        return serie_select(self, columns, name)
+    def select(self, *exprs, name=None):
+        return serie_select(self, exprs, name)
+
+    def extend(self, *exprs):
+        return serie_extend(self, exprs)
+
+    def where(self, *exprs):
+        return serie_where(self, exprs)
 
     def lstrip(self, *columns):
         return serie_lstrip(self, columns)
+
+    def group_by(self, expr, *aggregate_fct):
+        return serie_group_by(self, expr, aggregate_fct)
+
+    def sort_by(self, name):
+        return serie_sort_by(self, name)
 
     # ------------------------------------------------------------------
     # Column expression evaluation
@@ -357,8 +548,7 @@ cdef class Serie:
         """
         Return an *iterator* over the serie rows.
         """
-        cols = [self._index.py_values] + [col.py_values for col in self._columns]
-        return zip(*cols)
+        return serie_row_iterator(self)
 
     @property
     def headings(self):
@@ -438,6 +628,14 @@ cdef class Serie:
         EXPERIMENTAL. Change name?
         """
         return serie_bind(self.index, (), "Empty")
+
+    def get_strips(self):
+        """ For testing purposes only!
+        """
+        cdef array.array arr = ualloc(self.rowcount+1)
+        columns_get_strips(self._columns, arr.data.as_uints)
+
+        return arr
 
     # ------------------------------------------------------------------
     # Comparison
@@ -831,7 +1029,6 @@ cdef Join join_engine(
                 joinIndex,
                 name=serA._index.name,
                 type=serA._index.type,
-                convert=False
             ),
             tuple(leftColumns),
             tuple(rightColumns)

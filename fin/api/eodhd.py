@@ -31,6 +31,7 @@ def Client(api_token):
                     name=ticker,
                     format="dnnnnni"
                 ).select(
+                    "Date",
                     "Open",
                     "High",
                     "Low",

@@ -12,6 +12,7 @@ client = yf.Client()
 
 t = client.historical_data("BAC", CalendarDateDelta(days=200))
 t = t.select(
+        "Date",
         fc.all,
         (fc.sma(5), "Close"),
         (fc.bband(5), "Close"),

@@ -3,6 +3,7 @@ import unittest
 from fin.seq import serie
 from fin.seq import column
 from fin.seq import fc
+from fin.seq import ag
 
 # ======================================================================
 # Core Serie functionalities
@@ -355,10 +356,9 @@ class TestSerieStrip(unittest.TestCase):
         self.assertEqual(res.columns[0].py_values, cols[1][3:])
 
 
-
 class TestSerieSelect(unittest.TestCase):
-    def test_select(self):
-        cols = tuple(zip(*(
+    def setUp(self):
+        self.cols = tuple(zip(*(
             (11,21,31,41,51,),
             (12,22,32,42,52,),
             (13,23,33,43,53,),
@@ -370,7 +370,24 @@ class TestSerieSelect(unittest.TestCase):
             (19,29,39,49,59,),
         )))
 
-        a = serie.Serie.from_data(cols, "ABCDE")
+        self.serie = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_select_single(self):
+        a = self.serie
+        cols = self.cols
+
+        b = a.select(
+                "B",
+                )
+
+        self.assertEqual(b.rowcount, a.rowcount)
+        self.assertSequenceEqual(b.index.py_values, cols[1])
+        self.assertEqual(len(b.columns), 0)
+
+    def test_select_multi(self):
+        a = self.serie
+        cols = self.cols
+
         b = a.select(
                 "A",
                 (fc.add, "B", "C"),
@@ -379,11 +396,209 @@ class TestSerieSelect(unittest.TestCase):
 
         self.assertEqual(b.rowcount, a.rowcount)
         self.assertSequenceEqual(b.index, a.index)
-        self.assertEqual(len(b.columns), 3)
-        self.assertSequenceEqual(b.columns[0].py_values, cols[0])
-        self.assertSequenceEqual(b.columns[1].py_values, [x+y for x,y in zip(cols[1], cols[2])])
-        self.assertSequenceEqual(b.columns[2].py_values, (42,)*a.rowcount)
-        
+        self.assertEqual(len(b.columns), 2)
+        self.assertSequenceEqual(b.index.py_values, cols[0])
+        self.assertSequenceEqual(b.columns[0].py_values, [x+y for x,y in zip(cols[1], cols[2])])
+        self.assertSequenceEqual(b.columns[1].py_values, (42,)*a.rowcount)
+
+
+class TestSerieExtend(unittest.TestCase):
+    def setUp(self):
+        self.cols = tuple(zip(*(
+            (11,21,31,41,51,),
+            (12,22,32,42,52,),
+            (13,23,33,43,53,),
+            (14,24,34,44,54,),
+            (15,25,35,45,55,),
+            (16,26,36,46,56,),
+            (17,27,37,47,57,),
+            (18,28,38,48,58,),
+            (19,29,39,49,59,),
+        )))
+
+        self.serie = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_extend(self):
+        a = self.serie
+        cols = self.cols
+
+        b = a.extend(
+                (fc.named("F"), fc.range(61,70)),
+                )
+
+        self.assertEqual(b.rowcount, a.rowcount)
+        self.assertEqual(len(b.columns), len(a.columns)+1)
+        self.assertSequenceEqual(b.columns[-1].py_values, range(61, 70))
+
+
+class TestSerieWhere(unittest.TestCase):
+    def setUp(self):
+        self.cols = tuple(zip(*(
+            (11,29,30,49,51,),
+            (12,28,30,48,52,),
+            (13,27,39,43,53,),
+            (14,26,39,42,54,),
+            (15,25,30,47,55,),
+            (16,24,30,46,56,),
+            (17,23,30,45,57,),
+            (18,22,39,41,58,),
+            (19,21,30,44,59,),
+        )))
+
+        self.serie = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_where(self):
+        FA = False
+        TR = True
+        usecases = (
+                # :bomb: Zero-length index are not supported !
+#                "NULL serie",
+#                (
+#                    #  0   1   2   3   4   5   6   7   8
+#                    ( FA, FA, FA, FA, FA, FA, FA, FA, FA ),
+#                ),
+#                (),
+                "All, one expr",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR ),
+                ),
+                (      0,  1,  2,  3,  4,  5,  6,  7,  8 ),
+                "All, two expr",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR, ),
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR, ),
+                ),
+                (      0,  1,  2,  3,  4,  5,  6,  7,  8, ),
+                "First, two expr",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR, ),
+                    ( TR, FA, FA, FA, FA, FA, FA, FA, FA, ),
+                ),
+                (      0,                                ),
+                "Last, two expr",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR, ),
+                    ( FA, FA, FA, FA, FA, FA, FA, FA, TR, ),
+                ),
+                (                                      8, ),
+                "First and last, two expr (case 1)",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR, ),
+                    ( TR, FA, FA, FA, FA, FA, FA, FA, TR, ),
+                ),
+                (      0,                              8, ),
+                "First and last, two expr (case 2)",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, FA, FA, FA, FA, TR, ),
+                    ( TR, FA, FA, FA, FA, TR, TR, TR, TR, ),
+                ),
+                (      0,                              8, ),
+            )
+
+        while usecases:
+            desc, exprs, expected, *usecases = usecases
+
+            with self.subTest(desc=desc):
+                a = self.serie
+                b = a.where(*(column.Column.from_sequence(expr) for expr in exprs))
+
+                self.assertIsInstance(b, serie.Serie)
+                self.assertSequenceEqual(b.headings, a.headings)
+                self.assertSequenceEqual(b.index.py_values, [a.index[n] for n in expected])
+                self.assertSequenceEqual(b.columns[0].py_values, [a.columns[0][n] for n in expected])
+
+
+class TestSerieGroupBy(unittest.TestCase):
+    def setUp(self):
+        self.cols = tuple(zip(*(
+            (11,99,10,41,51,),
+            (12,99,10,42,52,),
+            (13,99,00,43,53,),
+            (14,00,00,44,54,),
+            (15,99,00,45,55,),
+            (16,99,10,46,56,),
+            (17,00,10,47,57,),
+            (18,00,00,48,58,),
+            (19,00,00,49,59,),
+        )))
+
+        self.serie = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_get_strips(self):
+        serie = self.serie.select("A", "B")
+        strips = serie.get_strips()
+
+        self.assertSequenceEqual(strips[:4], (3, 4, 6, 9))
+
+    def test_group_by_column_name(self):
+        a = self.serie
+        cols = self.cols
+        b = a.group_by(
+                "B",
+                (ag.first, "A"),
+                (ag.first, "C"),
+                )
+
+        self.assertEqual(b.rowcount, 4)
+        self.assertEqual(b.columns[0].name, "C")
+
+    def test_group_by_rename(self):
+        a = self.serie
+        cols = self.cols
+        b = a.group_by(
+                "B",
+                (ag.first, "A"),
+                (ag.first, fc.named("D"), "C"),
+                )
+
+        self.assertEqual(b.rowcount, 4)
+        self.assertEqual(b.columns[0].name, "D")
+
+    def test_group_by_expr(self):
+        a = self.serie
+        cols = self.cols
+        b = a.group_by(
+                (fc.add, "B", "C"),
+                (ag.first, "A"),
+                (ag.first, "C"),
+                )
+        self.assertEqual(b.rowcount, 7)
+        self.assertEqual(len(b.columns), 1)
+
+class TestSerieSortBy(unittest.TestCase):
+    def setUp(self):
+        self.cols = tuple(zip(*(
+            (11,29,30,49,51,),
+            (12,28,30,48,52,),
+            (13,27,39,43,53,),
+            (14,26,39,42,54,),
+            (15,25,30,47,55,),
+            (16,24,30,46,56,),
+            (17,23,30,45,57,),
+            (18,22,39,41,58,),
+            (19,21,30,44,59,),
+        )))
+
+        self.serie = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_sort_identity(self):
+        a = self.serie
+        b = a.sort_by("A")
+
+        self.assertEqual(b, a)
+
+    def test_sort_by(self):
+        a = self.serie
+        b = a.sort_by("B")
+
+        self.assertSequenceEqual(b.headings, "BACDE")
+        self.assertSequenceEqual(b.index.py_values, range(21,30))
 
 
 # ======================================================================
