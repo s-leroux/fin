@@ -431,6 +431,89 @@ class TestSerieExtend(unittest.TestCase):
         self.assertSequenceEqual(b.columns[-1].py_values, range(61, 70))
 
 
+class TestSerieWhere(unittest.TestCase):
+    def setUp(self):
+        self.cols = tuple(zip(*(
+            (11,29,30,49,51,),
+            (12,28,30,48,52,),
+            (13,27,39,43,53,),
+            (14,26,39,42,54,),
+            (15,25,30,47,55,),
+            (16,24,30,46,56,),
+            (17,23,30,45,57,),
+            (18,22,39,41,58,),
+            (19,21,30,44,59,),
+        )))
+
+        self.serie = serie.Serie.from_data(self.cols, "ABCDE")
+
+    def test_where(self):
+        FA = False
+        TR = True
+        usecases = (
+                # :bomb: Zero-length index are not supported !
+#                "NULL serie",
+#                (
+#                    #  0   1   2   3   4   5   6   7   8
+#                    ( FA, FA, FA, FA, FA, FA, FA, FA, FA ),
+#                ),
+#                (),
+                "All, one expr",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR ),
+                ),
+                (      0,  1,  2,  3,  4,  5,  6,  7,  8 ),
+                "All, two expr",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR, ),
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR, ),
+                ),
+                (      0,  1,  2,  3,  4,  5,  6,  7,  8, ),
+                "First, two expr",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR, ),
+                    ( TR, FA, FA, FA, FA, FA, FA, FA, FA, ),
+                ),
+                (      0,                                ),
+                "Last, two expr",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR, ),
+                    ( FA, FA, FA, FA, FA, FA, FA, FA, TR, ),
+                ),
+                (                                      8, ),
+                "First and last, two expr (case 1)",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, TR, TR, TR, TR, TR, ),
+                    ( TR, FA, FA, FA, FA, FA, FA, FA, TR, ),
+                ),
+                (      0,                              8, ),
+                "First and last, two expr (case 2)",
+                (
+                    #  0   1   2   3   4   5   6   7   8
+                    ( TR, TR, TR, TR, FA, FA, FA, FA, TR, ),
+                    ( TR, FA, FA, FA, FA, TR, TR, TR, TR, ),
+                ),
+                (      0,                              8, ),
+            )
+
+        while usecases:
+            desc, exprs, expected, *usecases = usecases
+
+            with self.subTest(desc=desc):
+                a = self.serie
+                b = a.where(*(column.Column.from_sequence(expr) for expr in exprs))
+
+                self.assertIsInstance(b, serie.Serie)
+                self.assertSequenceEqual(b.headings, a.headings)
+                self.assertSequenceEqual(b.index.py_values, [a.index[n] for n in expected])
+                self.assertSequenceEqual(b.columns[0].py_values, [a.columns[0][n] for n in expected])
+
+
 class TestSerieGroupBy(unittest.TestCase):
     def setUp(self):
         self.cols = tuple(zip(*(

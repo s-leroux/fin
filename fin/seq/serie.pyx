@@ -205,6 +205,37 @@ cdef Serie serie_extend(Serie self, tuple exprs):
 
     return result
 
+cdef Serie serie_where(Serie self, tuple exprs):
+    cdef tuple conds = serie_evaluate_items(self, exprs)
+
+    cdef array.array mapping_arr = ualloc(self.rowcount)
+    cdef unsigned* mapping = mapping_arr.data.as_uints
+    cdef unsigned end = self.rowcount
+
+    # Initialize the mapping table
+    cdef unsigned i = 0
+    for i in range(end):
+        mapping[i]=i
+
+    cdef unsigned src, dst
+    cdef Column cond
+    for cond in conds:
+        dst = 0
+        for src in range(end):
+            if cond[mapping[src]]:
+                mapping[dst] = mapping[src]
+                dst += 1
+        end = dst
+        if end == 0:
+            break # No remaining rows
+
+    cdef Column column
+    return serie_bind(
+            self._index.c_remap(end, mapping),
+            tuple([column.c_remap(end, mapping) for column in self._columns]),
+            self.name
+            )
+
 cdef Serie serie_lstrip(Serie self, tuple exprs):
     """
     Return a a new table with rows at the start containing None removed.
@@ -479,6 +510,9 @@ cdef class Serie:
 
     def extend(self, *exprs):
         return serie_extend(self, exprs)
+
+    def where(self, *exprs):
+        return serie_where(self, exprs)
 
     def lstrip(self, *columns):
         return serie_lstrip(self, columns)
