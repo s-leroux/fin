@@ -20,6 +20,12 @@ cdef struct Model:
     Domain      *domains
     unsigned    k
     Eq          *eqs
+
+    # cumulative adaptive weighting
+    double      *caw_weigth
+    double      *caw_acc
+
+    # Model parameters
     double      inertia
     double      cognitive_coef
     double      social_coef
@@ -29,6 +35,12 @@ cdef struct Model:
 # ======================================================================
 # Low-level functions
 # ======================================================================
+cdef void _init_caw(Model* model):
+    cdef unsigned i
+    for i in range(model.k):
+        model.caw_weigth[i] = 1.0
+        model.caw_acc[i] = 0.0
+
 cdef void _init_particles(Model* model, Particle* particles, double* buffer):
     """ Initialize the particles state.
 
@@ -85,8 +97,17 @@ cdef int _evaluate(Model* model, Particle* particles) except -1:
             # XXX We might use the PyTuple low-level API here
             params = [ point[eq.params[h]] for h in range(eq.count) ]
             tmp = (<object>eq.fct)(*params)
+
+            # cumulative adaptive weighting
+            if tmp > 0:
+                model.caw_acc[j] += tmp
+            else:
+                model.caw_acc[j] -= tmp
+            tmp *= model.caw_weigth[j]
+
+            # update the score for this point
             score += tmp*tmp
-        
+
         # Is this the local best?
         if score < curr.best_score:
             curr.best_score = score
@@ -103,6 +124,17 @@ cdef int _evaluate(Model* model, Particle* particles) except -1:
         curr += 1
 
     return 0
+
+cdef void _update_caw(Model* model):
+    cdef unsigned i
+    cdef double kd = model.k
+    for i in range(model.k):
+        # the ratio in the eq below are empirical :/
+        model.caw_weigth[i] = 1.0/((1.0/model.caw_weigth[i])*0.9+model.caw_acc[i]*0.1/kd)
+        # print(f"{i}: {model.caw_weigth[i]}")
+        model.caw_acc[i] = 0.0
+
+    model.global_best_score *= 1.3 # aging best score
 
 cdef void _update(Model* model, Particle* particles):
     cdef unsigned i,j
@@ -139,15 +171,15 @@ cdef void _update(Model* model, Particle* particles):
 #         print(f"{i} {particles.best_score}")
 #         for j in range(model.n):
 #             print(f"{particles.position[j]:+9.4f} {particles.best_position[j]:+9.4f} {particles.velocity[j]:+9.4f}")
-# 
+#
 #         particles += 1
- 
+
 # ======================================================================
 # Particle Swarm Solver
 # ======================================================================
 cdef class ParticleSwarmSolver(Solver):
     """ Model solver using particle swarm optimization.
-        
+
         https://en.wikipedia.org/wiki/Particle_swarm_optimization
     """
     cdef unsigned _population_size
@@ -187,7 +219,10 @@ cdef class ParticleSwarmSolver(Solver):
         # - n doubles for the global best position
         cdef array.array buffer_array = aalloc(3*n*self._population_size+n)
         cdef double *buffer = buffer_array.data.as_doubles
-        
+
+        # Extra buffer for cumulative adaptive weighting
+        cdef array.array caw_arr = aalloc(2*k)
+
         # Initialize the Model structure to keep the model's parameters
         cdef Model   model
         model.n = n
@@ -195,6 +230,8 @@ cdef class ParticleSwarmSolver(Solver):
         model.domains = domains
         model.k = k
         model.eqs = eqs
+        model.caw_weigth = &caw_arr.data.as_doubles[0]
+        model.caw_acc = &caw_arr.data.as_doubles[k]
         model.inertia = self._inertia
         model.cognitive_coef = self._cognitive_coef
         model.social_coef = self._social_coef
@@ -202,6 +239,7 @@ cdef class ParticleSwarmSolver(Solver):
         model.global_best_position = buffer
         buffer += n
 
+        _init_caw(&model)
         _init_particles(&model, particles, buffer)
 
         cdef int remaining = self._iterations
@@ -212,6 +250,7 @@ cdef class ParticleSwarmSolver(Solver):
             if remaining < 1:
                 break
 
+            _update_caw(&model)
             _update(&model, particles)
 
         return (
