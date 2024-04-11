@@ -1,6 +1,6 @@
 import math
 
-from .statisticx import *
+from .statx import *
 
 from fin.seq.column import Column
 from fin.seq.fc.windows import naive_window

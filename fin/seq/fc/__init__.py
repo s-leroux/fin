@@ -7,6 +7,6 @@ from fin.seq.fc.comp import *
 from fin.seq.fc.greeks import *
 from fin.seq.fc.interpolations import *
 from fin.seq.fc.projections import *
-from fin.seq.fc.statistics import *
+from fin.seq.fc.stat import *
 from fin.seq.fc.ti import *
 from fin.seq.fc.windows import *

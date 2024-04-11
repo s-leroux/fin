@@ -1,7 +1,7 @@
 import unittest
 import random
 
-from fin.seq.fc import statistics
+from fin.seq.fc import stat
 from testing import assertions
 
 from tests.fin.seq.fc import utilities
@@ -12,7 +12,7 @@ from tests.fin.seq.fc import utilities
 class TestStandardDeviation(unittest.TestCase, assertions.ExtraTests):
     def test_stdev_s(self):
         actual = utilities.apply(self,
-            statistics.stdev.s(3),
+            stat.stdev.s(3),
             [x**2 for x in range(10, 20)],
         )
 
@@ -31,7 +31,7 @@ class TestStandardDeviation(unittest.TestCase, assertions.ExtraTests):
 
     def test_variance(self):
         actual = utilities.apply(self,
-            statistics.var.s(5),
+            stat.var.s(5),
             [x**2 for x in range(10, 20)],
         )
 
@@ -54,7 +54,7 @@ class TestStandardDeviation(unittest.TestCase, assertions.ExtraTests):
         data[6] = None
 
         actual = utilities.apply(self,
-            statistics.stdev.s(3),
+            stat.stdev.s(3),
             data,
         )
 
@@ -80,7 +80,7 @@ class TestCorrelation(unittest.TestCase, assertions.ExtraTests):
         LEN = len(EXPECTED)
         INPUT = random.sample([*range(LEN)], LEN)
         actual = utilities.apply(self,
-            statistics.correlation(LEN),
+            stat.correlation(LEN),
             INPUT,
             INPUT
         )
@@ -95,7 +95,7 @@ class TestCorrelation(unittest.TestCase, assertions.ExtraTests):
         Y = [x*-10 for x in X]
         EXPECTED = [None, -1.0, -1.0, -1.0]
         actual = utilities.apply(self,
-            statistics.correlation(2),
+            stat.correlation(2),
             X,
             Y
         )
@@ -131,14 +131,14 @@ class TestVolatility(unittest.TestCase, assertions.ExtraTests):
         WINDOW=len(INPUT)-1
         OUTPUT = [*[None]*WINDOW, 0.19302342]
 
-        actual = utilities.apply(self, statistics.volatility(WINDOW), INPUT)
+        actual = utilities.apply(self, stat.volatility(WINDOW), INPUT)
 
         self.assertFloatSequenceEqual(actual.py_values, OUTPUT)
 
 class TestBestFit(unittest.TestCase, assertions.ExtraTests):
     def test_best_fit(self):
         actual = utilities.apply(self,
-                statistics.best_fit,
+                stat.best_fit,
                 [*range(5)],
                 [
                     1,

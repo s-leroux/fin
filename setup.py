@@ -10,7 +10,7 @@ setup(
         "fin/model/solvers/solver.pyx",
         "fin/seq/column.pyx",
         "fin/seq/fc/funcx.pyx",
-        "fin/seq/fc/statisticx.pyx",
+        "fin/seq/fc/statx.pyx",
         "fin/seq/fc/tix.pyx",
         "fin/seq/serie.pyx",
         "fin/tuplex.pyx",

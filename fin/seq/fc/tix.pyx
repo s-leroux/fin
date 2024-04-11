@@ -19,7 +19,7 @@ from fin.seq cimport column
 from fin.seq import column
 
 from fin.seq.fc cimport funcx
-from fin.seq.fc cimport statisticx
+from fin.seq.fc cimport statx
 
 # ======================================================================
 # Moving averages and smoothing functions
@@ -243,13 +243,13 @@ cdef class bband(funcx.Functor1_3):
     Compute the Bollinger's band.
     """
     cdef sma _sma
-    cdef statisticx.stdev _stdev
+    cdef statx.stdev _stdev
     cdef band _band
     cdef unsigned _n
 
     def __init__(self, n, w=2):
         self._sma = sma(n)
-        self._stdev = statisticx.stdev.p(n)
+        self._stdev = statx.stdev.p(n)
         # Above:
         # in "Bollinger on Bollinger's Bands" p52 John Bollinger uses the population 
         # formula for standard deviation.
