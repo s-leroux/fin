@@ -6,7 +6,7 @@ from fin.utils import formatters
 # ======================================================================
 # Utilities
 # ======================================================================
-def _from_sequence(sequence, converter):
+def _parse_string_sequence(sequence, converter):
     result = []
     push = result.append
 
@@ -41,8 +41,8 @@ class Type:
         return formatters.StringLeftFormatter()
 
 
-    def from_sequence(self, sequence):
-        """ Convert from a sequence of arbitrary Python objects to a tuple of this type.
+    def parse_string_sequence(self, sequence):
+        """ Convert from a sequence of string to a tuple of the receiver's type instances.
         """
         return tuple(sequence)
 
@@ -70,8 +70,8 @@ class Float(Type):
 
         return formatters.FloatFormatter(precision=precision)
 
-    def from_sequence(self, sequence):
-        return _from_sequence(sequence, float)
+    def parse_string_sequence(self, sequence):
+        return _parse_string_sequence(sequence, float)
 
 class Integer(Type):
     """ The type for a column containing integer numbers.
@@ -79,8 +79,8 @@ class Integer(Type):
     def new_formatter_for(self, column):
         return formatters.IntegerFormatter()
 
-    def from_sequence(self, sequence):
-        return _from_sequence(sequence, int)
+    def parse_string_sequence(self, sequence):
+        return _parse_string_sequence(sequence, int)
 
 class Other(Type):
     """ The default type for columns.
@@ -90,13 +90,13 @@ class Other(Type):
             A function to convert from a string to the most meaningful format for
             this type of data..
     """
-    def from_sequence(self, sequence):
+    def parse_string_sequence(self, sequence):
         try:
             converter = self._options["from_string"]
         except KeyError:
-            return super().from_sequence(sequence)
+            return super().parse_string_sequence(sequence)
 
-        return _from_sequence(sequence, converter)
+        return _parse_string_sequence(sequence, converter)
 
 Date = Other
 DateTime = Other

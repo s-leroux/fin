@@ -463,6 +463,19 @@ class TestSerieGroupBy(unittest.TestCase):
                 )
 
         self.assertEqual(b.rowcount, 4)
+        self.assertEqual(b.columns[0].name, "C")
+
+    def test_group_by_rename(self):
+        a = self.serie
+        cols = self.cols
+        b = a.group_by(
+                "B",
+                (ag.first, "A"),
+                (ag.first, fc.named("D"), "C"),
+                )
+
+        self.assertEqual(b.rowcount, 4)
+        self.assertEqual(b.columns[0].name, "D")
 
     def test_group_by_expr(self):
         a = self.serie

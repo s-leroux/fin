@@ -153,11 +153,12 @@ cdef Serie serie_from_rows(headings, types, rows, dict kwargs):
 
 import csv
 from fin import datetime
-cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict kwargs):
+cdef Serie serie_from_csv(iterator, str formats, fieldnames, str delimiter, dict kwargs):
     """
     Create a new serie by iterating over CSV data rows.
     """
     rows = []
+    types = parse_types(formats)
     reader = csv.reader(iterator, delimiter=delimiter)
     if fieldnames is not None:
         heading = [str(fieldname) for fieldname in fieldnames]
@@ -168,11 +169,11 @@ cdef Serie serie_from_csv(iterator, str format, fieldnames, str delimiter, dict 
     cols = []
     names = []
 
-    for name, col in zip(heading, zip(*rows)):
+    for name, tps, col in zip(heading, types, zip(*rows)):
         names.append(name)
-        cols.append(col)
+        cols.append(tps.parse_string_sequence(col))
 
-    result = serie_from_data(cols, names, format, kwargs)
+    result = serie_from_data(cols, names, types, kwargs)
 #    if select:
 #        result = result.select(*select)
 
@@ -270,7 +271,7 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     cdef list aggregate_sub_series = []
     for aggregate_fct, *aggregate_params in aggregate_expr:
         aggregate_fcts.append(aggregate_fct)
-        aggregate_sub_series.append(serie_evaluate_items(self, tuple(aggregate_params)))
+        aggregate_sub_series.append(serie_evaluate_expr(self, *aggregate_params))
 
     # Keep track of headings and types
     headings = [ ]
@@ -994,7 +995,6 @@ cdef Join join_engine(
                 joinIndex,
                 name=serA._index.name,
                 type=serA._index.type,
-                convert=False
             ),
             tuple(leftColumns),
             tuple(rightColumns)
