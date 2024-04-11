@@ -9,7 +9,7 @@ setup(
         "fin/model/solvers/random.pyx",
         "fin/model/solvers/solver.pyx",
         "fin/seq/column.pyx",
-        "fin/seq/fc/functorx.pyx",
+        "fin/seq/fc/funcx.pyx",
         "fin/seq/fc/statisticx.pyx",
         "fin/seq/fc/tix.pyx",
         "fin/seq/serie.pyx",

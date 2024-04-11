@@ -1,10 +1,10 @@
 from fin.seq cimport column
-from fin.seq.fc cimport functorx
+from fin.seq.fc cimport funcx
 
 # ======================================================================
 # Math and stats
 # ======================================================================
-cdef class var(functorx.Functor1):
+cdef class var(funcx.Functor1):
     """
     Compute the Variance over a n-period window.
     """
@@ -17,7 +17,7 @@ cdef class var(functorx.Functor1):
     cdef make_name(self, col)
     cdef void eval(self, unsigned l, double* dst, const double* src)
 
-cdef class stdev(functorx.Functor1):
+cdef class stdev(funcx.Functor1):
     """
     Compute the Standard Deviation over a n-period window.
     """

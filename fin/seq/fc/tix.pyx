@@ -18,13 +18,13 @@ from fin.mathx cimport alloc, aalloc, isnan, NaN
 from fin.seq cimport column
 from fin.seq import column
 
-from fin.seq.fc cimport functorx
+from fin.seq.fc cimport funcx
 from fin.seq.fc cimport statisticx
 
 # ======================================================================
 # Moving averages and smoothing functions
 # ======================================================================
-cdef class sma(functorx.Functor1):
+cdef class sma(funcx.Functor1):
     """
     Compute the Simple Moving Average over a n-period window.
     """
@@ -65,7 +65,7 @@ cdef class sma(functorx.Functor1):
 
             dst[i] = NaN if nans else acc/n
 
-cdef class ema(functorx.Functor1):
+cdef class ema(funcx.Functor1):
     """
     Compute the Exponential Moving Average over a n-period window.
 
@@ -104,7 +104,7 @@ cdef class ema(functorx.Functor1):
             dst[i] = NaN if history<n else acc
 
 
-cdef class wilders(functorx.Functor1):
+cdef class wilders(funcx.Functor1):
     """
     Compute the Wilder's Smoothing.
 
@@ -146,7 +146,7 @@ cdef class wilders(functorx.Functor1):
 # ======================================================================
 # Technical Indicators
 # ======================================================================
-cdef class Tr(functorx.Functor3):
+cdef class Tr(funcx.Functor3):
     """
     Compute the True Range
 
@@ -189,7 +189,7 @@ cdef class Tr(functorx.Functor3):
 
 tr = Tr()
 
-class atr(functorx.Functor3):
+class atr(funcx.Functor3):
     """
     Compute the Average True Range.
 
@@ -211,7 +211,7 @@ class atr(functorx.Functor3):
         atr = self.smooth(rowcount, tr)
         return atr
 
-cdef class band(functorx.Functor2_3):
+cdef class band(funcx.Functor2_3):
     """
     Compute a band arround a middle value.
     """
@@ -238,7 +238,7 @@ cdef class band(functorx.Functor2_3):
             dst2[i] = src1[i]
             dst3[i] = src1[i]+width*src2[i]
 
-cdef class bband(functorx.Functor1_3):
+cdef class bband(funcx.Functor1_3):
     """
     Compute the Bollinger's band.
     """
