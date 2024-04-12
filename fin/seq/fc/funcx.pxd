@@ -61,6 +61,18 @@ cdef class Functor3:
             )
     cdef make_name(self, col1, col2, col3)
 
+cdef class Functor5_4:
+    """
+    A functor accepting a five-column argument and returning four columns.
+    """
+    cdef void eval(
+            self,
+            unsigned l,
+            double* dst1, double* dst2, double* dst3, double* dst4,
+            const double* src1, const double* src2, const double* src3, const double* src4, const double* src5
+            )
+    cdef make_names(self, col1, col2, col3, col4, col5)
+
 cdef class FunctorN:
     """
     A simple functor accepting N-column argument.
