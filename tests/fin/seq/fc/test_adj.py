@@ -23,13 +23,10 @@ class TestAdjustQuote(unittest.TestCase):
             )
 
     def test_adj(self):
-        print(self.serie)
         res = self.serie.select(
                 "T",
                 (adj, "A", "B", "C", "D", "E"),
             )
-
-        print(res)
 
         rc = res.columns
         self.assertEqual(len(rc), 4)
