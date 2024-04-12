@@ -1,5 +1,7 @@
 from fin.seq.column import Column
 
+from . import core
+
 # ======================================================================
 # Projections
 # ======================================================================
@@ -50,6 +52,6 @@ def thread(fct, n):
         raise ValueError(f"Tread does not yet support n < 0")
 
     def _thread(serie, *args):
-        return tuple( (fct, x, args[n:]) for x in args[:n] )
+        return tuple( (core.named(x.name), fct, x, args[n:]) for x in args[:n] )
 
     return _thread
