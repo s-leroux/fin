@@ -1,6 +1,7 @@
 from fin.seq.fc.core import *
 
 # Keep the remaining imports sorted in alphabetic order
+from fin.seq.fc.adj import *
 from fin.seq.fc.arit import *
 from fin.seq.fc.calendars import *
 from fin.seq.fc.comp import *

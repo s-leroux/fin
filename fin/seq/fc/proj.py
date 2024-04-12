@@ -40,3 +40,16 @@ def map_change(fct):
 
     return _map
 
+def thread(fct, n):
+    """ Thread a function over a subset of the arguments.
+
+        Modeled from https://reference.wolfram.com/language/ref/Thread.html
+        See https://github.com/s-leroux/fin/issues/3
+    """
+    if n <= 0:
+        raise ValueError(f"Tread does not yet support n < 0")
+
+    def _thread(serie, *args):
+        return tuple( (fct, x, args[n:]) for x in args[:n] )
+
+    return _thread
