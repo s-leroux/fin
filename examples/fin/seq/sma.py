@@ -11,9 +11,7 @@ Usage:
 """
 client = Client()
 t = client.historical_data("^FCHI", CalendarDateDelta(days=900))
-t = t.select(
-        "Date",
-        fc.all,
+t = t.extend(
         (fc.named("SMA"), fc.sma(50), "Close")
     )
 
