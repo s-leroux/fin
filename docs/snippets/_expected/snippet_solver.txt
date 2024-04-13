@@ -1,0 +1,8 @@
+[{'description': 'Placement duration in years', 'name': 'duration'},
+ {'description': "Good's buy price", 'name': 'buyprice'}]
+[(1, 100), (1, 10000)]
+[(<function <lambda>>, [0, 1]),
+ (<function <lambda>>, [0, 1])]
+Score 4.847860035358858e-10
+Placement duration in years: 11.491533083698457
+Good's buy price    : 1255.5359813473349
