@@ -67,7 +67,7 @@ cdef tuple evaluate(Serie serie, object expr):
         elif t is Column:
             state.data.append(obj)
         elif t is str:
-            state.data.append(serie_get_column_by_name(serie, expr))
+            state.data.append(serie_get_column_by_name(serie, obj))
         elif t is tuple:
             saved = SavedState()
             saved.dp = state.dp
@@ -75,10 +75,10 @@ cdef tuple evaluate(Serie serie, object expr):
             state.dp = len(state.data)
             state.ops.extend(obj)
         elif t is Serie:
-            join = c_left_outer_join(serie, expr, False)
+            join = c_left_outer_join(serie, obj, False)
             if join.index != serie._index: # XXX Impossible by def of the `left outer join`‽
                 raise ValueError(f"Cannot insert serie: indices differ.")
-            return join.right
+            state.ops.append(join.right)
         elif callable(obj):
             flush(state)
             state.ops.append(obj(serie, *state.frame))

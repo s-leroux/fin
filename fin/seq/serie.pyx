@@ -5,6 +5,7 @@ import array
 from fin.seq import coltypes
 from fin.mathx cimport ualloc
 from fin.seq.column cimport Column
+from fin.seq.smachine cimport evaluate
 from fin.seq.presentation import Presentation
 
 # ======================================================================
@@ -104,7 +105,7 @@ cdef Serie serie_create(exprs, str name):
     self.rowcount = 0 # < rowcount is set to zero during index creation
     self.name = str(name) if name is not None else SERIE_DEFAULT_NAME
 
-    cdef tuple index_evaluation = serie_evaluate_item(self, index)
+    cdef tuple index_evaluation = evaluate(self, index)
 
     # Validity checks for the index column:
     if len(index_evaluation) != 1:
@@ -120,7 +121,7 @@ cdef Serie serie_create(exprs, str name):
     check_index(self._index)
 
     for expr in it:
-        self._columns += serie_evaluate_item(self, expr)
+        self._columns += evaluate(self, expr)
 
     return self
 
@@ -190,7 +191,7 @@ cdef Serie serie_select(Serie self, tuple exprs, str name):
     if len(exprs) == 0:
         raise ValueError(f"A serie must have at least one column")
 
-    cdef tuple columns = serie_evaluate_items(self, exprs)
+    cdef tuple columns = evaluate(self, exprs)
     # XXX Above: interesting corner case if the first expr return several columns.
     #            Is this a valid use case? What should we use as the index in that case?
 
@@ -201,12 +202,12 @@ cdef Serie serie_extend(Serie self, tuple exprs):
     cdef Serie result = serie_bind(self._index, self._columns, self.name)
 
     for expr in exprs:
-        result._columns += serie_evaluate_item(result, expr)
+        result._columns += evaluate(result, expr)
 
     return result
 
 cdef Serie serie_where(Serie self, tuple exprs):
-    cdef tuple conds = serie_evaluate_items(self, exprs)
+    cdef tuple conds = evaluate(self, exprs)
 
     cdef array.array mapping_arr = ualloc(self.rowcount)
     cdef unsigned* mapping = mapping_arr.data.as_uints
@@ -249,7 +250,7 @@ cdef Serie serie_lstrip(Serie self, tuple exprs):
     if len(exprs) == 0:
         columns = self._columns
     else:
-        columns = serie_evaluate_items(self, exprs)
+        columns = evaluate(self, exprs)
 
     none_row = (None,)*len(columns)
     try:
@@ -295,14 +296,14 @@ cdef int columns_get_strips(tuple columns, unsigned* buffer) except -1:
 
 cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     # Build the group column(s)
-    cdef tuple group_cols = serie_evaluate_item(self, expr)
+    cdef tuple group_cols = evaluate(self, expr)
 
     # Build the projection for aggregate functions parameters
     cdef list aggregate_fcts = []
     cdef list aggregate_sub_series = []
     for aggregate_fct, *aggregate_params in aggregate_expr:
         aggregate_fcts.append(aggregate_fct)
-        aggregate_sub_series.append(serie_evaluate_expr(self, *aggregate_params))
+        aggregate_sub_series.append(evaluate(self, tuple(aggregate_params)))
 
     # Keep track of headings and types
     headings = [ ]
@@ -385,73 +386,6 @@ cdef inline tuple wrap_in_tuple(tuple_or_column):
 
     return ( tuple_or_column, )
 
-cdef tuple serie_evaluate_item(Serie self, expr):
-    """
-    Evaluate a column expression in the context of the receiver.
-
-    The return type is either a Column object or a tuple of Column.
-
-    The rules:
-    Column -> noop
-    str -> context[name]
-    tuple -> tuple[0](*map(tuple[1:], serie_evaluate))
-    otherwise -> recursive evaluation (assume sequence)
-    """
-    # print(f"serie_evaluate_item {expr!r}")
-    cdef type t = type(expr)
-
-    if t is Column:
-        return ( expr, )
-    if t is Serie:
-        join = c_left_outer_join(self, expr, False)
-        if join.index != self._index:
-            raise ValueError(f"Cannot insert serie: indices differ.")
-        return join.right
-    if t is str:
-        return ( serie_get_column_by_name(self, expr), )
-    if t is int or t is float:
-        raise TypeError(f"Did you mean fc.constant({t!r})?")
-    if callable(expr):
-        # Only nullary callable are allowed here
-        return wrap_in_tuple(expr(self))
-
-    return serie_evaluate_expr(self, *expr) # implicit test for iter(expr)
-
-def serie_evaluate_expr(Serie self, head, *tail):
-    # print(f"serie_evaluate_expr {head!r}, {tail!r}")
-
-    while True:
-        if callable(head):
-            if tail:
-                tail = serie_evaluate_expr(self, tail)
-                result = head(self, *tail)
-            else:
-                result = head(self)
-
-            t = type(result)
-            if t is Column:
-                head = result
-                tail = ()
-            elif t is tuple:
-                head = result[0]
-                tail = result[1:]
-            elif t is Serie:
-                head, *tail = (<Serie>result)._columns
-            else:
-                raise TypeError(f"Column functions should return a Column or a tuple of Columns ({type(result)}) found)")
-        else:
-            # The first non-callable break the cycle of recursive evaluations
-            return serie_evaluate_items(self, (head, *tail))
-
-cdef inline tuple serie_evaluate_items(Serie self, tuple items):
-    # print(f"serie_evaluate_items {items!r}")
-
-    cdef list result = [ ]
-    for item in items:
-        result += serie_evaluate_item(self, item)
-
-    return tuple(result)
-
 # ======================================================================
 # Serie
 # ======================================================================
@@ -519,7 +453,7 @@ cdef class Serie:
         """
         Evaluate an expression as a column in the context of the receiver.
         """
-        return serie_evaluate_expr(self, *expr)
+        return evaluate(self, expr)
 
     # ------------------------------------------------------------------
     # Properties
