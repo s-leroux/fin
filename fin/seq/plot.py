@@ -1,6 +1,7 @@
 """
 Plot 2D curves using GNUPlot
 """
+import os
 from fin.seq.serie import Serie
 from fin.seq import presentation
 from fin.seq.column import Column
@@ -10,6 +11,7 @@ import collections
 from numbers import Number
 
 PIPE = asyncio.subprocess.PIPE
+GNUPLOT_CMD=os.environ.get("FIN_GNUPLOT", "gnuplot -p").split()
 
 # ======================================================================
 # Utilities
@@ -553,7 +555,7 @@ class _GNUPlotVisitor:
     def _make_fields(self, *field_names):
         return ":".join(map(str, self._get_field_numbers(*field_names)))
 
-def gnuplot(multiplot, *, log=None, Process=_Process, cmd=['gnuplot', '-p'], **kwargs):
+def gnuplot(multiplot, *, log=None, Process=_Process, cmd=GNUPLOT_CMD, **kwargs):
     with Process(cmd) as p:
         stdin_write = p.stdin.write
         if log is not None:
