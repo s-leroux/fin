@@ -12,8 +12,16 @@ class HistoricalDataTest:
             The historical_data() method should return the 7 standard columns for
             end-of-day data.
             """
-            t = self.client.historical_data(self.ticker)
+            t = self.client.historical_data(self.ticker, adjusted=False)
             self.assertSequenceEqual(t.headings, ('Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume'))
+
+        def test_historical_data_columns_adjusted(self):
+            """
+            The historical_data() method should return the 7 standard columns for
+            end-of-day data.
+            """
+            t = self.client.historical_data(self.ticker, adjusted=True)
+            self.assertSequenceEqual(t.headings, ('Date', 'Open', 'High', 'Low', 'Close'))
 
         def test_historical_data_start_end(self):
             """
