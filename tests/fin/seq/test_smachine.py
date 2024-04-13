@@ -109,4 +109,17 @@ class TestSMachineFeat(unittest.TestCase):
         self.assertSequenceEqual(res, (X,))
         self.assertEqual(res[0].name, "Y")
 
+    def test_multiple_results(self):
+        T = Column.from_sequence("ABCDE", name="T"),
+        X = Column.from_sequence(range(10,15), name="X")
+        Y = Column.from_sequence(range(20,25), name="Y")
+        Z = Column.from_sequence(range(30,35), name="Z")
+        ser = Serie.create( T, )
+
+        def fct(serie):
+            return ( X, Y, Z, )
+
+        res = py_evaluate(ser, fct)
+        self.assertSequenceEqual(res, (X,Y,Z,))
+
 
