@@ -375,17 +375,6 @@ cdef inline Column serie_get_column_by_index(Serie self, int idx):
     else:
         return self._columns[idx-1]
 
-cdef inline Column serie_get_column_by_name(Serie self, str name):
-    if name == self._index.name:
-        return self._index
-
-    cdef Column column
-    for column in self._columns:
-        if column.name == name:
-            return column
-
-    raise KeyError(name)
-
 cdef inline serie_row_iterator(Serie self):
     cdef list cols = [self._index.py_values] + [col.py_values for col in self._columns]
     return zip(*cols)
@@ -735,10 +724,6 @@ cdef class Serie:
 # Join
 # ======================================================================
 cdef class Join:
-    cdef Column index
-    cdef tuple left
-    cdef tuple right
-
     @staticmethod
     cdef Join create(Column index, tuple left, tuple right):
         cdef Join join = Join.__new__(Join)
