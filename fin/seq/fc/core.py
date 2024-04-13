@@ -41,10 +41,10 @@ def get(spec):
     """
     Evaluates to a function returning a sub-set of the serie columns.
     """
-    def _named(serie):
+    def _get(serie):
         return serie[spec]
 
-    return _named
+    return _get
 
 def all(serie):
     """

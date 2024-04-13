@@ -101,4 +101,12 @@ class TestSMachineFeat(unittest.TestCase):
         res = py_evaluate(serX, serY["Y"])
         self.assertSequenceEqual(res, (Y,))
 
+    def test_get_and_rename(self):
+        T = Column.from_sequence("ABCDE", name="T"),
+        X = Column.from_sequence(range(10,15), name="X")
+        ser = Serie.create( T, X, )
+        res = py_evaluate(ser, (fc.named("Y"), fc.get("X")))
+        self.assertSequenceEqual(res, (X,))
+        self.assertEqual(res[0].name, "Y")
+
 
