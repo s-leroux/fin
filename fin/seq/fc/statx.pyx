@@ -12,12 +12,12 @@ from cpython cimport array
 from fin.mathx cimport alloc, aalloc, isnan, NaN
 from fin.seq cimport column
 from fin.seq import column
-from fin.seq.fc cimport functorx
+from fin.seq.fc cimport funcx
 
 # ======================================================================
 # Math and stats
 # ======================================================================
-cdef class var(functorx.Functor1):
+cdef class var(funcx.Functor1):
     """
     Compute the Variance over a n-period window.
 
@@ -102,7 +102,7 @@ cdef class var(functorx.Functor1):
             else:
                 nones -= 1
 
-cdef class stdev(functorx.Functor1):
+cdef class stdev(funcx.Functor1):
     """
     Compute the Standard Deviation over a n-period window.
 

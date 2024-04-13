@@ -175,6 +175,57 @@ cdef class Functor3:
 
         return Column.from_float_array(dst1, name=self.make_name(src1, src2, src3), type=src1._type)
 
+cdef class Functor5_4:
+    """
+    A functor accepting a five-column argument and returning four columns.
+    """
+    cdef void eval(
+            self,
+            unsigned l,
+            double* dst1, double* dst2, double* dst3, double* dst4,
+            const double* src1, const double* src2, const double* src3, const double* src4, const double* src5
+            ):
+        pass
+
+    cdef make_names(self, col1, col2, col3, col4, col5):
+        return [
+                "A",
+                "B",
+                "C",
+                "D",
+                "E",
+                ]
+
+    def __call__(self, Serie serie, Column src1, Column src2, Column src3, Column src4, Column src5):
+        cdef unsigned rowcount = serie.rowcount
+        cdef unsigned l = rowcount
+        cdef array.array dst1 = aalloc(l)
+        cdef array.array dst2 = aalloc(l)
+        cdef array.array dst3 = aalloc(l)
+        cdef array.array dst4 = aalloc(l)
+
+        self.eval(l,
+                &dst1.data.as_doubles[0],
+                &dst2.data.as_doubles[0],
+                &dst3.data.as_doubles[0],
+                &dst4.data.as_doubles[0],
+                &src1.get_f_values().data.as_doubles[0],
+                &src2.get_f_values().data.as_doubles[0],
+                &src3.get_f_values().data.as_doubles[0],
+                &src4.get_f_values().data.as_doubles[0],
+                &src5.get_f_values().data.as_doubles[0],
+                )
+
+        names = self.make_names(src1, src2, src3, src4, src5);
+
+        return [
+                Column.from_float_array(dst1, name=names[0], type=src1._type),
+                Column.from_float_array(dst2, name=names[1], type=src1._type),
+                Column.from_float_array(dst3, name=names[2], type=src1._type),
+                Column.from_float_array(dst4, name=names[3], type=src1._type),
+                ]
+
+
 cdef class FunctorN:
     """
     A simple functor accepting N-column argument.

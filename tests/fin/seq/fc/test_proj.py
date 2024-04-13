@@ -2,7 +2,7 @@ import unittest
 
 from fin.seq.column import Column
 from fin.seq.serie import Serie
-from fin.seq.fc import projections
+from fin.seq.fc import proj
 
 from tests.fin.seq.fc import utilities
 
@@ -20,7 +20,7 @@ class TestMap(unittest.TestCase):
         columns = tuple(Column.from_sequence(s) for s in seqs)
         fn = lambda x,y,z : x+y+z
 
-        result = projections.map(fn)(serie, *columns)
+        result = proj.map(fn)(serie, *columns)
 
         self.assertSequenceEqual(result.py_values, [fn(x,y,z) for x,y,z in zip(*seqs)])
 
@@ -32,7 +32,7 @@ class TestMapChange(unittest.TestCase):
         column = Column.from_sequence(seq)
         fn = lambda x,y : x-y
 
-        result = projections.map_change(fn)(serie, column)
+        result = proj.map_change(fn)(serie, column)
 
         self.assertSequenceEqual(result.py_values, (None,1,1,1,1,1,))
 
