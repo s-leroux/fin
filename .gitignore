@@ -11,3 +11,5 @@ build/**
 # Cython-generated files:
 fin/**/*.c
 fin/**/*.html
+tests/fin/**/*.c
+tests/fin/**/*.html
