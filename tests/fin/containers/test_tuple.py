@@ -145,3 +145,12 @@ class TestTuple(unittest.TestCase):
                 t = Tuple.from_sequence(src)
                 self.assertSequenceEqual(t, (range(N)))
 
+    def test_from_constant(self):
+        N = 100
+        a = object()
+        rca = sys.getrefcount(a)
+
+        t = Tuple.from_constant(N, a)
+        self.assertEqual(sys.getrefcount(a), rca + N)
+        self.assertSequenceEqual(t, (a,)*N)
+

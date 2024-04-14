@@ -37,6 +37,10 @@ cdef class Tuple:
     def from_sequence(sequence):
         return tuple_from_sequence(sequence)
 
+    @staticmethod
+    def from_constant(size, c):
+        return tuple_from_constant(size, c)
+
     def new_view(self, start, end):
         if start < 0:
             start += self._size
@@ -152,6 +156,17 @@ cdef Tuple tuple_from_sequence(object sequence):
     tuple_resize(result, i)
 
     return result
+
+cdef Tuple tuple_from_constant(unsigned size, object c):
+    cdef Tuple      result = tuple_alloc(size)
+
+    cdef unsigned i
+    for i in range(size):
+        result._base_ptr[i] = <PyObject*>c
+        Py_INCREF(c)
+
+    return result
+
 
 cdef Tuple tuple_new_view(Tuple self, unsigned start, unsigned end):
     """ Create a new Tuple instance sharing the underlying buffer,
