@@ -13,10 +13,18 @@ cdef class Tuple:
     cdef array.array     _buffer
     cdef PyObject        **_base_ptr
 
-cdef Tuple tuple_create(unsigned size, object sequence)
-cdef int tuple_dealloc(Tuple self) except -1
+    @staticmethod
+    cdef Tuple create(unsigned size, object sequence)
 
-cdef Tuple tuple_new_view(Tuple self, unsigned start, unsigned end)
+    @staticmethod
+    cdef Tuple from_sequence(object sequence)
+
+    @staticmethod
+    cdef Tuple from_constant(unsigned size, object sequence)
+    
+    cdef Tuple new_view(self, int start, int end)
+
+    cdef Tuple remap(self, unsigned count, unsigned* mapping)
 
 cdef inline PyObject *tuple_get_item(Tuple self, unsigned idx) except? NULL:
     if idx >= self._size:

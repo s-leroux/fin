@@ -27,6 +27,33 @@ cdef class Tuple:
         return <object>obj
 
     # ------------------------------------------------------------------
+    # The Cython interface
+    # ------------------------------------------------------------------
+    @staticmethod
+    cdef Tuple create(unsigned size, object sequence):
+        return tuple_create(size, sequence)
+
+    @staticmethod
+    cdef Tuple from_sequence(object sequence):
+        return tuple_from_sequence(sequence)
+
+    @staticmethod
+    cdef Tuple from_constant(unsigned size, object sequence):
+        return tuple_from_constant(size, sequence)
+    
+    cdef Tuple new_view(self, int start, int end):
+        if start < 0:
+            start += self._size
+        if end < 0:
+            end += self._size
+
+        # tuple_new_view will take care of additional bounds checking
+        return tuple_new_view(self, start, end)
+
+    cdef Tuple remap(self, unsigned count, unsigned* mapping):
+        return tuple_remap(self, count, mapping)
+
+    # ------------------------------------------------------------------
     # The Python interface is for testing purposes ONLY
     # ------------------------------------------------------------------
     @staticmethod
@@ -42,13 +69,7 @@ cdef class Tuple:
         return tuple_from_constant(size, c)
 
     def tst_new_view(self, start, end):
-        if start < 0:
-            start += self._size
-        if end < 0:
-            end += self._size
-
-        # tuple_new_view will take care of additional tests
-        return tuple_new_view(self, start, end)
+        return self.new_view(start, end)
 
     def tst_remap(self, mapping):
         cdef array.array arr = array.array("i", mapping)
