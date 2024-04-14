@@ -53,6 +53,9 @@ cdef class Tuple:
     cdef Tuple remap(self, unsigned count, unsigned* mapping):
         return tuple_remap(self, count, mapping)
 
+    cdef Tuple shift(self, int offset):
+        return tuple_shift(self, offset)
+
     # ------------------------------------------------------------------
     # The Python interface is for testing purposes ONLY
     # ------------------------------------------------------------------
@@ -77,6 +80,9 @@ cdef class Tuple:
         # magic value ("MISSING" constant).
 
         return tuple_remap(self, len(mapping), arr.data.as_uints)
+
+    def tst_shift(self, offset):
+        return tuple_shift(self, offset)
 
     def tst_resize(self, new_size):
         tuple_resize(self, new_size)
@@ -224,5 +230,30 @@ cdef Tuple tuple_remap(Tuple self, unsigned count, unsigned* mapping):
 
         Py_XINCREF(obj)
         result._base_ptr[idx] = obj
+
+    return result
+
+cdef Tuple tuple_shift(Tuple self, int offset):
+    if offset == 0:
+        return self
+
+    cdef unsigned   count = self._size
+    cdef Tuple      result = tuple_alloc(count)
+    cdef PyObject        **src
+    cdef PyObject        **dst
+
+    if offset > 0:
+        src = &self._base_ptr[offset]
+        dst = result._base_ptr
+        count -= offset
+    else:
+        src = self._base_ptr
+        dst = &result._base_ptr[-offset]
+        count += offset
+
+    cdef unsigned i
+    for i in range(count):
+        Py_XINCREF(src[i])
+        dst[i] = src[i]
 
     return result

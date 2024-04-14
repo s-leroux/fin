@@ -26,6 +26,8 @@ cdef class Tuple:
 
     cdef Tuple remap(self, unsigned count, unsigned* mapping)
 
+    cdef Tuple shift(self, int offset)
+
 cdef inline PyObject *tuple_get_item(Tuple self, unsigned idx) except? NULL:
     if idx >= self._size:
         raise IndexError(f"Tuple index {idx} out of range")

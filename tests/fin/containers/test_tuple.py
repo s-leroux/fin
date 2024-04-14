@@ -165,3 +165,33 @@ class TestTuple(unittest.TestCase):
         t = Tuple.tst_from_constant(N, a)
         self.assertSequenceEqual(tuple(t), (a,)*N)
 
+    def test_shift(self):
+        a = object()
+        b = object()
+        c = object()
+        d = object()
+        e = object()
+        rca = sys.getrefcount(a)
+        rcb = sys.getrefcount(b)
+        rcc = sys.getrefcount(c)
+        rcd = sys.getrefcount(d)
+        rce = sys.getrefcount(e)
+
+        t = Tuple.tst_create(5, (a,b,c,d,e))
+
+        u = t.tst_shift(2)
+        self.assertSequenceEqual(u, (c,d,e,None,None))
+        self.assertEqual(sys.getrefcount(a), rca+1)
+        self.assertEqual(sys.getrefcount(b), rcb+1)
+        self.assertEqual(sys.getrefcount(c), rcc+2)
+        self.assertEqual(sys.getrefcount(d), rcd+2)
+        self.assertEqual(sys.getrefcount(e), rce+2)
+
+        v = t.tst_shift(-2)
+        self.assertSequenceEqual(v, (None,None,a,b,c))
+        self.assertEqual(sys.getrefcount(a), rca+2)
+        self.assertEqual(sys.getrefcount(b), rcb+2)
+        self.assertEqual(sys.getrefcount(c), rcc+3)
+        self.assertEqual(sys.getrefcount(d), rcd+2)
+        self.assertEqual(sys.getrefcount(e), rce+2)
+
