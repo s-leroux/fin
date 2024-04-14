@@ -4,8 +4,8 @@ import unittest
 from fin.containers import Tuple
 
 class TestTuple(unittest.TestCase):
-    def test_create(self):
-        t = Tuple.create(5, "ABCDE")
+    def test_tst_create(self):
+        t = Tuple.tst_create(5, "ABCDE")
         self.assertEqual(len(t), 5)
         self.assertSequenceEqual(t, "ABCDE")
 
@@ -13,7 +13,7 @@ class TestTuple(unittest.TestCase):
         a = object()
         rca = sys.getrefcount(a)
 
-        t = Tuple.create(5, (a,a,a,a,a))
+        t = Tuple.tst_create(5, (a,a,a,a,a))
         self.assertEqual(sys.getrefcount(a), rca + 5)
 
         t.__del__() # We shouldn't crash :/
@@ -33,7 +33,7 @@ class TestTuple(unittest.TestCase):
         rcd = sys.getrefcount(d)
         rce = sys.getrefcount(e)
 
-        t = Tuple.create(5, (a,b,c,d,e))
+        t = Tuple.tst_create(5, (a,b,c,d,e))
         self.assertEqual(sys.getrefcount(a), rca+1)
         self.assertEqual(sys.getrefcount(b), rcb+1)
         self.assertEqual(sys.getrefcount(c), rcc+1)
@@ -57,11 +57,11 @@ class TestTuple(unittest.TestCase):
         rca = sys.getrefcount(a)
         rcb = sys.getrefcount(b)
 
-        t = Tuple.create(4, (a,a,b,b))
+        t = Tuple.tst_create(4, (a,a,b,b))
         self.assertEqual(sys.getrefcount(a), rca + 2)
         self.assertEqual(sys.getrefcount(b), rcb + 2)
 
-        u = t.new_view(1,3)
+        u = t.tst_new_view(1,3)
         self.assertEqual(sys.getrefcount(a), rca + 2)
         self.assertEqual(sys.getrefcount(b), rcb + 2)
 
@@ -74,7 +74,7 @@ class TestTuple(unittest.TestCase):
         d = object()
         e = object()
         X = None
-        t = Tuple.create(5, (a, b, c, d, e))
+        t = Tuple.tst_create(5, (a, b, c, d, e))
         #                    0  1  2  3  4
         usecases = (
             "#0 identity",
@@ -97,14 +97,14 @@ class TestTuple(unittest.TestCase):
         while usecases:
             desc, mapping, expected, *usecases = usecases
             with self.subTest(desc=desc):
-                u = t.remap(mapping)
+                u = t.tst_remap(mapping)
                 self.assertSequenceEqual(u, expected)
 
     def test_resize_grow(self):
         a = object()
         rca = sys.getrefcount(a)
 
-        t = Tuple.create(5, (a,a,a,a,a))
+        t = Tuple.tst_create(5, (a,a,a,a,a))
         self.assertEqual(sys.getrefcount(a), rca + 5)
 
         t.tst_resize(10)
@@ -118,7 +118,7 @@ class TestTuple(unittest.TestCase):
         a = object()
         rca = sys.getrefcount(a)
 
-        t = Tuple.create(5, (a,a,a,a,a))
+        t = Tuple.tst_create(5, (a,a,a,a,a))
         self.assertEqual(sys.getrefcount(a), rca + 5)
 
         t.tst_resize(3)
@@ -146,7 +146,7 @@ class TestTuple(unittest.TestCase):
         while usecases:
             desc, src, *usecases = usecases
             with self.subTest(desc=desc):
-                t = Tuple.from_sequence(src)
+                t = Tuple.tst_from_sequence(src)
                 self.assertSequenceEqual(t, (range(N)))
 
     def test_from_constant(self):
@@ -154,7 +154,7 @@ class TestTuple(unittest.TestCase):
         a = object()
         rca = sys.getrefcount(a)
 
-        t = Tuple.from_constant(N, a)
+        t = Tuple.tst_from_constant(N, a)
         self.assertEqual(sys.getrefcount(a), rca + N)
         self.assertSequenceEqual(t, (a,)*N)
 
@@ -162,6 +162,6 @@ class TestTuple(unittest.TestCase):
         N = 100
         a = object()
 
-        t = Tuple.from_constant(N, a)
+        t = Tuple.tst_from_constant(N, a)
         self.assertSequenceEqual(tuple(t), (a,)*N)
 

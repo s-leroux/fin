@@ -26,19 +26,22 @@ cdef class Tuple:
 
         return <object>obj
 
+    # ------------------------------------------------------------------
+    # The Python interface is for testing purposes ONLY
+    # ------------------------------------------------------------------
     @staticmethod
-    def create(size, sequence):
+    def tst_create(size, sequence):
         return tuple_create(size, sequence)
 
     @staticmethod
-    def from_sequence(sequence):
+    def tst_from_sequence(sequence):
         return tuple_from_sequence(sequence)
 
     @staticmethod
-    def from_constant(size, c):
+    def tst_from_constant(size, c):
         return tuple_from_constant(size, c)
 
-    def new_view(self, start, end):
+    def tst_new_view(self, start, end):
         if start < 0:
             start += self._size
         if end < 0:
@@ -47,16 +50,13 @@ cdef class Tuple:
         # tuple_new_view will take care of additional tests
         return tuple_new_view(self, start, end)
 
-    def remap(self, mapping):
+    def tst_remap(self, mapping):
         cdef array.array arr = array.array("i", mapping)
         # Above: use a *signed* int array to accomodate for the -1u
         # magic value ("MISSING" constant).
 
         return tuple_remap(self, len(mapping), arr.data.as_uints)
 
-    # ------------------------------------------------------------------
-    # For testing purposes ONLY
-    # ------------------------------------------------------------------
     def tst_resize(self, new_size):
         tuple_resize(self, new_size)
 
