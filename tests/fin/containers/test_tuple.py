@@ -63,3 +63,35 @@ class TestTuple(unittest.TestCase):
 
         self.assertSequenceEqual(u, (a,b))
 
+    def test_remap(self):
+        a = object()
+        b = object()
+        c = object()
+        d = object()
+        e = object()
+        X = None
+        t = Tuple.create(5, (a, b, c, d, e))
+        #                    0  1  2  3  4
+        usecases = (
+            "#0 identity",
+            ( 0, 1, 2, 3, 4),
+            ( a, b, c, d, e),
+            "#1 reorder, same size",
+            ( 1, 4, 3, 2, 0),
+            ( b, e, d, c, a),
+            "#2 reorder, shorter",
+            ( 1, 4, 0),
+            ( b, e, a),
+            "#3 reorder, longuer",
+            ( 1, 4, 3, 2, 0, 3, 4, 2, 1),
+            ( b, e, d, c, a, d, e, c, b),
+            "#4 reorder, longuer with holes",
+            ( 1, 4,-1, 2, 0,-1, 4, 2, 1),
+            ( b, e, X, c, a, X, e, c, b),
+                )
+
+        while usecases:
+            desc, mapping, expected, *usecases = usecases
+            with self.subTest(desc=desc):
+                u = t.remap(mapping)
+                self.assertSequenceEqual(u, expected)

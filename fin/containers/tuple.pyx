@@ -41,6 +41,13 @@ cdef class Tuple:
         # tuple_new_view will take care of additional tests
         return tuple_new_view(self, start, end)
 
+    def remap(self, mapping):
+        cdef array.array arr = array.array("i", mapping)
+        # Above: use a *signed* int array to accomodate for the -1u
+        # magic value ("MISSING" constant).
+
+        return tuple_remap(self, len(mapping), arr.data.as_uints)
+
 cdef Tuple tuple_alloc(unsigned size):
     cdef Tuple result = Tuple.__new__(Tuple)
     result._size = size
@@ -69,7 +76,7 @@ cdef Tuple tuple_create(unsigned size, object sequence):
 
     for item in sequence:
         if idx == size:
-            raise ValueError(f"Initialization eqeunce too long")
+            raise ValueError(f"Initialization sequence too long")
 
         obj = <PyObject*>item
         Py_XINCREF(obj)
@@ -95,4 +102,27 @@ cdef Tuple tuple_new_view(Tuple self, unsigned start, unsigned end):
 
     return result
 
+cdef Tuple tuple_remap(Tuple self, unsigned count, unsigned* mapping):
+    """ Create a new Tuple instance with the items reordered according to `mapping`.
 
+        The special value `<unsigned>-1` in the mapping insert `None` in the tuple.
+    """
+    cdef Tuple      result = tuple_alloc(count)
+    cdef unsigned   idx
+    cdef unsigned   src
+    cdef unsigned   MISSING = -1
+    cdef PyObject   *obj
+
+    for idx in range(count):
+        src = mapping[idx]
+        if src == MISSING:
+            obj = <PyObject*>None
+        elif src >= self._size:
+            raise ValueError(f"Remapping index out of range (src)")
+        else:
+            obj = self._base_ptr[src]
+
+        Py_XINCREF(obj)
+        result._base_ptr[idx] = obj
+
+    return result
