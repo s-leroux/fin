@@ -285,6 +285,18 @@ class TestCalendarDate(unittest.TestCase):
                 actual = date.timestamp
                 self.assertEqual(round(actual,digits), round(expected,digits))
 
+    def test_ac_calendar_date(self):
+        use_cases = (
+                CalendarDate(2023, 10, 27),
+                "2023-10-27",
+                )
+        for use_case in use_cases:
+            with self.subTest(use_case=use_case):
+                date = asCalendarDate(use_case)
+                self.assertEqual(date.year, 2023)
+                self.assertEqual(date.month, 10)
+                self.assertEqual(date.day, 27)
+
 # ======================================================================
 # Calendar date math
 # ======================================================================

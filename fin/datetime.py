@@ -20,6 +20,19 @@ def asCalendarDateDelta(something):
     console.debug(something)
     raise NotImplementedError(f"Can't convert from {type(something)} to CalendarDateDelta")
 
+def asCalendarDate(something):
+    """
+    Smart convertion to a CalendarDate instance.
+    """
+    if isinstance(something, CalendarDate):
+        return something
+
+    if isinstance(something, str):
+        return parseisodate(something)
+
+    console.debug(something)
+    raise NotImplementedError(f"Can't convert from {type(something)} to CalendarDate")
+
 DATE="DATE"
 DATETIME="DATETIME"
 DATETIMEMS="DATETIMEMS"
