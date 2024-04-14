@@ -95,3 +95,53 @@ class TestTuple(unittest.TestCase):
             with self.subTest(desc=desc):
                 u = t.remap(mapping)
                 self.assertSequenceEqual(u, expected)
+
+    def test_resize_grow(self):
+        a = object()
+        rca = sys.getrefcount(a)
+
+        t = Tuple.create(5, (a,a,a,a,a))
+        self.assertEqual(sys.getrefcount(a), rca + 5)
+
+        t.tst_resize(10)
+        self.assertEqual(sys.getrefcount(a), rca + 5)
+        self.assertSequenceEqual(t, (a,)*5 + (None,)*5)
+
+        t.__del__() # We shouldn't crash :/
+        self.assertEqual(sys.getrefcount(a), rca)
+
+    def test_resize_shrink(self):
+        a = object()
+        rca = sys.getrefcount(a)
+
+        t = Tuple.create(5, (a,a,a,a,a))
+        self.assertEqual(sys.getrefcount(a), rca + 5)
+
+        t.tst_resize(3)
+        self.assertEqual(sys.getrefcount(a), rca + 3)
+        self.assertSequenceEqual(t, (a,a,a))
+
+        t.__del__() # We shouldn't crash :/
+        self.assertEqual(sys.getrefcount(a), rca)
+
+    def test_from_sequence(self):
+        N = 1000
+        def g():
+            for i in range(N):
+                yield i
+
+        usecases = (
+                "#0 From generator",
+                g(),
+                "#1 From list",
+                list(range(N)),
+                "#2 From tuple",
+                tuple(range(N)),
+            )
+        
+        while usecases:
+            desc, src, *usecases = usecases
+            with self.subTest(desc=desc):
+                t = Tuple.from_sequence(src)
+                self.assertSequenceEqual(t, (range(N)))
+
