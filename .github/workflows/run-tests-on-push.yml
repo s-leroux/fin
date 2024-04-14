@@ -6,6 +6,8 @@ jobs:
     runs-on: ubuntu-latest
     container:
       image: ubuntu:18.04
+    env:
+      PYTHONIOENCODING: utf8
     steps:
       - uses: actions/checkout@v3
       - name: Setup apt
