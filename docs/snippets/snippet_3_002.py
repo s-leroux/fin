@@ -1,4 +1,5 @@
 t2 = t1.select(
+        "Date",
         "Open",
         "High",
         "Low",

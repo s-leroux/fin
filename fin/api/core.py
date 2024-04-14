@@ -1,7 +1,7 @@
 """
 Core API interfaces
 """
-from fin.datetime import CalendarDate, CalendarDateDelta, asCalendarDateDelta
+from fin.datetime import CalendarDate, CalendarDateDelta, asCalendarDateDelta, asCalendarDate
 
 class HistoricalData:
     def historical_data(self, ticker, duration=CalendarDateDelta(years=1), end=None,* , select=None):
@@ -24,6 +24,8 @@ class HistoricalData:
         duration = asCalendarDateDelta(duration)
         if end is None:
             end = CalendarDate.today()
+        else:
+            end = asCalendarDate(end)
         t = self._historical_data(ticker, duration, end)
 
 #        if select:
