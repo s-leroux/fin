@@ -22,4 +22,6 @@ jobs:
         run: make compile
       - name: Running tests
         run: SLOW_TESTS=yes make tests
+      - name: Checking snippets
+        run: make snippets
 
