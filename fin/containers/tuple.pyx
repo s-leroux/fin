@@ -61,15 +61,15 @@ cdef class Tuple:
     # ------------------------------------------------------------------
     @staticmethod
     def tst_create(size, sequence):
-        return tuple_create(size, sequence)
+        return Tuple.create(size, sequence)
 
     @staticmethod
     def tst_from_sequence(sequence):
-        return tuple_from_sequence(sequence)
+        return Tuple.from_sequence(sequence)
 
     @staticmethod
     def tst_from_constant(size, c):
-        return tuple_from_constant(size, c)
+        return Tuple.from_constant(size, c)
 
     def tst_new_view(self, start, end):
         return self.new_view(start, end)
@@ -79,10 +79,10 @@ cdef class Tuple:
         # Above: use a *signed* int array to accomodate for the -1u
         # magic value ("MISSING" constant).
 
-        return tuple_remap(self, len(mapping), arr.data.as_uints)
+        return self.remap(len(mapping), arr.data.as_uints)
 
     def tst_shift(self, offset):
-        return tuple_shift(self, offset)
+        return self.shift(offset)
 
     def tst_resize(self, new_size):
         tuple_resize(self, new_size)
