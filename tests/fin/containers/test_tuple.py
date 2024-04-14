@@ -47,3 +47,19 @@ class TestTuple(unittest.TestCase):
         self.assertEqual(sys.getrefcount(b), rcb)
         self.assertEqual(sys.getrefcount(a), rca)
 
+    def test_new_view(self):
+        a = object()
+        b = object()
+        rca = sys.getrefcount(a)
+        rcb = sys.getrefcount(b)
+
+        t = Tuple.create(4, (a,a,b,b))
+        self.assertEqual(sys.getrefcount(a), rca + 2)
+        self.assertEqual(sys.getrefcount(b), rcb + 2)
+
+        u = t.new_view(1,3)
+        self.assertEqual(sys.getrefcount(a), rca + 2)
+        self.assertEqual(sys.getrefcount(b), rcb + 2)
+
+        self.assertSequenceEqual(u, (a,b))
+

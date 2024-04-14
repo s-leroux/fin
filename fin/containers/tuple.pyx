@@ -32,6 +32,15 @@ cdef class Tuple:
     def create(size, sequence):
         return tuple_create(size, sequence)
 
+    def new_view(self, start, end):
+        if start < 0:
+            start += self._size
+        if end < 0:
+            end += self._size
+
+        # tuple_new_view will take care of additional tests
+        return tuple_new_view(self, start, end)
+
 cdef Tuple tuple_alloc(unsigned size):
     cdef Tuple result = Tuple.__new__(Tuple)
     result._size = size
@@ -69,4 +78,21 @@ cdef Tuple tuple_create(unsigned size, object sequence):
         idx += 1
 
     return result
+
+cdef Tuple tuple_new_view(Tuple self, unsigned start, unsigned end):
+    """ Create a new Tuple instance sharing the underlying buffer,
+        but exposing only the items in the range [start;end).
+
+        This is a zero-copy operation.
+    """
+    if not start <= end <= self._size:
+        raise ValueError(f"Indices out of range ({start}, {end})")
+
+    cdef Tuple result = Tuple.__new__(Tuple)
+    result._size = end-start
+    result._buffer = self._buffer
+    result._base_ptr = self._base_ptr+start
+
+    return result
+
 

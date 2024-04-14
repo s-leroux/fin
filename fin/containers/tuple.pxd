@@ -16,6 +16,8 @@ cdef class Tuple:
 cdef Tuple tuple_create(unsigned size, object sequence)
 cdef int tuple_dealloc(Tuple self) except -1
 
+cdef Tuple tuple_new_view(Tuple self, unsigned start, unsigned end)
+
 cdef inline PyObject *tuple_get_item(Tuple self, unsigned idx) except? NULL:
     if idx >= self._size:
         raise IndexError(f"Tuple index {idx} out of range")
