@@ -158,3 +158,10 @@ class TestTuple(unittest.TestCase):
         self.assertEqual(sys.getrefcount(a), rca + N)
         self.assertSequenceEqual(t, (a,)*N)
 
+    def test_to_tuple(self):
+        N = 100
+        a = object()
+
+        t = Tuple.from_constant(N, a)
+        self.assertSequenceEqual(tuple(t), (a,)*N)
+
