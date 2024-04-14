@@ -195,3 +195,30 @@ class TestTuple(unittest.TestCase):
         self.assertEqual(sys.getrefcount(d), rcd+2)
         self.assertEqual(sys.getrefcount(e), rce+2)
 
+    def test_eq(self):
+        usecases = (
+                    "#0",
+                    range(5),
+                    range(5),
+                    True,
+                    "#1",
+                    range(5),
+                    range(6),
+                    False,
+                    "#2",
+                    "ABCE",
+                    "ABCD",
+                    False,
+                )
+
+        while usecases:
+            desc, a, b, expected, *usecases = usecases
+            with self.subTest(desc=desc):
+                t = Tuple.tst_from_sequence(a)
+                u = Tuple.tst_from_sequence(b)
+                
+                if expected:
+                    self.assertEqual(t, u)
+                else:
+                    self.assertNotEqual(t, u)
+

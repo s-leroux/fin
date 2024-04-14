@@ -1,3 +1,4 @@
+from cpython.object cimport Py_EQ, Py_NE
 from cpython.ref cimport Py_XDECREF, Py_INCREF
 from libc.string cimport memset
 
@@ -25,6 +26,15 @@ cdef class Tuple:
             return None
 
         return <object>obj
+
+    def __richcmp__(self, other, int op):
+        if isinstance(other, Tuple) and isinstance(self, Tuple):
+            if op == Py_EQ:
+                return tuple_equal(self, other)
+            if op == Py_NE:
+                return not tuple_equal(self, other)
+
+        return NotImplemented
 
     # ------------------------------------------------------------------
     # The Cython interface
@@ -257,3 +267,19 @@ cdef Tuple tuple_shift(Tuple self, int offset):
         dst[i] = src[i]
 
     return result
+
+cdef bint tuple_equal(Tuple a, Tuple b) except -1:
+    if a is b:
+        return True
+
+    if a._size != b._size:
+        return False
+
+    cdef unsigned i
+    for i in range(a._size):
+        if a._base_ptr[i] != b._base_ptr[i]:
+            if (<object>a._base_ptr[i]) != (<object>b._base_ptr[i]):
+                return False
+
+    return True
+
