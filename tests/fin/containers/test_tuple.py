@@ -24,28 +24,32 @@ class TestTuple(unittest.TestCase):
         """
         a = object()
         b = object()
+        c = object()
+        d = object()
+        e = object()
         rca = sys.getrefcount(a)
         rcb = sys.getrefcount(b)
+        rcc = sys.getrefcount(c)
+        rcd = sys.getrefcount(d)
+        rce = sys.getrefcount(e)
 
-        t = Tuple.create(5, (a,a,a,a,a))
-        self.assertEqual(sys.getrefcount(b), rcb)
-        self.assertEqual(sys.getrefcount(a), rca+5)
-
-        t[2] = b
+        t = Tuple.create(5, (a,b,c,d,e))
+        self.assertEqual(sys.getrefcount(a), rca+1)
         self.assertEqual(sys.getrefcount(b), rcb+1)
-        self.assertEqual(sys.getrefcount(a), rca+4)
-
-        t[2] = b
-        self.assertEqual(sys.getrefcount(b), rcb+1)
-        self.assertEqual(sys.getrefcount(a), rca+4)
+        self.assertEqual(sys.getrefcount(c), rcc+1)
+        self.assertEqual(sys.getrefcount(d), rcd+1)
+        self.assertEqual(sys.getrefcount(e), rce+1)
 
         self.assertEqual(len(t), 5)
-        self.assertEqual(t[2], b)
-        self.assertSequenceEqual(t, (a,a,b,a,a))
+        self.assertEqual(t[2], c)
+        self.assertSequenceEqual(t, (a,b,c,d,e))
 
         t.__del__()
-        self.assertEqual(sys.getrefcount(b), rcb)
         self.assertEqual(sys.getrefcount(a), rca)
+        self.assertEqual(sys.getrefcount(b), rcb)
+        self.assertEqual(sys.getrefcount(c), rcc)
+        self.assertEqual(sys.getrefcount(d), rcd)
+        self.assertEqual(sys.getrefcount(e), rce)
 
     def test_new_view(self):
         a = object()

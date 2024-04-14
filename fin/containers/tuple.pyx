@@ -26,9 +26,6 @@ cdef class Tuple:
 
         return <object>obj
 
-    def __setitem__(self, idx, obj):
-        tuple_set_item(self, idx, <PyObject*>obj)
-
     @staticmethod
     def create(size, sequence):
         return tuple_create(size, sequence)
