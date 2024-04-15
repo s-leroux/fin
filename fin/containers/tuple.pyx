@@ -51,14 +51,8 @@ cdef class Tuple:
     cdef Tuple from_constant(unsigned size, object sequence):
         return tuple_from_constant(size, sequence)
     
-    cdef Tuple slice(self, int start, int end):
-        if start < 0:
-            start += self._size
-        if end < 0:
-            end += self._size
-
-        # tuple_slice will take care of additional bounds checking
-        return tuple_slice(self, start, end)
+    cdef Tuple slice(self, Py_ssize_t start, Py_ssize_t stop):
+        return tuple_slice(self, start, stop)
 
     cdef Tuple remap(self, unsigned count, const unsigned* mapping):
         return tuple_remap(self, count, mapping)
@@ -81,8 +75,8 @@ cdef class Tuple:
     def tst_from_constant(size, c):
         return Tuple.from_constant(size, c)
 
-    def tst_slice(self, start, end):
-        return self.slice(start, end)
+    def tst_slice(self, start, stop):
+        return self.slice(start, stop)
 
     def tst_remap(self, mapping):
         cdef array.array arr = array.array("i", mapping)
@@ -202,17 +196,22 @@ cdef Tuple tuple_from_constant(unsigned size, object c):
     return result
 
 
-cdef Tuple tuple_slice(Tuple self, unsigned start, unsigned end):
+cdef Tuple tuple_slice(Tuple self, Py_ssize_t start, Py_ssize_t stop):
     """ Create a new Tuple instance sharing the underlying buffer,
-        but exposing only the items in the range [start;end).
+        but exposing only the items in the range [start;stop).
 
         This is a zero-copy operation.
     """
-    if not start <= end <= self._size:
-        raise ValueError(f"Indices out of range ({start}, {end})")
+    if start < 0:
+        start += self._size
+    if stop < 0:
+        stop += self._size
+
+    if not 0 <= start <= stop <= self._size:
+        raise ValueError(f"Indices out of range ({start}, {stop})")
 
     cdef Tuple result = Tuple.__new__(Tuple)
-    result._size = end-start
+    result._size = stop-start
     result._buffer = self._buffer
     result._base_ptr = self._base_ptr+start
 

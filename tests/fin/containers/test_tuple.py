@@ -51,7 +51,7 @@ class TestTuple(unittest.TestCase):
         self.assertEqual(sys.getrefcount(d), rcd)
         self.assertEqual(sys.getrefcount(e), rce)
 
-    def test_slice(self):
+    def test_slice_zero_copy(self):
         a = object()
         b = object()
         rca = sys.getrefcount(a)
@@ -66,6 +66,29 @@ class TestTuple(unittest.TestCase):
         self.assertEqual(sys.getrefcount(b), rcb + 2)
 
         self.assertSequenceEqual(u, (a,b))
+
+    def test_slice(self):
+        N = 100
+        seq = tuple(range(N))
+        usecases = (
+                "#0 Identity",
+                0, N,
+                "#1 Middle section",
+                2, 10,
+                "#1 Start section",
+                0, 10,
+                "#1 End section",
+                -10, -1,
+            )
+
+        while usecases:
+            desc, start, stop, *usecases = usecases
+            with self.subTest(desc=desc):
+                t = Tuple.tst_create(N, seq)
+                s = t.tst_slice(start, stop)
+
+                self.assertIsInstance(s, Tuple)
+                self.assertSequenceEqual(s, seq[start:stop])
 
     def test_remap(self):
         a = object()
