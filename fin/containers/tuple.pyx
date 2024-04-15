@@ -60,7 +60,7 @@ cdef class Tuple:
         # tuple_slice will take care of additional bounds checking
         return tuple_slice(self, start, end)
 
-    cdef Tuple remap(self, unsigned count, unsigned* mapping):
+    cdef Tuple remap(self, unsigned count, const unsigned* mapping):
         return tuple_remap(self, count, mapping)
 
     cdef Tuple shift(self, int offset):
@@ -218,7 +218,7 @@ cdef Tuple tuple_slice(Tuple self, unsigned start, unsigned end):
 
     return result
 
-cdef Tuple tuple_remap(Tuple self, unsigned count, unsigned* mapping):
+cdef Tuple tuple_remap(Tuple self, unsigned count, const unsigned* mapping):
     """ Create a new Tuple instance with the items reordered according to `mapping`.
 
         The special value `<unsigned>-1` in the mapping insert `None` in the tuple.

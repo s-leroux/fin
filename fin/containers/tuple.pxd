@@ -24,7 +24,7 @@ cdef class Tuple:
     
     cdef Tuple slice(self, int start, int end)
 
-    cdef Tuple remap(self, unsigned count, unsigned* mapping)
+    cdef Tuple remap(self, unsigned count, const unsigned* mapping)
 
     cdef Tuple shift(self, int offset)
 
