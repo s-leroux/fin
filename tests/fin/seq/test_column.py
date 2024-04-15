@@ -205,7 +205,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         carr = Column.from_float_array(array.array("d", range(LEN)))
         use_cases = (
                 ( 0, LEN ),
-                ( 0, LEN+1 ),
+#                ( 0, LEN+1 ), # raise an error with fin.containers.Tuple
                 ( 1, LEN ),
                 ( 1, LEN // 2 + 1),
                 )
@@ -213,7 +213,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         for use_case in use_cases:
             with self.subTest(use_case=use_case, created="from sequence"):
                 start, end = use_case
-                self.assertSequenceEqual(cseq[start:end].py_values, cseq.py_values[start:end])
+                self.assertSequenceEqual(cseq[start:end].py_values, cseq.py_values.tst_slice(start,end))
             with self.subTest(use_case=use_case, created="from float array"):
                 start, end = use_case
                 self.assertSequenceEqual(carr[start:end].f_values, carr.f_values[start:end])

@@ -4,6 +4,7 @@ import array
 
 from fin.seq import coltypes
 from fin.mathx cimport ualloc
+from fin.containers cimport Tuple
 from fin.seq.column cimport Column
 from fin.seq.smachine cimport evaluate
 from fin.seq.presentation import Presentation
@@ -327,7 +328,7 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
 
         row = [ ]
         for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
-            row += aggregate_fct(*[column.py_values[start:end] for column in aggregate_sub_serie])
+            row += aggregate_fct(*[column.get_py_values().slice(start, end) for column in aggregate_sub_serie])
         rows.append(row)
 
         start = end
@@ -687,14 +688,14 @@ def left_outer_join(serA, serB, *, rename=True):
     return c_left_outer_join(serA, serB, rename).as_tuple()
 
 ctypedef unsigned (*join_build_mapping_t)(
-        unsigned lenA, tuple indexA,
-        unsigned lenB, tuple indexB,
+        unsigned lenA, Tuple indexA,
+        unsigned lenB, Tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB)
 
 cdef unsigned inner_join_build_mapping(
-        unsigned lenA, tuple indexA,
-        unsigned lenB, tuple indexB,
+        unsigned lenA, Tuple indexA,
+        unsigned lenB, Tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB):
     """
@@ -740,8 +741,8 @@ cdef unsigned inner_join_build_mapping(
     return n
 
 cdef unsigned full_outer_join_build_mapping(
-        unsigned lenA, tuple indexA,
-        unsigned lenB, tuple indexB,
+        unsigned lenA, Tuple indexA,
+        unsigned lenB, Tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB):
     """
@@ -808,8 +809,8 @@ cdef unsigned full_outer_join_build_mapping(
     return n
 
 cdef unsigned left_outer_join_build_mapping(
-        unsigned lenA, tuple indexA,
-        unsigned lenB, tuple indexB,
+        unsigned lenA, Tuple indexA,
+        unsigned lenB, Tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB):
     """
@@ -887,8 +888,8 @@ cdef Join join_engine(
     """
     Create a join from two series.
     """
-    cdef tuple indexA = serA._index.get_py_values()
-    cdef tuple indexB = serB._index.get_py_values()
+    cdef Tuple indexA = serA._index.get_py_values()
+    cdef Tuple indexB = serB._index.get_py_values()
 
     cdef unsigned lenA = len(indexA)
     cdef unsigned lenB = len(indexB)

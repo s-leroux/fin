@@ -343,8 +343,8 @@ class TestSerieStrip(unittest.TestCase):
 
         self.assertEqual(res.rowcount, ser.rowcount-1)
         self.assertEqual(len(res.columns), 4)
-        self.assertEqual(res.index.py_values, cols[0][1:])
-        self.assertEqual(res.columns[0].py_values, cols[1][1:])
+        self.assertSequenceEqual(res.index.py_values, cols[0][1:])
+        self.assertSequenceEqual(res.columns[0].py_values, cols[1][1:])
 
     def test_lstrip_select(self):
         cols, ser = self.cols, self.ser
@@ -352,8 +352,8 @@ class TestSerieStrip(unittest.TestCase):
 
         self.assertEqual(res.rowcount, ser.rowcount-3)
         self.assertEqual(len(res.columns), 4)
-        self.assertEqual(res.index.py_values, cols[0][3:])
-        self.assertEqual(res.columns[0].py_values, cols[1][3:])
+        self.assertSequenceEqual(res.index.py_values, cols[0][3:])
+        self.assertSequenceEqual(res.columns[0].py_values, cols[1][3:])
 
 
 class TestSerieSelect(unittest.TestCase):
