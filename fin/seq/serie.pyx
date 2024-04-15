@@ -449,6 +449,9 @@ cdef class Serie:
     def sort_by(self, name):
         return serie_sort_by(self, name)
 
+    def union(self, other):
+        return serie_union(self, other)
+
     # ------------------------------------------------------------------
     # Column expression evaluation
     # ------------------------------------------------------------------
@@ -952,15 +955,22 @@ cdef Join join_engine(
             tuple(rightColumns)
     )
 
-cdef Join set_operator_engine(
+# ======================================================================
+# Set operations
+# ======================================================================
+cdef Serie serie_union(Serie serA, Serie serB):
+    cdef tuple res = set_operator_engine(full_outer_join_build_mapping, serA, serB)
+    return serie_bind(res[0], res[1], name=f"{serA.name} ∪ {serB.name}")
+
+cdef tuple set_operator_engine(
         join_build_mapping_t join_build_mapping,
         Serie serA, Serie serB):
     """
-    Combine two series uing a set operator.
+    Combine two series using a set operator.
     """
     # Sanity check
     if serA.headings != serB.headings:
-        raise ValueError(f"Set operators requeire identical series")
+        raise ValueError(f"Set operators require identical series")
 
     cdef Tuple indexA = serA._index.get_py_values()
     cdef Tuple indexB = serB._index.get_py_values()
@@ -985,13 +995,28 @@ cdef Join set_operator_engine(
     array.resize(mappingB, n)
 
     # Build the index
-    cdef unsigned i
-    cdef list joinIndex = [
-            # A bit of hack here: -1u ("MISSING") is the greatest unsigned int so
-            # .... < lenA will catch both the out-of-bound and the missing cases
-            indexA[mappingA[i]] if mappingA[i] < lenA else indexB[mappingB[i]]
-            for i in range(n)
-        ]
-    cdef Column column
+    cdef Tuple joinIndex = Tuple.combine(indexA, indexB,
+            n, mappingA.data.as_uints, mappingB.data.as_uints)
 
-    # ...
+    # Build the data columns
+    cdef list data_columns = []
+    cdef Tuple t
+    cdef Column colA, colB
+    for colA, colB in zip(serA.columns, serB.columns):
+        t = Tuple.combine(
+                colA.get_py_values(),
+                colB.get_py_values(),
+                n,
+                mappingA.data.as_uints,
+                mappingB.data.as_uints
+            )
+        data_columns.append(Column.from_sequence(t, name=colA.name, type=colA.type))
+
+    return (
+            Column.from_sequence(
+                joinIndex,
+                name=serA._index.name,
+                type=serA._index.type,
+            ),
+            tuple(data_columns),
+        )
