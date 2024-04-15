@@ -914,17 +914,13 @@ cdef Join join_engine(
 
     # Build the index
     cdef unsigned i
-    cdef list joinIndex = [
-            # A bit of hack here: -1u ("MISSING") is the greatest unsigned int so
-            # .... < lenA will catch both the out-of-bound and the missing cases
-            indexA[mappingA[i]] if mappingA[i] < lenA else indexB[mappingB[i]]
-            for i in range(n)
-        ]
-    cdef Column column
+    cdef Tuple joinIndex = Tuple.combine(indexA, indexB,
+            n, mappingA.data.as_uints, mappingB.data.as_uints)
 
     # Rename the columns if:
     # 1. `rename` is true
     # 2. the serie has a non-empty name
+    cdef Column column
     cdef str prefix
     cdef list colA = list(serA._columns)
     cdef list colB = list(serB._columns)
