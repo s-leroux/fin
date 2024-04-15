@@ -317,6 +317,15 @@ class TestSerieFromCSV(unittest.TestCase):
         self.assertEqual(ser.columns[1].name, "C")
         self.assertSequenceEqual(ser.columns[1].py_values, range(20,25))
 
+    def test_from_csv_file(self):
+        ser = serie.Serie.from_csv_file(
+                "tests/_fixtures/MCD-20200103-20230103.csv",
+                format="dnnnnni"
+                )
+        self.assertIsInstance(ser, serie.Serie)
+        self.assertEqual(ser.rowcount, 756)
+
+
 # ======================================================================
 # Projections
 # ======================================================================

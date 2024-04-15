@@ -147,6 +147,9 @@ cdef Serie serie_from_csv(iterator, str formats, fieldnames, str delimiter, dict
 
     return result
 
+cdef Serie serie_from_csv_file(str fname, str formats, fieldnames, str delimiter, dict kwargs):
+    with open(fname, newline='') as csvfile:
+        return serie_from_csv(csvfile, formats, fieldnames, delimiter, kwargs)
 
 # ----------------------------------------------------------------------
 # Predicates
@@ -387,8 +390,12 @@ cdef class Serie:
     # XXX Above: fix from_data() and from_rows() to have the parameters in the same order
 
     @staticmethod
-    def from_csv(iterator, format='', *, fieldnames=None, delimiter=",", **kwargs):
+    def from_csv(iterator, format, *, fieldnames=None, delimiter=",", **kwargs):
         return serie_from_csv(iterator, format, fieldnames, delimiter, kwargs)
+
+    @staticmethod
+    def from_csv_file(fname, format, *, fieldnames=None, delimiter=",", **kwargs):
+        return serie_from_csv_file(fname, format, fieldnames, delimiter, kwargs)
 
     @staticmethod
     def bind(index, *columns, name=None):
