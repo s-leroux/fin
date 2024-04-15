@@ -51,6 +51,24 @@ class TestTuple(unittest.TestCase):
         self.assertEqual(sys.getrefcount(d), rcd)
         self.assertEqual(sys.getrefcount(e), rce)
 
+    def test_get_item(self):
+        n = 100
+        seq = tuple(range(n))
+        usecases = (
+                "#0 Positive",
+                2,
+                "#1 Negative",
+                -2,
+            )
+
+        while usecases:
+            desc, idx, *usecases = usecases
+            with self.subTest(desc=desc):
+                t = Tuple.tst_create(n, seq)
+                s = t.tst_get_item(idx)
+
+                self.assertEqual(s, seq[idx])
+
     def test_slice_zero_copy(self):
         a = object()
         b = object()
@@ -68,23 +86,23 @@ class TestTuple(unittest.TestCase):
         self.assertSequenceEqual(u, (a,b))
 
     def test_slice(self):
-        N = 100
-        seq = tuple(range(N))
+        n = 100
+        seq = tuple(range(n))
         usecases = (
-                "#0 Identity",
-                0, N,
-                "#1 Middle section",
+                "#0 identity",
+                0, n,
+                "#1 middle section",
                 2, 10,
-                "#1 Start section",
+                "#1 start section",
                 0, 10,
-                "#1 End section",
+                "#1 end section",
                 -10, -1,
             )
 
         while usecases:
             desc, start, stop, *usecases = usecases
             with self.subTest(desc=desc):
-                t = Tuple.tst_create(N, seq)
+                t = Tuple.tst_create(n, seq)
                 s = t.tst_slice(start, stop)
 
                 self.assertIsInstance(s, Tuple)

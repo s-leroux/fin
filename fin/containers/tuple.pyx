@@ -21,11 +21,7 @@ cdef class Tuple:
         tuple_dealloc(self)
 
     def __getitem__(self, idx):
-        cdef PyObject *obj = tuple_get_item(self, idx)
-        if obj is NULL:
-            return None
-
-        return <object>obj
+        return self.get_item(idx)
 
     def __richcmp__(self, other, int op):
         if isinstance(other, Tuple) and isinstance(self, Tuple):
@@ -54,6 +50,13 @@ cdef class Tuple:
     cdef Tuple slice(self, Py_ssize_t start, Py_ssize_t stop):
         return tuple_slice(self, start, stop)
 
+    cdef object get_item(self, Py_ssize_t idx):
+        cdef PyObject* obj = tuple_get_item(self, idx)
+        if obj is NULL:
+            return None
+
+        return <object>obj
+
     cdef Tuple remap(self, unsigned count, const unsigned* mapping):
         return tuple_remap(self, count, mapping)
 
@@ -77,6 +80,9 @@ cdef class Tuple:
 
     def tst_slice(self, start, stop):
         return self.slice(start, stop)
+
+    def tst_get_item(self, idx):
+        return self.get_item(idx)
 
     def tst_remap(self, mapping):
         cdef array.array arr = array.array("i", mapping)
