@@ -61,6 +61,11 @@ cdef class Tuple:
     @staticmethod
     cdef Tuple from_constant(unsigned size, object sequence):
         return tuple_from_constant(size, sequence)
+
+    @staticmethod
+    cdef Tuple combine(Tuple ta, Tuple tb,
+            unsigned n, const unsigned *mappingA, const unsigned *mappingB):
+        return tuple_combine(ta, tb, n, mappingA, mappingB)
     
     cdef Tuple slice(self, Py_ssize_t start, Py_ssize_t stop):
         return tuple_slice(self, start, stop)
@@ -92,6 +97,18 @@ cdef class Tuple:
     @staticmethod
     def tst_from_constant(size, c):
         return Tuple.from_constant(size, c)
+
+    @staticmethod
+    def tst_combine(ta, tb, mappingA, mappingB):
+        if len(mappingA) != len(mappingB):
+            raise ValueError("Both mapping must have the same length")
+
+        cdef array.array arrA = array.array("i", mappingA)
+        cdef array.array arrB = array.array("i", mappingB)
+        # Above: use a *signed* int array to accomodate for the -1u
+        # magic value ("MISSING" constant).
+
+        return Tuple.combine(ta, tb, len(mappingA), arrA.data.as_uints, arrB.data.as_uints)
 
     def tst_slice(self, start, stop):
         return self.slice(start, stop)
@@ -216,6 +233,30 @@ cdef Tuple tuple_from_constant(unsigned size, object c):
 
     return result
 
+cdef Tuple tuple_combine(Tuple ta, Tuple tb,
+        unsigned n, const unsigned *mappingA, const unsigned *mappingB):
+    """ Combine two tupples using the given mapping.
+    """
+    cdef Tuple result = tuple_alloc(n)
+
+    cdef unsigned MISSING = -1
+    cdef unsigned i
+    cdef unsigned idxA, idxB
+    cdef PyObject *obj
+    for i in range(n):
+        idxA = mappingA[i]
+        idxB = mappingB[i]
+        if idxA != MISSING:
+            obj = ta._base_ptr[idxA]
+        elif idxB != MISSING:
+            obj = tb._base_ptr[idxB]
+        else:
+            obj = <PyObject*>None
+
+        result._base_ptr[i] = obj
+        Py_XINCREF(obj)
+
+    return result
 
 cdef Tuple tuple_slice(Tuple self, Py_ssize_t start, Py_ssize_t stop):
     """ Create a new Tuple instance sharing the underlying buffer,

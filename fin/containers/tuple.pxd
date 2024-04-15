@@ -22,6 +22,10 @@ cdef class Tuple:
     @staticmethod
     cdef Tuple from_constant(unsigned size, object sequence)
     
+    @staticmethod
+    cdef Tuple combine(Tuple ta, Tuple tb,
+            unsigned n, const unsigned *mappingA, const unsigned *mappingB)
+
     cdef object get_item(self, Py_ssize_t idx)
     cdef Tuple slice(self, Py_ssize_t start, Py_ssize_t stop)
 

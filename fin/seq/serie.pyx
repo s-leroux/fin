@@ -955,3 +955,47 @@ cdef Join join_engine(
             tuple(leftColumns),
             tuple(rightColumns)
     )
+
+cdef Join set_operator_engine(
+        join_build_mapping_t join_build_mapping,
+        Serie serA, Serie serB):
+    """
+    Combine two series uing a set operator.
+    """
+    # Sanity check
+    if serA.headings != serB.headings:
+        raise ValueError(f"Set operators requeire identical series")
+
+    cdef Tuple indexA = serA._index.get_py_values()
+    cdef Tuple indexB = serB._index.get_py_values()
+
+    cdef unsigned lenA = len(indexA)
+    cdef unsigned lenB = len(indexB)
+
+    # In the worst case, a join can have lenA+lenB rows (case of a full outer join with
+    # completely disjoined indices).
+    cdef unsigned lenMapping = lenA+lenB
+    cdef array.array mappingA = array.clone(unsigned_array, lenMapping, zero=False)
+    cdef array.array mappingB = array.clone(unsigned_array, lenMapping, zero=False)
+
+    cdef unsigned n = join_build_mapping(
+            lenA, indexA,
+            lenB, indexB,
+            mappingA.data.as_uints, mappingB.data.as_uints,
+        )
+
+    # shrink array to their correct length:
+    array.resize(mappingA, n)
+    array.resize(mappingB, n)
+
+    # Build the index
+    cdef unsigned i
+    cdef list joinIndex = [
+            # A bit of hack here: -1u ("MISSING") is the greatest unsigned int so
+            # .... < lenA will catch both the out-of-bound and the missing cases
+            indexA[mappingA[i]] if mappingA[i] < lenA else indexB[mappingB[i]]
+            for i in range(n)
+        ]
+    cdef Column column
+
+    # ...

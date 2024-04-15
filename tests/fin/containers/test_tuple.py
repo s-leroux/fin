@@ -206,6 +206,33 @@ class TestTuple(unittest.TestCase):
         t = Tuple.tst_from_constant(N, a)
         self.assertSequenceEqual(tuple(t), (a,)*N)
 
+    def test_tuple_combine(self):
+        ta = Tuple.tst_from_sequence("01234")
+        tb = Tuple.tst_from_sequence("ABCDE")
+        X = -1
+
+        usecases = (
+                "#0",
+                (0,1,2,3,4,X,X,X,X,X),
+                (X,X,X,X,X,0,1,2,3,4),
+                (*"01234ABCDE",),
+                "#1 Interleaved",
+                (0,X,1,X,2,X,3,X,4,X),
+                (X,0,X,1,X,2,X,3,X,4),
+                "0A1B2C3D4E",
+                "#2 Holes",
+                (0,1,2,X,X,X,X,3,4),
+                (X,X,X,1,X,X,2,X,X),
+                (*"012B",None,None,*"C34"),
+            )
+
+        while usecases:
+            desc, mappingA, mappingB, expected, *usecases = usecases
+            with self.subTest(desc=desc):
+                t = Tuple.tst_combine(ta, tb, mappingA, mappingB)
+                self.assertIsInstance(t, Tuple)
+                self.assertSequenceEqual(t,expected)
+
     def test_shift(self):
         a = object()
         b = object()
