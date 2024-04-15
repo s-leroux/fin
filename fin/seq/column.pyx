@@ -42,7 +42,7 @@ cdef array.array _double_array_template = array.array("d")
 # ----------------------------------------------------------------------
 # Conversion
 # ----------------------------------------------------------------------
-cpdef array.array f_values_from_py_values(tuple sequence):
+cpdef array.array f_values_from_py_values(Tuple sequence):
     cdef unsigned n = len(sequence)
     cdef unsigned i
     cdef array.array arr = array.clone(_double_array_template, n, zero=False)
@@ -52,7 +52,7 @@ cpdef array.array f_values_from_py_values(tuple sequence):
     
     return arr
 
-cpdef tuple py_values_from_f_values(array.array arr):
+cpdef Tuple py_values_from_f_values(array.array arr):
     cdef unsigned n = len(arr)
     cdef const double* src = arr.data.as_doubles
     cdef list lst = arr.tolist()
@@ -62,7 +62,7 @@ cpdef tuple py_values_from_f_values(array.array arr):
         if isnan(src[i]):
             lst[i] = None
 
-    return tuple(lst) # Enforce immutability
+    return Tuple.create(n, lst)
 
 # ----------------------------------------------------------------------
 # Addition
@@ -310,26 +310,11 @@ cdef array.array remap_from_f_values(double* values, unsigned count, const unsig
 
     return result
 
-cdef tuple remap_from_py_values(tuple values, unsigned count, const unsigned* mapping):
+cdef inline Tuple remap_from_py_values(Tuple values, unsigned count, const unsigned* mapping):
     """
     Remap an array of Python objects using the indices provided in `mapping`.
-
-    The result tuple is newly allocated here and returned as a Python object.
-
-    Low-level function.
     """
-    cdef list  result = [None,]*count
-    cdef unsigned i
-    cdef unsigned idx
-    cdef unsigned MISSING=-1
-    # XXX Above:
-    # replace by a global constant when it will be properly supported by Cython
-
-    for i in range(count):
-        idx = mapping[i]
-        result[i] = values[idx] if idx != MISSING else None
-
-    return tuple(result)
+    return values.remap(count, mapping)
     
 
 # ======================================================================
@@ -372,7 +357,7 @@ cdef class Column:
             name = str(k)
 
         cdef Column column = Column(name=name, **kwargs)
-        column._py_values = tuple([k]*count)
+        column._py_values = Tuple.from_constant(count, k)
 
         return column
 
@@ -382,7 +367,7 @@ cdef class Column:
         Create a Column from a sequence of Python objects.
         """
         cdef Column column = Column(**kwargs)
-        column._py_values = tuple(sequence)
+        column._py_values = Tuple.from_sequence(sequence)
 
         return column
 
@@ -433,7 +418,7 @@ cdef class Column:
     def py_values(self):
         return self.get_py_values()
 
-    cdef tuple get_py_values(self):
+    cdef Tuple get_py_values(self):
         """
         Return the content of the column as a sequence of Python objects.
         """
@@ -548,7 +533,7 @@ cdef class Column:
             if self._f_values is not None:
                 column._f_values = self._f_values[x]
             if self._py_values is not None:
-                column._py_values = self._py_values[x]
+                column._py_values = self._py_values.slice(x.start, x.stop)
             return column
 
         if self._py_values is not None:
@@ -580,7 +565,7 @@ cdef class Column:
         if self._f_values is not None:
             result._f_values = remap_from_f_values(self._f_values.data.as_doubles, count, mapping)
         elif self._py_values is not None:
-            result._py_values = remap_from_py_values(self._py_values, count, mapping)
+            result._py_values = self._py_values.remap(count, mapping)
         else:
             raise NotImplementedError()
 
@@ -606,12 +591,7 @@ cdef class Column:
 
     cdef Column c_shift(self, int n):
         cdef Column result = new_column_with_meta(self)
-        cdef tuple values = self.get_py_values()
-
-        if n >= 0:
-            result._py_values = values[n:] + (None,)*n
-        else:
-            result._py_values = (None,)*-n + values[:n]
+        result._py_values = self.get_py_values().shift(n)
 
         return result
 

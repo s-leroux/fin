@@ -4,6 +4,7 @@ import array
 
 from fin.seq import coltypes
 from fin.mathx cimport ualloc
+from fin.containers cimport Tuple
 from fin.seq.column cimport Column
 from fin.seq.smachine cimport evaluate
 from fin.seq.presentation import Presentation
@@ -60,7 +61,7 @@ cdef bint check_index(Column index) except -1:
         An index must have values sorted in a strictly ascending order.
     """
 
-    it = iter(index.get_py_values())
+    it = iter(index)
     try:
         prev = next(it)
     except StopIteration:
@@ -327,7 +328,7 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
 
         row = [ ]
         for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
-            row += aggregate_fct(*[column.py_values[start:end] for column in aggregate_sub_serie])
+            row += aggregate_fct(*[column[start:end] for column in aggregate_sub_serie])
         rows.append(row)
 
         start = end
@@ -377,7 +378,9 @@ cdef inline Column serie_get_column_by_index(Serie self, int idx):
         return self._columns[idx-1]
 
 cdef inline serie_row_iterator(Serie self):
-    cdef list cols = [self._index.py_values] + [col.py_values for col in self._columns]
+    cdef list cols = [self._index]
+    cols.extend(self._columns)
+
     return zip(*cols)
 
 cdef inline tuple wrap_in_tuple(tuple_or_column):
@@ -687,14 +690,14 @@ def left_outer_join(serA, serB, *, rename=True):
     return c_left_outer_join(serA, serB, rename).as_tuple()
 
 ctypedef unsigned (*join_build_mapping_t)(
-        unsigned lenA, tuple indexA,
-        unsigned lenB, tuple indexB,
+        unsigned lenA, Tuple indexA,
+        unsigned lenB, Tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB)
 
 cdef unsigned inner_join_build_mapping(
-        unsigned lenA, tuple indexA,
-        unsigned lenB, tuple indexB,
+        unsigned lenA, Tuple indexA,
+        unsigned lenB, Tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB):
     """
@@ -740,8 +743,8 @@ cdef unsigned inner_join_build_mapping(
     return n
 
 cdef unsigned full_outer_join_build_mapping(
-        unsigned lenA, tuple indexA,
-        unsigned lenB, tuple indexB,
+        unsigned lenA, Tuple indexA,
+        unsigned lenB, Tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB):
     """
@@ -808,8 +811,8 @@ cdef unsigned full_outer_join_build_mapping(
     return n
 
 cdef unsigned left_outer_join_build_mapping(
-        unsigned lenA, tuple indexA,
-        unsigned lenB, tuple indexB,
+        unsigned lenA, Tuple indexA,
+        unsigned lenB, Tuple indexB,
         unsigned *mappingA,
         unsigned *mappingB):
     """
@@ -887,8 +890,8 @@ cdef Join join_engine(
     """
     Create a join from two series.
     """
-    cdef tuple indexA = serA._index.get_py_values()
-    cdef tuple indexB = serB._index.get_py_values()
+    cdef Tuple indexA = serA._index.get_py_values()
+    cdef Tuple indexB = serB._index.get_py_values()
 
     cdef unsigned lenA = len(indexA)
     cdef unsigned lenB = len(indexB)

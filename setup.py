@@ -3,6 +3,7 @@ from Cython.Build import cythonize
 
 setup(
     ext_modules = cythonize([
+        "fin/containers/tuple.pyx",
         "fin/mathx.pyx",
         "fin/model/kellyx.pyx",
         "fin/model/solvers/particle.pyx",

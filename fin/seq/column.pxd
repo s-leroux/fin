@@ -1,4 +1,5 @@
 from cpython cimport array
+from fin.containers.tuple cimport Tuple
 import array
 
 # ======================================================================
@@ -16,7 +17,7 @@ cdef class Column:
     # ------------------------------------------------------------------
     # Polymorphic representation of the values:
     # ------------------------------------------------------------------
-    cdef tuple          _py_values
+    cdef Tuple          _py_values
     cdef array.array    _f_values
 
     # ------------------------------------------------------------------
@@ -29,7 +30,7 @@ cdef class Column:
     # ------------------------------------------------------------------
     # Accessors
     # ------------------------------------------------------------------
-    cdef tuple          get_py_values(self)
+    cdef Tuple          get_py_values(self)
     cdef array.array    get_f_values(self)
 
     cdef str            get_name(self)
