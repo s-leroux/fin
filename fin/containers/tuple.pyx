@@ -35,6 +35,9 @@ cdef class Tuple:
         else:
             return self.get_item(idx)
 
+    def __repr__(self):
+        return tuple_repr(self)
+
     def __richcmp__(self, other, int op):
         if isinstance(other, Tuple) and isinstance(self, Tuple):
             if op == Py_EQ:
@@ -299,4 +302,21 @@ cdef bint tuple_equal(Tuple a, Tuple b) except -1:
                 return False
 
     return True
+
+cdef tuple_repr(Tuple self):
+    cdef bint first = True
+    cdef unsigned idx
+    cdef PyObject *obj
+
+    result = "Tuple(("
+    for idx in range(self._size):
+        if first:
+            first = False
+        else:
+            result += ", "
+        obj = self._base_ptr[idx]
+        result += repr(<object>self._base_ptr[idx]) if obj else "None"
+    result += "))"
+
+    return result
 

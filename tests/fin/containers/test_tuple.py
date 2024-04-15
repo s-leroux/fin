@@ -263,3 +263,8 @@ class TestTuple(unittest.TestCase):
                 else:
                     self.assertNotEqual(t, u)
 
+    def test_repr(self):
+        example = tuple(range(5))
+        t = Tuple.tst_from_sequence(example)
+        self.assertEqual(repr(t), "Tuple("+repr(example)+")")
+
