@@ -51,7 +51,7 @@ class TestTuple(unittest.TestCase):
         self.assertEqual(sys.getrefcount(d), rcd)
         self.assertEqual(sys.getrefcount(e), rce)
 
-    def test_new_view(self):
+    def test_slice(self):
         a = object()
         b = object()
         rca = sys.getrefcount(a)
@@ -61,7 +61,7 @@ class TestTuple(unittest.TestCase):
         self.assertEqual(sys.getrefcount(a), rca + 2)
         self.assertEqual(sys.getrefcount(b), rcb + 2)
 
-        u = t.tst_new_view(1,3)
+        u = t.tst_slice(1,3)
         self.assertEqual(sys.getrefcount(a), rca + 2)
         self.assertEqual(sys.getrefcount(b), rcb + 2)
 

@@ -51,14 +51,14 @@ cdef class Tuple:
     cdef Tuple from_constant(unsigned size, object sequence):
         return tuple_from_constant(size, sequence)
     
-    cdef Tuple new_view(self, int start, int end):
+    cdef Tuple slice(self, int start, int end):
         if start < 0:
             start += self._size
         if end < 0:
             end += self._size
 
-        # tuple_new_view will take care of additional bounds checking
-        return tuple_new_view(self, start, end)
+        # tuple_slice will take care of additional bounds checking
+        return tuple_slice(self, start, end)
 
     cdef Tuple remap(self, unsigned count, unsigned* mapping):
         return tuple_remap(self, count, mapping)
@@ -81,8 +81,8 @@ cdef class Tuple:
     def tst_from_constant(size, c):
         return Tuple.from_constant(size, c)
 
-    def tst_new_view(self, start, end):
-        return self.new_view(start, end)
+    def tst_slice(self, start, end):
+        return self.slice(start, end)
 
     def tst_remap(self, mapping):
         cdef array.array arr = array.array("i", mapping)
@@ -202,7 +202,7 @@ cdef Tuple tuple_from_constant(unsigned size, object c):
     return result
 
 
-cdef Tuple tuple_new_view(Tuple self, unsigned start, unsigned end):
+cdef Tuple tuple_slice(Tuple self, unsigned start, unsigned end):
     """ Create a new Tuple instance sharing the underlying buffer,
         but exposing only the items in the range [start;end).
 

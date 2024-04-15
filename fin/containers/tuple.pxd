@@ -22,7 +22,7 @@ cdef class Tuple:
     @staticmethod
     cdef Tuple from_constant(unsigned size, object sequence)
     
-    cdef Tuple new_view(self, int start, int end)
+    cdef Tuple slice(self, int start, int end)
 
     cdef Tuple remap(self, unsigned count, unsigned* mapping)
 
