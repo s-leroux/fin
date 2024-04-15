@@ -1,7 +1,13 @@
-__version_info__ = (0, 2, 2)
+__version_info__ = (0, 2, 3)
 __version__ = '.'.join(map(str,__version_info__))
 
 __history__ = {
+    "0.2.3":
+    """ Rewrite of some internal helpers.
+
+        New interpreter for s_expr.
+        Columns now use the custom container `fin.containers.Tuple` instead of standard `tuple`.
+    """,
     "0.2.2":
     """ All serie predicates are implemented.
 
