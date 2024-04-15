@@ -103,7 +103,7 @@ class TestTuple(unittest.TestCase):
             desc, start, stop, *usecases = usecases
             with self.subTest(desc=desc):
                 t = Tuple.tst_create(n, seq)
-                s = t.tst_slice(start, stop)
+                s = t[start:stop]
 
                 self.assertIsInstance(s, Tuple)
                 self.assertSequenceEqual(s, seq[start:stop])

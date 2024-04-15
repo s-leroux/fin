@@ -1,8 +1,10 @@
 from cpython.object cimport Py_EQ, Py_NE
 from cpython.ref cimport Py_XDECREF, Py_INCREF
+from cpython.slice cimport PySlice_Check, PySlice_GetIndicesEx
 from libc.string cimport memset
 
 from fin.mathx cimport balloc
+
 
 # ======================================================================
 # Custom Tuple
@@ -21,7 +23,17 @@ cdef class Tuple:
         tuple_dealloc(self)
 
     def __getitem__(self, idx):
-        return self.get_item(idx)
+        cdef Py_ssize_t start
+        cdef Py_ssize_t stop
+        cdef Py_ssize_t step
+        cdef Py_ssize_t length
+        if PySlice_Check(idx):
+            PySlice_GetIndicesEx(idx, self._size, &start, &stop, &step, &length)
+            if step != 1:
+                raise ValueError(f"Steps other than 1 are not supported")
+            return self.slice(start, stop)
+        else:
+            return self.get_item(idx)
 
     def __richcmp__(self, other, int op):
         if isinstance(other, Tuple) and isinstance(self, Tuple):
