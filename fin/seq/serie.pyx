@@ -61,7 +61,7 @@ cdef bint check_index(Column index) except -1:
         An index must have values sorted in a strictly ascending order.
     """
 
-    it = iter(index.get_py_values())
+    it = iter(index)
     try:
         prev = next(it)
     except StopIteration:
@@ -328,7 +328,7 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
 
         row = [ ]
         for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
-            row += aggregate_fct(*[column.get_py_values().slice(start, end) for column in aggregate_sub_serie])
+            row += aggregate_fct(*[column[start:end] for column in aggregate_sub_serie])
         rows.append(row)
 
         start = end
