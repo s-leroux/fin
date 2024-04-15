@@ -378,7 +378,9 @@ cdef inline Column serie_get_column_by_index(Serie self, int idx):
         return self._columns[idx-1]
 
 cdef inline serie_row_iterator(Serie self):
-    cdef list cols = [self._index.py_values] + [col.py_values for col in self._columns]
+    cdef list cols = [self._index]
+    cols.extend(self._columns)
+
     return zip(*cols)
 
 cdef inline tuple wrap_in_tuple(tuple_or_column):
