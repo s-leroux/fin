@@ -600,6 +600,22 @@ class TestSerieSortBy(unittest.TestCase):
         self.assertSequenceEqual(b.headings, "BACDE")
         self.assertSequenceEqual(b.index.py_values, range(21,30))
 
+class TestSerieUnion(unittest.TestCase):
+    def test_union(self):
+        serA = serie.Serie.create(
+                (fc.named("T"), fc.sequence("ABC")),
+                (fc.named("X"), fc.constant(0)),
+            )
+        serB = serie.Serie.create(
+                (fc.named("T"), fc.sequence("DEF")),
+                (fc.named("X"), fc.constant(1)),
+            )
+
+        res = serA.union(serB)
+
+        self.assertSequenceEqual(res.index.py_values, "ABCDEF")
+        self.assertSequenceEqual(res.columns[0].py_values, (0,0,0,1,1,1))
+
 
 # ======================================================================
 # Output

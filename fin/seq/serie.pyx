@@ -449,6 +449,9 @@ cdef class Serie:
     def sort_by(self, name):
         return serie_sort_by(self, name)
 
+    def union(self, other):
+        return serie_union(self, other)
+
     # ------------------------------------------------------------------
     # Column expression evaluation
     # ------------------------------------------------------------------
@@ -914,17 +917,13 @@ cdef Join join_engine(
 
     # Build the index
     cdef unsigned i
-    cdef list joinIndex = [
-            # A bit of hack here: -1u ("MISSING") is the greatest unsigned int so
-            # .... < lenA will catch both the out-of-bound and the missing cases
-            indexA[mappingA[i]] if mappingA[i] < lenA else indexB[mappingB[i]]
-            for i in range(n)
-        ]
-    cdef Column column
+    cdef Tuple joinIndex = Tuple.combine(indexA, indexB,
+            n, mappingA.data.as_uints, mappingB.data.as_uints)
 
     # Rename the columns if:
     # 1. `rename` is true
     # 2. the serie has a non-empty name
+    cdef Column column
     cdef str prefix
     cdef list colA = list(serA._columns)
     cdef list colB = list(serB._columns)
@@ -955,3 +954,69 @@ cdef Join join_engine(
             tuple(leftColumns),
             tuple(rightColumns)
     )
+
+# ======================================================================
+# Set operations
+# ======================================================================
+cdef Serie serie_union(Serie serA, Serie serB):
+    cdef tuple res = set_operator_engine(full_outer_join_build_mapping, serA, serB)
+    return serie_bind(res[0], res[1], name=f"{serA.name} ∪ {serB.name}")
+
+cdef tuple set_operator_engine(
+        join_build_mapping_t join_build_mapping,
+        Serie serA, Serie serB):
+    """
+    Combine two series using a set operator.
+    """
+    # Sanity check
+    if serA.headings != serB.headings:
+        raise ValueError(f"Set operators require identical series")
+
+    cdef Tuple indexA = serA._index.get_py_values()
+    cdef Tuple indexB = serB._index.get_py_values()
+
+    cdef unsigned lenA = len(indexA)
+    cdef unsigned lenB = len(indexB)
+
+    # In the worst case, a join can have lenA+lenB rows (case of a full outer join with
+    # completely disjoined indices).
+    cdef unsigned lenMapping = lenA+lenB
+    cdef array.array mappingA = array.clone(unsigned_array, lenMapping, zero=False)
+    cdef array.array mappingB = array.clone(unsigned_array, lenMapping, zero=False)
+
+    cdef unsigned n = join_build_mapping(
+            lenA, indexA,
+            lenB, indexB,
+            mappingA.data.as_uints, mappingB.data.as_uints,
+        )
+
+    # shrink array to their correct length:
+    array.resize(mappingA, n)
+    array.resize(mappingB, n)
+
+    # Build the index
+    cdef Tuple joinIndex = Tuple.combine(indexA, indexB,
+            n, mappingA.data.as_uints, mappingB.data.as_uints)
+
+    # Build the data columns
+    cdef list data_columns = []
+    cdef Tuple t
+    cdef Column colA, colB
+    for colA, colB in zip(serA.columns, serB.columns):
+        t = Tuple.combine(
+                colA.get_py_values(),
+                colB.get_py_values(),
+                n,
+                mappingA.data.as_uints,
+                mappingB.data.as_uints
+            )
+        data_columns.append(Column.from_sequence(t, name=colA.name, type=colA.type))
+
+    return (
+            Column.from_sequence(
+                joinIndex,
+                name=serA._index.name,
+                type=serA._index.type,
+            ),
+            tuple(data_columns),
+        )
