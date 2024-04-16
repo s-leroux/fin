@@ -4,6 +4,7 @@ from fin.mathx cimport NaN, isnan
 
 import array
 from fin.seq import coltypes
+from fin.seq cimport coltypes
 
 # ======================================================================
 # Globals
@@ -341,7 +342,7 @@ cdef class Column:
         if name is not None:
             self._name = str(name)
         if type is not None:
-            self._type = type
+            self._type = coltypes.parse_type_atom(type)
         else:
             self._type = coltypes.Other()
 

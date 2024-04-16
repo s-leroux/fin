@@ -6,6 +6,7 @@ from fin.seq import coltypes
 from fin.mathx cimport ualloc
 from fin.containers cimport Tuple
 from fin.seq.column cimport Column
+from fin.seq.coltypes cimport parse_type_string, IGNORE
 from fin.seq.smachine cimport evaluate
 from fin.seq.presentation import Presentation
 
@@ -18,43 +19,9 @@ cdef array.array    double_array    = array.array("d", [])
 
 cdef str SERIE_DEFAULT_NAME = ""
 
-cdef IGNORE = object()
-
 # ======================================================================
 # Low-level helpers
 # ======================================================================
-cdef parse_types(object types):
-    if not isinstance(types, str):
-        return types
-
-    cdef str fstring = <str>types
-    types = []
-
-    for fchar in fstring:
-        if fchar=='-': # IGNORE
-            type = IGNORE
-        elif fchar=='n': # NUMERIC
-#            f = float
-            type = coltypes.Float()
-        elif fchar=='d': # ISO DATE
-#            f = datetime.parseisodate
-            type = coltypes.Date(from_string=datetime.parseisodate)
-        elif fchar=='s': # SECONDS SINCE UNIX EPOCH
-#            f = datetime.parsetimestamp
-            type = coltypes.DateTime(from_string=datetime.parsetimestamp)
-        elif fchar=='m': # MILLISECONDS SINCE UNIX EPOCH
-#            f = datetime.parsetimestamp_ms
-            type = coltypes.DateTime(from_string=datetime.parsetimestamp_ms)
-        elif fchar=='i': # INTEGER
-#            f = int
-            type = coltypes.Integer()
-        else:
-            raise ValueError(f"Invalid column type specifier {fchar!r} found in {format!r}")
-
-        types.append(type)
-
-    return types
-
 cdef bint check_index(Column index) except -1:
     """ Check that a column satisfies the prerequisites for an index.
 
@@ -131,7 +98,7 @@ cdef Serie serie_from_data(data, headings, types, dict kwargs):
     Create a serie from raw Python data (sequences).
     """
     name = kwargs.get("name", SERIE_DEFAULT_NAME)
-    types = parse_types(types)
+    types = parse_type_string(types)
 
     # `data` can be an iterator: compute the columns first so we can later call `len()`
     columns = [
@@ -154,13 +121,12 @@ cdef Serie serie_from_rows(headings, types, rows, dict kwargs):
     return serie_from_data(zip(*rows), headings, types, kwargs)
 
 import csv
-from fin import datetime
 cdef Serie serie_from_csv(iterator, str formats, fieldnames, str delimiter, dict kwargs):
     """
     Create a new serie by iterating over CSV data rows.
     """
     rows = []
-    types = parse_types(formats)
+    types = parse_type_string(formats)
     reader = csv.reader(iterator, delimiter=delimiter)
     if fieldnames is not None:
         heading = [str(fieldname) for fieldname in fieldnames]

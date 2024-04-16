@@ -2,6 +2,56 @@ import sys
 
 from fin.utils.log import console
 from fin.utils import formatters
+from fin import datetime
+
+cdef object IGNORE = object()
+
+# ======================================================================
+# Type string parsing
+# ======================================================================
+cdef parse_type_char(Py_UCS4 c):
+    if c==u'-': # IGNORE
+        return None
+    elif c==u'n': # NUMERIC
+#            f = float
+        return Float()
+    elif c==u'd': # ISO DATE
+#            f = datetime.parseisodate
+        return Date(from_string=datetime.parseisodate)
+    elif c==u's': # SECONDS SINCE UNIX EPOCH
+#            f = datetime.parsetimestamp
+        return DateTime(from_string=datetime.parsetimestamp)
+    elif c==u'm': # MILLISECONDS SINCE UNIX EPOCH
+#            f = datetime.parsetimestamp_ms
+        return DateTime(from_string=datetime.parsetimestamp_ms)
+    elif c==u'i': # INTEGER
+#            f = int
+        return Integer()
+    else:
+        raise ValueError(f"Invalid column type specifier {c!r}")
+
+cdef parse_type_atom(object tpe):
+    if not isinstance(tpe, str):
+        return tpe
+
+    cdef str fstring = <str>tpe
+    cdef Py_UCS4 c = fstring[0]
+    if len(fstring) > 1:
+        raise ValueError(f"Invalid column type specifier {fstring!r}")
+
+    return parse_type_char(c)
+
+cdef parse_type_string(object types):
+    if not isinstance(types, str):
+        return types
+
+    cdef str fstring = <str>types
+    types = []
+
+    for fchar in fstring:
+        types.append(parse_type_char(fchar))
+
+    return types
 
 # ======================================================================
 # Utilities

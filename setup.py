@@ -9,6 +9,7 @@ setup(
         "fin/model/solvers/particle.pyx",
         "fin/model/solvers/random.pyx",
         "fin/model/solvers/solver.pyx",
+        "fin/seq/coltypes.pyx",
         "fin/seq/column.pyx",
         "fin/seq/fc/funcx.pyx",
         "fin/seq/fc/statx.pyx",
