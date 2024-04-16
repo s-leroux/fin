@@ -513,6 +513,18 @@ cdef class Serie:
         pres = Presentation(heading=True)
         return pres(self)
 
+    def as_tabular(self):
+        """ Return a string containing a tabular representation of the table.
+        """
+        pres = Presentation(format="TABULAR", heading=True)
+        return pres(self)
+
+    def as_csv(self):
+        """ Return a string containing a CSV representation of the table.
+        """
+        pres = Presentation(format="CSV", heading=True)
+        return pres(self)
+
     # ------------------------------------------------------------------
     # Subscript
     # ------------------------------------------------------------------
