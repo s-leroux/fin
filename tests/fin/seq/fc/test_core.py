@@ -70,3 +70,10 @@ class TestCoreFunctions(unittest.TestCase):
         col = fct(None, col)
 
         self.assertSequenceEqual(col.py_values, (4,5,None,None,None))
+
+    def test_rownum(self):
+        LEN = 10
+        serie = type("SerieMock",(),dict(rowcount=LEN))()
+        col = core.rownum(serie)
+
+        self.assertSequenceEqual(tuple(col), range(LEN))

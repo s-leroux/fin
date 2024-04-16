@@ -64,6 +64,9 @@ def named(new_name):
 
     return _named
 
+def rownum(serie):
+    return Column.from_sequence(builtins.range(serie.rowcount), type="i")
+
 def shift(n):
     """
     Evaluate to a function that shift the values in a column.
