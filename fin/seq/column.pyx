@@ -38,7 +38,9 @@ cdef Column new_column_with_meta(Column other):
 # ======================================================================
 # Low-level operations
 # ======================================================================
+ctypedef signed char schar
 cdef array.array _double_array_template = array.array("d")
+cdef array.array _signed_char_array_template = array.array("b")
 
 # ----------------------------------------------------------------------
 # Conversion
@@ -50,7 +52,7 @@ cpdef array.array f_values_from_py_values(Tuple sequence):
 
     for i in range(n):
         arr.data.as_doubles[i] = NaN if sequence[i] is None else sequence[i]
-    
+
     return arr
 
 cpdef Tuple py_values_from_f_values(array.array arr):
@@ -62,6 +64,49 @@ cpdef Tuple py_values_from_f_values(array.array arr):
     for i in range(n):
         if isnan(src[i]):
             lst[i] = None
+
+    return Tuple.create(n, lst)
+
+cpdef array.array t_values_from_py_values(Tuple sequence):
+    """ Convert a column to a list of values in ternary logic.
+
+        Here, false is -1, unknown is 0 and true is +1
+
+        See https://en.wikipedia.org/wiki/Three-valued_logic
+        and https://homepage.cs.uiowa.edu/~dwjones/ternary/logic.shtml
+    """
+    cdef unsigned n = len(sequence)
+    cdef unsigned i
+    cdef array.array arr = array.clone(_signed_char_array_template, n, zero=False)
+    cdef signed char tmp
+    cdef object obj
+
+    for i in range(n):
+        obj = sequence[i]
+        if obj is None:
+            tmp = 0
+        elif obj:
+            tmp = 1
+        else:
+            tmp = -1
+
+        arr.data.as_schars[i] = tmp
+
+    return arr
+
+cpdef Tuple py_values_from_t_values(array.array arr):
+    cdef unsigned n = len(arr)
+    cdef const signed char* src = arr.data.as_schars
+    cdef list lst = []
+
+    cdef unsigned i
+    for i in range(n):
+        if src[i] == 0:
+            lst.append(None)
+        elif src[i] > 0:
+            lst.append(True)
+        else:
+            lst.append(False)
 
     return Tuple.create(n, lst)
 
@@ -290,7 +335,11 @@ cdef array.array neg(unsigned count, const double* values):
 # ----------------------------------------------------------------------
 # Column remapping
 # ----------------------------------------------------------------------
-cdef array.array remap_from_f_values(double* values, unsigned count, const unsigned* mapping):
+ctypedef fused integral_column_t:
+    signed char
+    double
+
+cdef array.array remap_values(integral_column_t *values, unsigned count, const unsigned* mapping):
     """
     Remap an array of double using the indices provided in `mapping`.
 
@@ -298,7 +347,17 @@ cdef array.array remap_from_f_values(double* values, unsigned count, const unsig
 
     Low-level function.
     """
-    cdef array.array result = array.clone(_double_array_template, count, zero=False)
+    cdef array.array result
+    cdef integral_column_t undefined
+
+    if integral_column_t is double:
+        result = array.clone(_double_array_template, count, False)
+        undefined = NaN
+    else:
+        result = array.clone(_signed_char_array_template, count, False)
+        undefined = 0
+
+    cdef integral_column_t *dst = <integral_column_t*>result.data.as_voidptr
     cdef unsigned i
     cdef unsigned idx
     cdef unsigned MISSING=-1
@@ -307,16 +366,10 @@ cdef array.array remap_from_f_values(double* values, unsigned count, const unsig
 
     for i in range(count):
         idx = mapping[i]
-        result.data.as_doubles[i] = values[idx] if idx != MISSING else NaN
+        dst[i] = values[idx] if idx != MISSING else undefined
 
     return result
 
-cdef inline Tuple remap_from_py_values(Tuple values, unsigned count, const unsigned* mapping):
-    """
-    Remap an array of Python objects using the indices provided in `mapping`.
-    """
-    return values.remap(count, mapping)
-    
 
 # ======================================================================
 # Column class
@@ -386,6 +439,19 @@ cdef class Column:
         return column
 
     @staticmethod
+    def from_signed_char_array(arr, **kwargs):
+        """
+        Create a Column from an array of signed chars.
+
+        This is an efficient "zero-copy" operation.
+        You MUST treat the original array's content as an immutable object.
+        """
+        cdef Column column = Column(**kwargs)
+        column._t_values = arr # type checking is implicitly done here
+
+        return column
+
+    @staticmethod
     def from_callable(fct, *columns, name=None, type=None, **kwargs):
         if name is None:
             try:
@@ -432,6 +498,11 @@ cdef class Column:
             return self._py_values
 
         # else
+        if self._t_values is not None:
+            self._py_values = py_values_from_t_values(self._t_values)
+            return self._py_values
+
+        # else
         raise NotImplementedError()
 
     @property
@@ -449,6 +520,25 @@ cdef class Column:
         if self._py_values is not None:
             self._f_values = f_values_from_py_values(self._py_values)
             return self._f_values
+
+        # else
+        raise NotImplementedError()
+
+    @property
+    def t_values(self):
+        return self.get_t_values()
+
+    cdef array.array get_t_values(self):
+        """
+        Return the content of the column as an array of ternary values.
+        """
+        if self._t_values is not None:
+            return self._t_values
+
+        # else
+        if self._py_values is not None:
+            self._t_values = t_values_from_py_values(self._py_values)
+            return self._t_values
 
         # else
         raise NotImplementedError()
@@ -522,6 +612,8 @@ cdef class Column:
     def __len__(self):
         if self._f_values is not None:
             return len(self._f_values)
+        if self._t_values is not None:
+            return len(self._t_values)
         if self._py_values is not None:
             return len(self._py_values)
 
@@ -533,6 +625,8 @@ cdef class Column:
             # XXX Do we really need to slice all representations?
             if self._f_values is not None:
                 column._f_values = self._f_values[x]
+            if self._t_values is not None:
+                column._t_values = self._t_values[x]
             if self._py_values is not None:
                 column._py_values = self._py_values.slice(x.start, x.stop)
             return column
@@ -541,6 +635,8 @@ cdef class Column:
             return self._py_values[x]
         if self._f_values is not None:
             return self._f_values[x]
+        if self._t_values is not None:
+            return self._t_values[x]
 
         raise NotImplementedError()
 
@@ -564,7 +660,9 @@ cdef class Column:
         """
         cdef Column result = new_column_with_meta(self)
         if self._f_values is not None:
-            result._f_values = remap_from_f_values(self._f_values.data.as_doubles, count, mapping)
+            result._f_values = remap_values[double](self._f_values.data.as_doubles, count, mapping)
+        elif self._t_values is not None:
+            result._t_values = remap_values[schar](self._t_values.data.as_schars, count, mapping)
         elif self._py_values is not None:
             result._py_values = self._py_values.remap(count, mapping)
         else:
@@ -677,3 +775,4 @@ cdef class Column:
         # magic value ("MISSING" constant).
 
         return self.c_remap(len(mapping), arr.data.as_uints)
+

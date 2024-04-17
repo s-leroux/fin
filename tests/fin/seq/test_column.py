@@ -35,7 +35,7 @@ class TestColumnRemap(unittest.TestCase):
 
         actual = column.remap([3,4,0,3,1,4,4,5])
 
-        self.assertSequenceEqual(actual.py_values, (
+        self.assertSequenceEqual(actual.f_values, (
             40, 50, 10, 40, 20, 50, 50, 60
         ))
 
@@ -95,6 +95,14 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         c = Column.from_float_array(arr)
         self.assertFloatSequenceEqual(c.f_values, arr)
 
+    def test_create_from_signed_char_array(self):
+        """
+        You can create a column from a signed array.
+        """
+        arr = array.array("b", [+1, 0, -1, -1, +1])
+        c = Column.from_signed_char_array(arr)
+        self.assertSequenceEqual(c.t_values, arr)
+
     def test_create_from_callable_1(self):
         """
         You can create a column from a callable and a set of columns.
@@ -134,6 +142,24 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         seq = [1, 2, 3, None, 5]
         arr = array.array("d", [1, 2, 3, float("nan"), 5])
         c = Column.from_float_array(arr)
+        self.assertSequenceEqual(c.py_values, seq)
+
+    def test_sequence_to_ternary_conversion(self):
+        """
+        You can access the content of a column as an array of ternary values.
+        """
+        seq = [True, False, None, "", 0, 1]
+        arr = array.array("b", [+1, -1, 0, -1, -1, +1])
+        c = Column.from_sequence(seq)
+        self.assertSequenceEqual(c.t_values, arr)
+
+    def test_ternary_to_sequence_conversion(self):
+        """
+        You can access the content of a column as a sequence of Python objects.
+        """
+        seq = [True, False, None, False, False, True]
+        arr = array.array("b", [+1, -1, 0, -1, -1, +1])
+        c = Column.from_signed_char_array(arr)
         self.assertSequenceEqual(c.py_values, seq)
 
     def test_equality(self):

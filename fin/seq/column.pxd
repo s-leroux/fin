@@ -17,8 +17,9 @@ cdef class Column:
     # ------------------------------------------------------------------
     # Polymorphic representation of the values:
     # ------------------------------------------------------------------
-    cdef Tuple          _py_values
-    cdef array.array    _f_values
+    cdef Tuple          _py_values # Python objects
+    cdef array.array    _f_values  # Array of doubles
+    cdef array.array    _t_values  # Array of ternary values (-1, 0, +1)
 
     # ------------------------------------------------------------------
     # Metadata
@@ -32,6 +33,7 @@ cdef class Column:
     # ------------------------------------------------------------------
     cdef Tuple          get_py_values(self)
     cdef array.array    get_f_values(self)
+    cdef array.array    get_t_values(self)
 
     cdef str            get_name(self)
     cdef object         get_type(self)
