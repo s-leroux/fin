@@ -17,9 +17,11 @@ setup(
         "fin/seq/serie.pyx",
         "fin/seq/smachine.pyx",
         "fin/tuplex.pyx",
+        "fin/utils/ternary.pyx",
 
         "tests/fin/seq/fc/functor.pyx",
         "tests/fin/tuplex.pyx",
+        "tests/fin/utils/ternary.pyx",
         ],
         annotate=True,
         compiler_directives={'language_level' : "3"},
