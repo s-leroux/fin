@@ -426,28 +426,36 @@ cdef class Column:
         return column
 
     @staticmethod
-    def from_float_array(arr, **kwargs):
+    def from_float_array(array.array arr, **kwargs):
         """
         Create a Column from an array of floats.
 
         This is an efficient "zero-copy" operation.
         You MUST treat the original array's content as an immutable object.
         """
+        #sanity check:
+        if arr.ob_descr.typecode != b'd':
+            raise ValueError(f"Array of doubles expected, not {arr!r} {arr.ob_descr.typecode}")
+
         cdef Column column = Column(**kwargs)
         column._f_values = arr # type checking is implicitly done here
 
         return column
 
     @staticmethod
-    def from_ternary_array(arr, **kwargs):
+    def from_ternary_array(array.array arr, **kwargs):
         """
         Create a Column from an array of signed chars.
 
         This is an efficient "zero-copy" operation.
         You MUST treat the original array's content as an immutable object.
         """
+        #sanity check:
+        if arr.ob_descr.typecode != b'b':
+            raise ValueError(f"Array of signed chars expected, not {arr!r}")
+
         cdef Column column = Column(**kwargs)
-        column._t_values = arr # type checking is implicitly done here
+        column._t_values = arr
 
         return column
 
