@@ -109,7 +109,7 @@ def Client(base, *, db_name=CACHE_DEFAULT_DB_NAME):
     db = _DB(db_name)
 
     class _Client(*interfaces):
-        def _historical_data(self, ticker, duration, end):
+        def _historical_data(self, ticker, duration, end, **kwargs):
             start = end-duration
             rows = db.get_historical_data(ticker, start, end)
             if rows is None:

@@ -11,7 +11,7 @@ EODHD_BASE_URI="https://eodhistoricaldata.com/api"
 
 def Client(api_token):
     class _Client(HistoricalData):
-        def _historical_data(self, ticker, duration, end, _get=get):
+        def _historical_data(self, ticker, duration, end, _get=get, **kwargs):
             uri = f"{EODHD_BASE_URI}/eod/{ticker}"
 
             start = end-duration

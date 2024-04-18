@@ -1,4 +1,5 @@
 from fin.seq.column import Column
+from fin.seq.coltypes import Ternary
 
 # ======================================================================
 # Comparison functions
@@ -34,7 +35,8 @@ def lt(serie, *cols):
 
     return Column.from_sequence(
             result,
-            name="(lt,"+",".join([col.name for col in cols])+")"
+            name="(lt,"+",".join([col.name for col in cols])+")",
+            type=Ternary()
         )
 
 def gt(serie, *cols):
@@ -68,6 +70,7 @@ def gt(serie, *cols):
 
     return Column.from_sequence(
             result,
-            name="(gt,"+",".join([col.name for col in cols])+")"
+            name="(gt,"+",".join([col.name for col in cols])+")",
+            type=Ternary()
         )
 

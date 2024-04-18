@@ -1,6 +1,5 @@
 """ An interface to some services provided by Yahoo Finance
 """
-
 from fin.requests import get
 from fin.seq.serie import Serie
 from fin.api.core import HistoricalData
@@ -10,7 +9,7 @@ YF_BASE_URI="https://query1.finance.yahoo.com/v7/finance"
 
 def Client():
     class _Client(HistoricalData):
-        def _historical_data(self, ticker, duration, end, _get=get):
+        def _historical_data(self, ticker, duration, end, _get=get, **kwargs):
             ONE_DAY=24*60*60
             uri = f"{YF_BASE_URI}/download/{ticker}"
 

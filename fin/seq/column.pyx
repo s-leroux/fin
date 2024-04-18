@@ -652,9 +652,8 @@ cdef class Column:
 
         return self._name
 
-    @property
-    def formatter(self):
-        return self._type.formatter(self)
+    def format(self, context):
+        return self._type.format(context, self)
 
     @property
     def type(self):
