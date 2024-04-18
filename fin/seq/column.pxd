@@ -24,6 +24,7 @@ cdef class Column:
     # ------------------------------------------------------------------
     # Metadata
     # ------------------------------------------------------------------
+    cdef unsigned       length
     cdef unsigned       _id
     cdef str            _name
     cdef object         _type
@@ -34,6 +35,14 @@ cdef class Column:
     cdef Tuple          get_py_values(self)
     cdef array.array    get_f_values(self)
     cdef array.array    get_t_values(self)
+
+    cdef const double*  as_float_values(self) except NULL
+    cdef const signed char*  as_ternary_values(self) except NULL
+    # Methods `as_....()` above:
+    # The returned buffer is valid as long as the column exists.
+    # Raise an exception if the column's values cannot be represented using the
+    # requested type.
+
 
     cdef str            get_name(self)
     cdef object         get_type(self)
