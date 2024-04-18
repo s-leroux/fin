@@ -58,3 +58,4 @@ cdef class Column:
     cdef Column         c_sub_scalar(self, double scalar)
     cdef Column         c_mul_scalar(self, double scalar)
     cdef Column         c_div_scalar(self, double scalar)
+

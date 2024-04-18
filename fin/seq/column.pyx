@@ -325,6 +325,86 @@ cdef array.array neg(unsigned count, const double* values):
     return arr
 
 # ----------------------------------------------------------------------
+# Bitwise and
+# ----------------------------------------------------------------------
+cdef Column and_column_column(Column a, Column b):
+    """
+    Column to column logical and.
+
+    This method performs an implicit conversion to ternary values.
+
+    TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+    """
+    cdef unsigned lenA = a.length
+    cdef unsigned lenB = b.length
+
+    if lenB != lenA:
+        raise ColumnSizeMismatchError(a, b)
+
+    cdef Column result = new_column_with_meta(a, lenA)
+    result._name = f"({a.get_name()}&{b.get_name()})"
+    if result._type is None:
+        result._type = b._type
+
+    result._t_values = and_vector_vector(
+            lenA,
+            a.as_ternary_values(),
+            b.as_ternary_values(),
+    )
+
+    return result
+
+cdef array.array and_vector_vector(unsigned count, const signed char* a, const signed char* b):
+    cdef array.array arr = array.clone(_signed_char_array_template, count, zero=False)
+    cdef unsigned i
+
+    for i in range(count):
+        arr.data.as_schars[i] = a[i] if a[i] < b[i] else b[i]
+        # In balanced ternary logic, and() is the same as min()
+
+    return arr
+
+# ----------------------------------------------------------------------
+# Bitwise or
+# ----------------------------------------------------------------------
+cdef Column or_column_column(Column a, Column b):
+    """
+    Column to column logical or.
+
+    This method performs an implicit conversion to ternary values.
+
+    TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+    """
+    cdef unsigned lenA = a.length
+    cdef unsigned lenB = b.length
+
+    if lenB != lenA:
+        raise ColumnSizeMismatchError(a, b)
+
+    cdef Column result = new_column_with_meta(a, lenA)
+    result._name = f"({a.get_name()}|{b.get_name()})"
+    if result._type is None:
+        result._type = b._type
+
+    result._t_values = or_vector_vector(
+            lenA,
+            a.as_ternary_values(),
+            b.as_ternary_values(),
+    )
+
+    return result
+
+cdef array.array or_vector_vector(unsigned count, const signed char* a, const signed char* b):
+    cdef array.array arr = array.clone(_signed_char_array_template, count, zero=False)
+    cdef unsigned i
+
+    for i in range(count):
+        arr.data.as_schars[i] = a[i] if a[i] > b[i] else b[i]
+        # In balanced ternary logic, or() is the same as max()
+
+    return arr
+
+# ----------------------------------------------------------------------
 # Column remapping
 # ----------------------------------------------------------------------
 ctypedef fused integral_column_t:
@@ -608,13 +688,13 @@ cdef class Column:
         """
         Compare if two columns are equal.
         """
-        if isinstance(other, Column):
+        if isinstance(other, Column) and isinstance(self, Column):
             if op == Py_EQ:
                 return self.py_values == other.py_values
             if op == Py_NE:
                 return self.py_values != other.py_values
 
-        raise NotImplementedError()
+        return NotImplemented
 
     def __repr__(self):
         parts = [ repr(self.py_values) ]
@@ -776,6 +856,24 @@ cdef class Column:
         result._f_values = neg(count, values.data.as_doubles)
 
         return result
+
+    # ------------------------------------------------------------------
+    # Bitwise and
+    # ------------------------------------------------------------------
+    def __and__(self, other):
+        if isinstance(other, Column):
+            return and_column_column(self, other)
+        else:
+            return NotImplemented
+
+    # ------------------------------------------------------------------
+    # Bitwise or
+    # ------------------------------------------------------------------
+    def __or__(self, other):
+        if isinstance(other, Column):
+            return or_column_column(self, other)
+        else:
+            return NotImplemented
 
 
     # ------------------------------------------------------------------

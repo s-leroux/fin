@@ -68,6 +68,72 @@ TestSutraction = BinOp("Subtraction", "+-", lambda x,y: x-y)
 TestMultiplication = BinOp("Multiplication", "*", lambda x,y: x*y)
 TestDivision = BinOp("Division", "/", lambda x,y: x/y)
 
+class TestOperators(unittest.TestCase):
+    def test_binary_operators(self):
+        T = True
+        F = False
+        N = None
+        testcases = (
+                "#0,0 Addition",
+                "+",
+                (10, 20, 30, 40, 50, 60),
+                (11, 21, 31, 41, 51, 61),
+                lambda a, b : a+b,
+                ...,
+
+                "#1,0 Soustraction",
+                "+-",
+                (10, 20, 30, 40, 50, 60),
+                (11, 21, 31, 41, 51, 61),
+                lambda a, b : a-b,
+                ...,
+
+                "#2,0 Multiplication",
+                "*",
+                (10, 20, 30, 40, 50, 60),
+                (11, 21, 31, 41, 51, 61),
+                lambda a, b : a*b,
+                ...,
+
+                "#3,0 Division",
+                "/",
+                (10, 20, 30, 40, 50, 60),
+                (11, 21, 31, 41, 51, 61),
+                lambda a, b : a/b,
+                ...,
+
+                "#4,0 Bitwise and",
+                "&",
+                ( T,  F,  F,  N,  N,  T,  T,  N,  F),
+                ( T,  N,  T,  F,  T,  F,  N,  N,  F),
+                lambda a, b : a&b,
+                ( T,  F,  F,  F,  N,  F,  N,  N,  F),
+
+                "#5,0 Bitwise or",
+                "|",
+                ( T,  F,  F,  N,  N,  T,  T,  N,  F),
+                ( T,  N,  T,  F,  T,  F,  N,  N,  F),
+                lambda a, b : a|b,
+                ( T,  N,  T,  N,  T,  T,  T,  N,  F),
+
+            )
+
+        while testcases:
+            desc, op, seqA, seqB, fct, expected, *testcases = testcases
+            if expected is Ellipsis:
+                expected = [fct(i,j) for i,j in zip(seqA, seqB)]
+
+            with self.subTest(desc=desc):
+                ca = Column.from_sequence(seqA)
+                cb = Column.from_sequence(seqB)
+                cc = fct(ca, cb)
+
+                self.assertIsInstance(cc, Column)
+                self.assertSequenceEqual(cc, expected)
+                self.assertEqual(cc.name, f"({ca.name}{op}{cb.name})")
+
+
+
 class TestColumn(unittest.TestCase, assertions.ExtraTests):
     def test_create_from_sequence(self):
         """
