@@ -100,7 +100,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         You can create a column from a signed array.
         """
         arr = array.array("b", [+1, 0, -1, -1, +1])
-        c = Column.from_signed_char_array(arr)
+        c = Column.from_ternary_array(arr)
         self.assertSequenceEqual(c.t_values, arr)
 
     def test_create_from_callable_1(self):
@@ -159,7 +159,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         """
         seq = [True, False, None, False, False, True]
         arr = array.array("b", [+1, -1, 0, -1, -1, +1])
-        c = Column.from_signed_char_array(arr)
+        c = Column.from_ternary_array(arr)
         self.assertSequenceEqual(c.py_values, seq)
 
     def tesst_ternary_to_float_conversion(self):
@@ -169,7 +169,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         NaN = float("nan")
         a = array.array("b", [ +1,  -1,  +1,   0,  +1])
         b = array.array("d", [1.0, 0.0, 3.0, NaN, 5.0])
-        c = Column.from_signed_char_array(seq, a)
+        c = Column.from_ternary_array(seq, a)
         self.assertFloatSequenceEqual(c.f_values, b)
 
     def tesst_float_to_ternary_conversion(self):

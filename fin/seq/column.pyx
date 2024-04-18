@@ -439,7 +439,7 @@ cdef class Column:
         return column
 
     @staticmethod
-    def from_signed_char_array(arr, **kwargs):
+    def from_ternary_array(arr, **kwargs):
         """
         Create a Column from an array of signed chars.
 
