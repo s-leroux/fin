@@ -516,13 +516,12 @@ cdef class Column:
         if self._f_values is not None:
             return self._f_values
 
-        # else
-        if self._py_values is not None:
-            self._f_values = f_values_from_py_values(self._py_values)
-            return self._f_values
+        # Not cached and no direct conversion implemented. Fallback to the slow path.
+        if self._py_values is None:
+            self.get_py_values()
 
-        # else
-        raise NotImplementedError()
+        self._f_values = f_values_from_py_values(self._py_values)
+        return self._f_values
 
     @property
     def t_values(self):
@@ -535,13 +534,12 @@ cdef class Column:
         if self._t_values is not None:
             return self._t_values
 
-        # else
-        if self._py_values is not None:
-            self._t_values = t_values_from_py_values(self._py_values)
-            return self._t_values
+        # Not cached and no direct conversion implemented. Fallback to the slow path.
+        if self._py_values is None:
+            self.get_py_values()
 
-        # else
-        raise NotImplementedError()
+        self._t_values = t_values_from_py_values(self._py_values)
+        return self._t_values
 
     # ------------------------------------------------------------------
     # Metadata

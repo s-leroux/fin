@@ -162,6 +162,26 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         c = Column.from_signed_char_array(arr)
         self.assertSequenceEqual(c.py_values, seq)
 
+    def tesst_ternary_to_float_conversion(self):
+        """
+        Conversion from ternary to float is supported.
+        """
+        NaN = float("nan")
+        a = array.array("b", [ +1,  -1,  +1,   0,  +1])
+        b = array.array("d", [1.0, 0.0, 3.0, NaN, 5.0])
+        c = Column.from_signed_char_array(seq, a)
+        self.assertFloatSequenceEqual(c.f_values, b)
+
+    def tesst_float_to_ternary_conversion(self):
+        """
+        Conversion from ternary to float is supported.
+        """
+        NaN = float("nan")
+        a = array.array("d", [1.0, 0.0, 3.0, NaN, 5.0])
+        b = array.array("b", [ +1,  -1,  +1,   0,  +1])
+        c = Column.from_float_array(seq, a)
+        self.assertFloatSequenceEqual(c.t_values, b)
+
     def test_equality(self):
         seq = [1, 2, 3, None, 5]
         c1 = Column.from_sequence(seq)
