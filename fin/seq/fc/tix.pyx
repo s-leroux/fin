@@ -28,6 +28,10 @@ cdef class sma(funcx.Functor1):
     """
     Compute the Simple Moving Average over a n-period window.
     """
+    def __cinit__(self):
+        self.src1_tc = b'd'
+        self.dst1_tc = b'd'
+
     cdef unsigned n
 
     def __init__(self, n):
@@ -36,7 +40,7 @@ cdef class sma(funcx.Functor1):
     def __repr__(self):
         return f"SMA({self.n})"
 
-    cdef void eval(self, unsigned l, double* dst, double* src):
+    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src):
         cdef unsigned n = self.n
 
         cdef double[::1] buffer = alloc(n)
@@ -53,7 +57,7 @@ cdef class sma(funcx.Functor1):
             else:
                 acc -= old
 
-            buffer[idx] = new = src[i]
+            buffer[idx] = new = src.as_doubles[i]
             idx += 1
             if idx == n:
                 idx = 0
@@ -63,7 +67,7 @@ cdef class sma(funcx.Functor1):
             else:
                 acc += new
 
-            dst[i] = NaN if nans else acc/n
+            dst.as_doubles[i] = NaN if nans else acc/n
 
 cdef class ema(funcx.Functor1):
     """
@@ -71,6 +75,10 @@ cdef class ema(funcx.Functor1):
 
     The smoothing factor is assumed to be `2/(1+n)` where `n` is the window size.
     """
+    def __cinit__(self):
+        self.src1_tc = b'd'
+        self.dst1_tc = b'd'
+
     cdef unsigned n
     cdef double alpha
 
@@ -81,7 +89,7 @@ cdef class ema(funcx.Functor1):
     def __repr__(self):
         return f"EMA({self.n})"
 
-    cdef void eval(self, unsigned l, double* dst, double* src):
+    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src):
         cdef unsigned n = self.n
         cdef double alpha = self.alpha
 
@@ -90,7 +98,7 @@ cdef class ema(funcx.Functor1):
         cdef double curr
         cdef unsigned i
         for i in range(l):
-            curr = src[i]
+            curr = src.as_doubles[i]
             if isnan(acc):
                 history = 0
                 acc = curr
@@ -101,7 +109,7 @@ cdef class ema(funcx.Functor1):
                 acc += (curr-acc)*alpha
                 history += 1
 
-            dst[i] = NaN if history<n else acc
+            dst.as_doubles[i] = NaN if history<n else acc
 
 
 cdef class wilders(funcx.Functor1):
@@ -111,6 +119,10 @@ cdef class wilders(funcx.Functor1):
     Except for the initialization stage, a `n` periode Wilder's Smoothing is equivalent
     to a `2n-1` Exponential Moving Average.
     """
+    def __cinit__(self):
+        self.src1_tc = b'd'
+        self.dst1_tc = b'd'
+
     cdef unsigned n
     cdef double alpha
 
@@ -121,7 +133,7 @@ cdef class wilders(funcx.Functor1):
     def __repr__(self):
         return f"WILDERS({self.n})"
 
-    cdef void eval(self, unsigned l, double* dst, double* src):
+    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src):
         cdef unsigned n = self.n
         cdef double alpha = self.alpha
 
@@ -130,7 +142,7 @@ cdef class wilders(funcx.Functor1):
         cdef double curr
         cdef unsigned i
         for i in range(l):
-            curr = src[i]
+            curr = src.as_doubles[i]
             if isnan(curr):
                 history = 0
                 acc = 0.0
@@ -141,7 +153,7 @@ cdef class wilders(funcx.Functor1):
                     acc += (curr-acc)*alpha
                 history += 1
 
-            dst[i] = NaN if history<n else acc
+            dst.as_doubles[i] = NaN if history<n else acc
 
 # ======================================================================
 # Technical Indicators
@@ -155,11 +167,16 @@ cdef class Tr(funcx.Functor3):
     * `abs(high[i]-close[i-1])`
     * `abs(low[i]-close[i-1])`
     """
+    def __cinit__(self):
+        self.src1_tc = b'd'
+        self.src2_tc = b'd'
+        self.src3_tc = b'd'
+        self.dst1_tc = b'd'
 
     def __repr__(self):
         return f"TR"
 
-    cdef void eval(self, unsigned l, double* dst, double* high, double* low, double* close):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t* high, const funcx.param_t* low, const funcx.param_t* close):
         cdef double yc = NaN # Yesterday's close
         cdef double th # today's high
         cdef double tl # today's low
@@ -171,8 +188,8 @@ cdef class Tr(funcx.Functor3):
 
         cdef unsigned i
         for i in range(l):
-            th = high[i]
-            tl = low[i]
+            th = high.as_doubles[i]
+            tl = low.as_doubles[i]
 
             tr = th-tl
             if not isnan(yc):
@@ -184,8 +201,8 @@ cdef class Tr(funcx.Functor3):
                 if lc > tr:
                     tr = lc
 
-            dst[i] = tr
-            yc = close[i]
+            dst.as_doubles[i] = tr
+            yc = close.as_doubles[i]
 
 tr = Tr()
 
@@ -217,6 +234,13 @@ cdef class band(funcx.Functor2_3):
     """
     cdef double _width
 
+    def __cinit__(self):
+        self.src1_tc = b'd'
+        self.src2_tc = b'd'
+        self.dst1_tc = b'd'
+        self.dst2_tc = b'd'
+        self.dst3_tc = b'd'
+
     def __init__(self, width):
         self._width = width
 
@@ -229,19 +253,25 @@ cdef class band(funcx.Functor2_3):
                 ]
 
     cdef void eval(self, unsigned l,
-            double* dst1, double* dst2, double* dst3,
-            const double* src1, const double* src2):
+            funcx.param_t *dst1, funcx.param_t *dst2, funcx.param_t *dst3,
+            const funcx.param_t *src1, const funcx.param_t *src2):
         cdef double width = self._width
         cdef unsigned i
         for i in range(l):
-            dst1[i] = src1[i]-width*src2[i]
-            dst2[i] = src1[i]
-            dst3[i] = src1[i]+width*src2[i]
+            dst1.as_doubles[i] = src1.as_doubles[i]-width*src2.as_doubles[i]
+            dst2.as_doubles[i] = src1.as_doubles[i]
+            dst3.as_doubles[i] = src1.as_doubles[i]+width*src2.as_doubles[i]
 
 cdef class bband(funcx.Functor1_3):
     """
     Compute the Bollinger's band.
     """
+    def __cinit__(self):
+        self.src1_tc = b'd'
+        self.dst1_tc = b'd'
+        self.dst2_tc = b'd'
+        self.dst3_tc = b'd'
+
     cdef sma _sma
     cdef statx.stdev _stdev
     cdef band _band
@@ -267,11 +297,11 @@ cdef class bband(funcx.Functor1_3):
                 ]
 
     cdef void eval(self, unsigned l,
-            double* dst1, double* dst2, double* dst3,
-            const double* src1):
+            funcx.param_t *dst1, funcx.param_t *dst2, funcx.param_t *dst3,
+            const funcx.param_t *src1):
         cdef double[::1] middle = alloc(l)
         cdef double[::1] sd = alloc(l)
-        self._sma.eval(l, &middle[0], src1)
-        self._stdev.eval(l, &sd[0], &middle[0])
-        self._band.eval(l, dst1, dst2, dst3, &middle[0], &sd[0])
+        self._sma.eval(l, <funcx.param_t*>&middle[0], <funcx.param_t*>src1)
+        self._stdev.eval(l, <funcx.param_t*>&sd[0], <funcx.param_t*>&middle[0])
+        self._band.eval(l, dst1, dst2, dst3, <funcx.param_t*>&middle[0], <funcx.param_t*>&sd[0])
 

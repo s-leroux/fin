@@ -31,7 +31,7 @@ cdef class Functor1:
     Actual calculation are delegate to the eval() method that should be
     overrided by the implementation.
     """
-    cdef void eval(self, unsigned l, double* dst, const double* src):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src):
         pass
 
     cdef make_name(self, col):
@@ -57,8 +57,8 @@ cdef class Functor1_3:
     overrided by the implementation.
     """
     cdef void eval(self, unsigned l,
-            double* dst1, double* dst2, double* dst3,
-            const double* src1):
+            funcx.param_t *dst1, funcx.param_t *dst2, funcx.param_t *dst3,
+            const funcx.param_t *src1):
         pass
 
     cdef make_names(self, col1):
@@ -97,7 +97,7 @@ cdef class Functor2:
     Actual calculation are delegate to the eval() method that should be
     overrided by the implementation.
     """
-    cdef void eval(self, unsigned l, double* dst, const double* src1, const double* src2):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src1, const funcx.param_t *src2):
         pass
 
     cdef make_name(self, col1, col2):
@@ -125,8 +125,8 @@ cdef class Functor2_3:
     overrided by the implementation.
     """
     cdef void eval(self, unsigned l,
-            double* dst1, double* dst2, double* dst3,
-            const double* src1, const double* src2):
+            funcx.param_t *dst1, funcx.param_t *dst2, funcx.param_t *dst3,
+            const funcx.param_t *src1, const funcx.param_t *src2):
         pass
 
     cdef make_names(self, col1, col2):
@@ -167,7 +167,7 @@ cdef class Functor3:
     Actual calculation are delegate to the eval() method that should be
     overrided by the implementation.
     """
-    cdef void eval(self, unsigned l, double* dst, const double* src1, const double* src2, const double* src3):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src1, const funcx.param_t *src2, const funcx.param_t *src3):
         pass
 
     cdef make_name(self, col1, col2, col3):
@@ -196,7 +196,7 @@ cdef class FunctorN:
     Actual calculation are delegate to the eval() method that should be
     overrided by the implementation.
     """
-    cdef void eval(self, unsigned l, double* dst, unsigned m, (const double*)[] src):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, unsigned m, (const double*)[] src):
         pass
 
     cdef make_name(self, sequences):
@@ -229,7 +229,7 @@ cdef class RowFunctor1(Functor1):
     cdef double eval_one_row(self, double src):
         return NaN
 
-    cdef void eval(self, unsigned l, double* dst, const double* src):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src):
         cdef unsigned i = 0
         for i in range(l):
             dst[i] = self.eval_one_row(src[i])
@@ -244,7 +244,7 @@ cdef class RowFunctorN(FunctorN):
     cdef double eval_one_row(self, unsigned m, double[] src):
         return NaN
 
-    cdef void eval(self, unsigned l, double* dst, unsigned m, (const double*)[] src):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, unsigned m, (const double*)[] src):
         cdef double[::1] buffer = alloc(m)
         cdef double* base = &buffer[0]
 
@@ -264,7 +264,7 @@ cdef class WindowFunctor1(Functor1):
     cdef double eval_one_window(self, unsigned n, const double *src):
         return NaN
 
-    cdef void eval(self, unsigned l, double* dst, const double* src):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src):
         cdef unsigned n = self.n
         cdef unsigned i = n-1
         cdef unsigned j = 0
@@ -377,7 +377,7 @@ cdef class Ratio(Functor2):
 
     Formally, y_i = to a_i/b_i.
     """
-    cdef void eval(self, unsigned l, double* dst, const double* src1, const double* src2):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src1, const funcx.param_t *src2):
         cdef unsigned i
         for i in range(l):
             dst[i] = src1[i]/src2[i]
@@ -434,7 +434,7 @@ cdef class var(Functor1):
     cdef make_name(self, col):
         return f"{repr(self)}, {column.get_column_name(col)}"
 
-    cdef void eval(self, unsigned l, double* dst, const double* src):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src):
         cdef double a = self.a
         cdef double b = self.b
         cdef unsigned n = self.n
@@ -516,7 +516,7 @@ cdef class stdev(Functor1):
     cdef make_name(self, col):
         return f"STDDEV({self.delegate.n}), {column.get_column_name(col)}"
 
-    cdef void eval(self, unsigned l, double* dst, const double* src):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src):
         self.delegate.eval(l, dst, src)
         for i in range(l):
             dst[i] = sqrt(dst[i])
@@ -536,7 +536,7 @@ cdef class sma(Functor1):
     def __repr__(self):
         return f"SMA({self.n})"
 
-    cdef void eval(self, unsigned l, double* dst, double* src):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src):
         cdef unsigned n = self.n
 
         cdef double[::1] buffer = alloc(n)
@@ -581,7 +581,7 @@ cdef class ema(Functor1):
     def __repr__(self):
         return f"EMA({self.n})"
 
-    cdef void eval(self, unsigned l, double* dst, double* src):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src):
         cdef unsigned n = self.n
         cdef double alpha = self.alpha
 
@@ -621,7 +621,7 @@ cdef class wilders(Functor1):
     def __repr__(self):
         return f"WILDERS({self.n})"
 
-    cdef void eval(self, unsigned l, double* dst, double* src):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, const funcx.param_t *src):
         cdef unsigned n = self.n
         cdef double alpha = self.alpha
 
@@ -659,7 +659,7 @@ cdef class Tr(Functor3):
     def __repr__(self):
         return f"TR"
 
-    cdef void eval(self, unsigned l, double* dst, double* high, double* low, double* close):
+    cdef void eval(self, unsigned l, funcx.param_t *dst, double* high, double* low, double* close):
         cdef double yc = NaN # Yesterday's close
         cdef double th # today's high
         cdef double tl # today's low
@@ -729,8 +729,8 @@ cdef class band(Functor2_3):
                 ]
 
     cdef void eval(self, unsigned l,
-            double* dst1, double* dst2, double* dst3,
-            const double* src1, const double* src2):
+            funcx.param_t *dst1, funcx.param_t *dst2, funcx.param_t *dst3,
+            const funcx.param_t *src1, const funcx.param_t *src2):
         cdef double width = self._width
         cdef unsigned i
         for i in range(l):
@@ -767,8 +767,8 @@ cdef class bband(Functor1_3):
                 ]
 
     cdef void eval(self, unsigned l,
-            double* dst1, double* dst2, double* dst3,
-            const double* src1):
+            funcx.param_t *dst1, funcx.param_t *dst2, funcx.param_t *dst3,
+            const funcx.param_t *src1):
         cdef double[::1] middle = alloc(l)
         cdef double[::1] sd = alloc(l)
         self._sma.eval(l, &middle[0], src1)

@@ -15,7 +15,7 @@ cdef class var(funcx.Functor1):
 
     cdef init(self, unsigned n, double correction)
     cdef make_name(self, col)
-    cdef void eval(self, unsigned l, double* dst, const double* src)
+    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src)
 
 cdef class stdev(funcx.Functor1):
     """
@@ -25,5 +25,5 @@ cdef class stdev(funcx.Functor1):
 
     cdef init(self, unsigned n, var v)
     cdef make_name(self, col)
-    cdef void eval(self, unsigned l, double* dst, const double* src)
+    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src)
 

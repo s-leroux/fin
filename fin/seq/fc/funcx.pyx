@@ -1,7 +1,6 @@
 # cython: boundscheck=False
 # cython: cdivision=True
 
-import array
 from cpython cimport array
 
 from fin.mathx cimport alloc, aalloc, NaN
@@ -11,6 +10,31 @@ from fin.seq.column import Column
 
 cdef extern from "<alloca.h>":
     void *alloca(size_t size)
+
+
+# ======================================================================
+# Allocators
+# ======================================================================
+cdef array.array double_array_template = array.array('d', [])
+# cdef array.array int_array_template = array.array('i', [])
+# cdef array.array unsigned_array_template = array.array('I', [])
+cdef array.array signed_byte_array_template = array.array('b', [])
+
+cdef inline array.array alloc_(char typecode, unsigned n):
+    if typecode == b'd':
+        return array.clone(double_array_template, n, zero=False)
+    elif typecode == b'd':
+        return array.clone(signed_byte_array_template, n, zero=False)
+
+    raise ValueError(f"bad typecode (must be b or d, not {typecode!r})")
+
+cdef inline const param_t*    data_(char typecode, Column col):
+    if typecode == b'd':
+        return <const param_t*>col.as_float_values()
+    elif typecode == b'b':
+        return <const param_t*>col.as_ternary_values()
+
+    raise ValueError(f"bad typecode (must be b or d, not {typecode!r})")
 
 # ======================================================================
 # Common base classes
@@ -22,7 +46,7 @@ cdef class Functor1:
     Actual calculation are delegate to the eval() method that should be
     overrided by the implementation.
     """
-    cdef void eval(self, unsigned l, double* dst, const double* src):
+    cdef void eval(self, unsigned l, param_t* dst, const param_t* src):
         pass
 
     cdef make_name(self, col):
@@ -30,11 +54,11 @@ cdef class Functor1:
 
     def __call__(self, Serie serie, Column src1):
         cdef unsigned rowcount = serie.rowcount
-        cdef array.array dst1 = aalloc(rowcount)
+        cdef array.array dst1 = alloc_(self.dst1_tc, rowcount)
 
         self.eval(rowcount,
-                &dst1.data.as_doubles[0],
-                &src1.get_f_values().data.as_doubles[0]
+                <param_t*>dst1.data.as_voidptr,
+                data_(self.src1_tc, src1),
                 )
 
         return Column.from_float_array(dst1, name=self.make_name(src1), type=src1._type)
@@ -46,9 +70,15 @@ cdef class Functor1_3:
     Actual calculation are delegate to the eval() method that should be
     overrided by the implementation.
     """
+    def __cinit__(self):
+        self.src1_tc = b'd'
+        self.dst1_tc = b'd'
+        self.dst2_tc = b'd'
+        self.dst3_tc = b'd'
+
     cdef void eval(self, unsigned l,
-            double* dst1, double* dst2, double* dst3,
-            const double* src1):
+            param_t *dst1, param_t *dst2, param_t *dst3,
+            const param_t *src1):
         pass
 
     cdef make_names(self, col1):
@@ -61,15 +91,15 @@ cdef class Functor1_3:
     def __call__(self, Serie serie, Column src1):
         cdef unsigned rowcount = serie.rowcount
         cdef unsigned l = rowcount
-        cdef array.array dst1 = aalloc(l)
-        cdef array.array dst2 = aalloc(l)
-        cdef array.array dst3 = aalloc(l)
+        cdef array.array dst1 = alloc_(self.dst1_tc, l)
+        cdef array.array dst2 = alloc_(self.dst2_tc, l)
+        cdef array.array dst3 = alloc_(self.dst3_tc, l)
 
         self.eval(l,
-                &dst1.data.as_doubles[0],
-                &dst2.data.as_doubles[0],
-                &dst3.data.as_doubles[0],
-                &src1.get_f_values().data.as_doubles[0]
+                <param_t*>dst1.data.as_voidptr,
+                <param_t*>dst2.data.as_voidptr,
+                <param_t*>dst3.data.as_voidptr,
+                data_(self.src1_tc, src1),
                 )
 
         names = self.make_names(src1);
@@ -87,7 +117,7 @@ cdef class Functor2:
     Actual calculation are delegate to the eval() method that should be
     overrided by the implementation.
     """
-    cdef void eval(self, unsigned l, double* dst, const double* src1, const double* src2):
+    cdef void eval(self, unsigned l, param_t *dst, const param_t *src1, const param_t *src2):
         pass
 
     cdef make_name(self, col1, col2):
@@ -96,12 +126,12 @@ cdef class Functor2:
     def __call__(self, Serie serie, Column src1, Column src2):
         cdef unsigned rowcount = serie.rowcount
         cdef unsigned l = rowcount
-        cdef array.array dst1 = aalloc(l)
+        cdef array.array dst1 = alloc_(self.dst1_tc, l)
 
         self.eval(l,
-                &dst1.data.as_doubles[0],
-                &src1.get_f_values().data.as_doubles[0],
-                &src2.get_f_values().data.as_doubles[0],
+                <param_t*>dst1.data.as_voidptr,
+                data_(self.src1_tc, src1),
+                data_(self.src2_tc, src2),
                 )
 
         return Column.from_float_array(dst1, name=self.make_name(src1, src2), type=src1._type)
@@ -114,8 +144,8 @@ cdef class Functor2_3:
     overrided by the implementation.
     """
     cdef void eval(self, unsigned l,
-            double* dst1, double* dst2, double* dst3,
-            const double* src1, const double* src2):
+            param_t *dst1, param_t *dst2, param_t *dst3,
+            const param_t *src1, const param_t *src2):
         pass
 
     cdef make_names(self, col1, col2):
@@ -128,25 +158,25 @@ cdef class Functor2_3:
     def __call__(self, Serie serie, Column src1, Column src2):
         cdef unsigned rowcount = serie.rowcount
         cdef unsigned l = rowcount
-        cdef array.array dst1 = aalloc(l)
-        cdef array.array dst2 = aalloc(l)
-        cdef array.array dst3 = aalloc(l)
+        cdef array.array dst1 = alloc_(self.dst1_tc, l)
+        cdef array.array dst2 = alloc_(self.dst2_tc, l)
+        cdef array.array dst3 = alloc_(self.dst3_tc, l)
 
         self.eval(l,
-                &dst1.data.as_doubles[0],
-                &dst2.data.as_doubles[0],
-                &dst3.data.as_doubles[0],
-                &src1.get_f_values().data.as_doubles[0],
-                &src2.get_f_values().data.as_doubles[0],
+                <param_t*>dst1.data.as_voidptr,
+                <param_t*>dst2.data.as_voidptr,
+                <param_t*>dst3.data.as_voidptr,
+                data_(self.src1_tc, src1),
+                data_(self.src2_tc, src2),
                 )
 
         names = self.make_names(src1, src2);
 
-        return [
+        return (
                 Column.from_float_array(dst1, name=names[0], type=src1._type),
                 Column.from_float_array(dst2, name=names[1], type=src1._type),
                 Column.from_float_array(dst3, name=names[2], type=src1._type),
-                ]
+                )
 
 cdef class Functor3:
     """
@@ -155,7 +185,7 @@ cdef class Functor3:
     Actual calculation are delegate to the eval() method that should be
     overrided by the implementation.
     """
-    cdef void eval(self, unsigned l, double* dst, const double* src1, const double* src2, const double* src3):
+    cdef void eval(self, unsigned l, param_t *dst, const param_t *src1, const param_t *src2, const param_t *src3):
         pass
 
     cdef make_name(self, col1, col2, col3):
@@ -164,13 +194,13 @@ cdef class Functor3:
     def __call__(self, Serie serie, Column src1, Column src2, Column src3):
         cdef unsigned rowcount = serie.rowcount
         cdef unsigned l = rowcount
-        cdef array.array dst1 = aalloc(l)
+        cdef array.array dst1 = alloc_(self.dst1_tc, l)
 
         self.eval(l,
-                &dst1.data.as_doubles[0],
-                &src1.get_f_values().data.as_doubles[0],
-                &src2.get_f_values().data.as_doubles[0],
-                &src3.get_f_values().data.as_doubles[0],
+                <param_t*>dst1.data.as_voidptr,
+                data_(self.src1_tc, src1),
+                data_(self.src2_tc, src2),
+                data_(self.src3_tc, src3),
                 )
 
         return Column.from_float_array(dst1, name=self.make_name(src1, src2, src3), type=src1._type)
@@ -182,8 +212,8 @@ cdef class Functor5_4:
     cdef void eval(
             self,
             unsigned l,
-            double* dst1, double* dst2, double* dst3, double* dst4,
-            const double* src1, const double* src2, const double* src3, const double* src4, const double* src5
+            param_t *dst1, param_t *dst2, param_t *dst3, param_t *dst4,
+            const param_t *src1, const param_t *src2, const param_t *src3, const param_t *src4, const param_t *src5
             ):
         pass
 
@@ -199,21 +229,21 @@ cdef class Functor5_4:
     def __call__(self, Serie serie, Column src1, Column src2, Column src3, Column src4, Column src5):
         cdef unsigned rowcount = serie.rowcount
         cdef unsigned l = rowcount
-        cdef array.array dst1 = aalloc(l)
-        cdef array.array dst2 = aalloc(l)
-        cdef array.array dst3 = aalloc(l)
-        cdef array.array dst4 = aalloc(l)
+        cdef array.array dst1 = alloc_(self.dst1_tc, l)
+        cdef array.array dst2 = alloc_(self.dst2_tc, l)
+        cdef array.array dst3 = alloc_(self.dst3_tc, l)
+        cdef array.array dst4 = alloc_(self.dst4_tc, l)
 
         self.eval(l,
-                &dst1.data.as_doubles[0],
-                &dst2.data.as_doubles[0],
-                &dst3.data.as_doubles[0],
-                &dst4.data.as_doubles[0],
-                &src1.get_f_values().data.as_doubles[0],
-                &src2.get_f_values().data.as_doubles[0],
-                &src3.get_f_values().data.as_doubles[0],
-                &src4.get_f_values().data.as_doubles[0],
-                &src5.get_f_values().data.as_doubles[0],
+                <param_t*>dst1.data.as_voidptr,
+                <param_t*>dst2.data.as_voidptr,
+                <param_t*>dst3.data.as_voidptr,
+                <param_t*>dst4.data.as_voidptr,
+                data_(self.src1_tc, src1),
+                data_(self.src2_tc, src2),
+                data_(self.src3_tc, src3),
+                data_(self.src4_tc, src4),
+                data_(self.src5_tc, src5),
                 )
 
         names = self.make_names(src1, src2, src3, src4, src5);
@@ -233,7 +263,7 @@ cdef class FunctorN:
     Actual calculation are delegate to the eval() method that should be
     overrided by the implementation.
     """
-    cdef void eval(self, unsigned l, double* dst, unsigned m, (const double*)[] src):
+    cdef void eval(self, unsigned l, param_t *dst, unsigned m, (const param_t*)[] src):
         pass
 
     cdef make_name(self, sequences):
@@ -242,69 +272,16 @@ cdef class FunctorN:
     def __call__(self, Serie serie, *seqs):
         cdef unsigned rowcount = serie.rowcount
         cdef unsigned m = len(seqs)
-        cdef const double** v= <const double**>alloca(m*sizeof(double*))
+        cdef const param_t** v= <const param_t**>alloca(m*sizeof(param_t*))
 
         cdef unsigned i
         for i in range(m):
             ci = <Column>seqs[i]
             assert len(ci) == rowcount
-            v[i] = &ci.get_f_values().data.as_doubles[0]
+            v[i] = data_(self.src_tc[i], ci)
         cdef unsigned l = rowcount
-        cdef array.array dst1 = aalloc(l)
+        cdef array.array dst1 = alloc_(self.dst1_tc, l)
 
-        self.eval(l, &dst1.data.as_doubles[0], m, v)
+        self.eval(l, <param_t*>dst1.data.as_voidptr, m, v)
 
         return Column.from_float_array(dst1, name=self.make_name(seqs), type=seqs[0]._type)
-
-cdef class RowFunctor1(Functor1):
-    """
-    A simple functor accepting one column argument.
-
-    Output values are evaluated one by one calling repeatidly `eval_one_row`.
-    This method should be overrided by the actual implementation.
-    """
-    cdef double eval_one_row(self, double src):
-        return NaN
-
-    cdef void eval(self, unsigned l, double* dst, const double* src):
-        cdef unsigned i = 0
-        for i in range(l):
-            dst[i] = self.eval_one_row(src[i])
-
-cdef class RowFunctorN(FunctorN):
-    """
-    A simple functor accepting N column arguments.
-
-    Output values are evaluated one by one calling repeatidly `eval_one_row`.
-    This method should be overrided by the actual implementation.
-    """
-    cdef double eval_one_row(self, unsigned m, double[] src):
-        return NaN
-
-    cdef void eval(self, unsigned l, double* dst, unsigned m, (const double*)[] src):
-        cdef double[::1] buffer = alloc(m)
-        cdef double* base = &buffer[0]
-
-        cdef unsigned i = 0
-        cdef unsigned j = 0
-        for i in range(l):
-            for j in range(m):
-                base[j] = src[j][i]
-            dst[i] = self.eval_one_row(m, base)
-
-cdef class WindowFunctor1(Functor1):
-    def __init__(self, n):
-        self.n = n
-
-    cdef double eval_one_window(self, unsigned n, const double *src):
-        return NaN
-
-    cdef void eval(self, unsigned l, double* dst, const double* src):
-        cdef unsigned n = self.n
-        cdef unsigned i = n-1
-        cdef unsigned j = 0
-        while i < l:
-            dst[i] = self.eval_one_window(n, &src[j])
-            i += 1
-            j += 1
-

@@ -28,12 +28,12 @@ class TestFunctor(unittest.TestCase):
         fct = functor.Functor2Example()
         serie = Serie.create(self.idx)
 
-        res = fct(serie, self.src1, self.src2)
+        res = fct(serie, self.src2, self.src3)
 
         self.assertIsInstance(res, Column)
         self.assertSequenceEqual(
                 res.py_values,
-                [x+y for x,y in zip(self.src1.py_values, self.src2.py_values)]
+                [x+y for x,y in zip(self.src2.py_values, self.src3.py_values)]
         )
 
     def test_functor_3(self):
@@ -59,4 +59,17 @@ class TestFunctor(unittest.TestCase):
         self.assertSequenceEqual(
                 res[0],
                 self.src1
+        )
+
+    def test_functor_2_3(self):
+        fct = functor.Functor2_3Example()
+        serie = Serie.create(self.idx)
+
+        res = fct(serie, self.src1, self.src2)
+
+        self.assertIsInstance(res, tuple)
+        self.assertEqual(len(res), 3)
+        self.assertSequenceEqual(
+                res[0],
+                [x+y for x,y in zip(self.src1.py_values, self.src2.py_values)]
         )

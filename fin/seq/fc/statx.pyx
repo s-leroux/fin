@@ -26,6 +26,10 @@ cdef class var(funcx.Functor1):
 
     This general implmentation allows for a correction parameter.
     """
+    def __cinit__(self):
+        self.src1_tc = b'd'
+        self.dst1_tc = b'd'
+
     def __init__(self, *args, **wargs):
         raise NotImplementedError("Use a factory method, not a constructor")
 
@@ -58,7 +62,7 @@ cdef class var(funcx.Functor1):
     cdef make_name(self, col):
         return f"{repr(self)}, {col.name}"
 
-    cdef void eval(self, unsigned l, double* dst, const double* src):
+    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src):
         cdef double a = self.a
         cdef double b = self.b
         cdef unsigned n = self.n
@@ -74,28 +78,29 @@ cdef class var(funcx.Functor1):
 
         # general case
         while i < n-1:
-            v = src[i]
+            v = src.as_doubles[i]
             if not isnan(v):
                 sigma_ui += v
                 sigma_ui2 += v*v
             else:
                 nones += 1
 
+            dst.as_doubles[i] = NaN
             i += 1
 
         while i < l:
-            v = src[i]
+            v = src.as_doubles[i]
             if not isnan(v):
                 sigma_ui += v
                 sigma_ui2 += v*v
             else:
                 nones += 1
 
-            dst[i] = NaN if nones else a*sigma_ui2 - b*sigma_ui*sigma_ui
+            dst.as_doubles[i] = NaN if nones else a*sigma_ui2 - b*sigma_ui*sigma_ui
 
             i += 1
 
-            v = src[i-n]
+            v = src.as_doubles[i-n]
             if not isnan(v):
                 sigma_ui -= v
                 sigma_ui2 -= v*v
@@ -109,6 +114,10 @@ cdef class stdev(funcx.Functor1):
     The standard deviation is defined as the square root of the variance
     as implemented here.
     """
+    def __cinit__(self):
+        self.src1_tc = b'd'
+        self.dst1_tc = b'd'
+
     def __init__(self, *args, **wargs):
         raise NotImplementedError("Use a factory method, not a constructor")
 
@@ -138,8 +147,8 @@ cdef class stdev(funcx.Functor1):
     cdef make_name(self, col):
         return f"STDDEV({self.delegate.n}), {col.name}"
 
-    cdef void eval(self, unsigned l, double* dst, const double* src):
+    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src):
         self.delegate.eval(l, dst, src)
         for i in range(l):
-            dst[i] = sqrt(dst[i])
+            dst.as_doubles[i] = sqrt(dst.as_doubles[i])
 
