@@ -614,7 +614,7 @@ cdef class Column:
     def f_values(self):
         return get_f_values(self)
 
-    cdef double* as_float_values(self) except NULL:
+    cdef const double* as_float_values(self) except NULL:
         if self._f_values is None:
             get_f_values(self) # This may raise an exception!
 
@@ -624,7 +624,7 @@ cdef class Column:
     def t_values(self):
         return get_t_values(self)
 
-    cdef signed char* as_ternary_values(self) except NULL:
+    cdef const signed char* as_ternary_values(self) except NULL:
         if self._t_values is None:
             get_t_values(self) # This may raise an exception!
 

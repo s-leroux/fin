@@ -7,17 +7,16 @@ Cython implementation of common algorithms on columns.
 
 from libc.math cimport sqrt
 import array
-from cpython cimport array
 
 from fin.mathx cimport alloc, aalloc, isnan, NaN
-from fin.seq cimport column
-from fin.seq import column
-from fin.seq.fc cimport funcx
+from fin.seq.column cimport Column
+from fin.seq.serie cimport Serie
+from fin cimport mem
 
 # ======================================================================
 # Math and stats
 # ======================================================================
-cdef class var(funcx.Functor1):
+cdef class var:
     """
     Compute the Variance over a n-period window.
 
@@ -26,10 +25,6 @@ cdef class var(funcx.Functor1):
 
     This general implmentation allows for a correction parameter.
     """
-    def __cinit__(self):
-        self.src1_tc = b'd'
-        self.dst1_tc = b'd'
-
     def __init__(self, *args, **wargs):
         raise NotImplementedError("Use a factory method, not a constructor")
 
@@ -59,10 +54,24 @@ cdef class var(funcx.Functor1):
 
         return res
 
-    cdef make_name(self, col):
-        return f"{repr(self)}, {col.name}"
+    def __call__(self, Serie ser, Column col):
+        # ------------------ prologue ------------------
+        cdef unsigned l = ser.rowcount
+        cdef double[::1] dst = mem.double_alloc(l)
+        cdef const double *src = col.as_float_values()
+        # -------------- end of prologue ---------------
 
-    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src):
+        self.eval(l, &dst[0], src)
+
+        # ------------------ epilogue ------------------
+        return Column.from_float_mv(
+                dst,
+                name=f"{self}, {col.name}",
+                type=col._type
+            )
+        # -------------- end of epilogue ---------------
+
+    cdef void eval(self, unsigned l, double* dst, const double* src):
         cdef double a = self.a
         cdef double b = self.b
         cdef unsigned n = self.n
@@ -78,46 +87,42 @@ cdef class var(funcx.Functor1):
 
         # general case
         while i < n-1:
-            v = src.as_doubles[i]
+            v = src[i]
             if not isnan(v):
                 sigma_ui += v
                 sigma_ui2 += v*v
             else:
                 nones += 1
 
-            dst.as_doubles[i] = NaN
+            dst[i] = NaN
             i += 1
 
         while i < l:
-            v = src.as_doubles[i]
+            v = src[i]
             if not isnan(v):
                 sigma_ui += v
                 sigma_ui2 += v*v
             else:
                 nones += 1
 
-            dst.as_doubles[i] = NaN if nones else a*sigma_ui2 - b*sigma_ui*sigma_ui
+            dst[i] = NaN if nones else a*sigma_ui2 - b*sigma_ui*sigma_ui
 
             i += 1
 
-            v = src.as_doubles[i-n]
+            v = src[i-n]
             if not isnan(v):
                 sigma_ui -= v
                 sigma_ui2 -= v*v
             else:
                 nones -= 1
 
-cdef class stdev(funcx.Functor1):
+cdef class stdev:
     """
     Compute the Standard Deviation over a n-period window.
 
     The standard deviation is defined as the square root of the variance
     as implemented here.
     """
-    def __cinit__(self):
-        self.src1_tc = b'd'
-        self.dst1_tc = b'd'
-
     def __init__(self, *args, **wargs):
         raise NotImplementedError("Use a factory method, not a constructor")
 
@@ -144,11 +149,28 @@ cdef class stdev(funcx.Functor1):
 
         return res
 
-    cdef make_name(self, col):
-        return f"STDDEV({self.delegate.n}), {col.name}"
+    def __repr__(self):
+        return f"STDDEV({self.delegate.n})"
 
-    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src):
+    def __call__(self, Serie ser, Column col):
+        # ------------------ prologue ------------------
+        cdef unsigned l = ser.rowcount
+        cdef double[::1] dst = mem.double_alloc(l)
+        cdef const double *src = col.as_float_values()
+        # -------------- end of prologue ---------------
+
+        self.eval(l, &dst[0], src)
+
+        # ------------------ epilogue ------------------
+        return Column.from_float_mv(
+                dst,
+                name=f"{self}, {col.name}",
+                type=col._type
+            )
+        # -------------- end of epilogue ---------------
+
+    cdef void eval(self, unsigned l, double* dst, const double* src):
         self.delegate.eval(l, dst, src)
         for i in range(l):
-            dst.as_doubles[i] = sqrt(dst.as_doubles[i])
+            dst[i] = sqrt(dst[i])
 

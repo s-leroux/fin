@@ -1,10 +1,9 @@
 from fin.seq cimport column
-from fin.seq.fc cimport funcx
 
 # ======================================================================
 # Math and stats
 # ======================================================================
-cdef class var(funcx.Functor1):
+cdef class var:
     """
     Compute the Variance over a n-period window.
     """
@@ -14,16 +13,14 @@ cdef class var(funcx.Functor1):
     cdef double correction
 
     cdef init(self, unsigned n, double correction)
-    cdef make_name(self, col)
-    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src)
+    cdef void eval(self, unsigned l, double* dst, const double* src)
 
-cdef class stdev(funcx.Functor1):
+cdef class stdev:
     """
     Compute the Standard Deviation over a n-period window.
     """
     cdef var delegate
 
     cdef init(self, unsigned n, var v)
-    cdef make_name(self, col)
-    cdef void eval(self, unsigned l, funcx.param_t* dst, const funcx.param_t* src)
+    cdef void eval(self, unsigned l, double* dst, const double* src)
 

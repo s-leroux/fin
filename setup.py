@@ -12,7 +12,6 @@ setup(
         "fin/model/solvers/solver.pyx",
         "fin/seq/coltypes.pyx",
         "fin/seq/column.pyx",
-        "fin/seq/fc/funcx.pyx",
         "fin/seq/fc/statx.pyx",
         "fin/seq/fc/tix.pyx",
         "fin/seq/serie.pyx",
@@ -20,7 +19,6 @@ setup(
         "fin/tuplex.pyx",
         "fin/utils/ternary.pyx",
 
-        "tests/fin/seq/fc/functor.pyx",
         "tests/fin/tuplex.pyx",
         "tests/fin/utils/ternary.pyx",
         ],
