@@ -279,10 +279,10 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     headings = [ ]
     types = [ ]
     cdef Column column
-    for aggregate_sub_serie in aggregate_sub_series:
+    for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
         for column in aggregate_sub_serie:
             headings.append(column._name)
-            types.append(column._type)
+            types.append(aggregate_fct.type_for(column))
 
     # Iterate over rows to group identical values:
     cdef array.array arr = ualloc(self.rowcount+1)
