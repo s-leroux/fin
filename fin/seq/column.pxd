@@ -18,8 +18,8 @@ cdef class Column:
     # Polymorphic representation of the values:
     # ------------------------------------------------------------------
     cdef Tuple          _py_values # Python objects
-    cdef array.array    _f_values  # Array of doubles
-    cdef array.array    _t_values  # Array of ternary values (-1, 0, +1)
+    cdef double[::1]    _f_values  # Array of doubles
+    cdef signed char[::1] _t_values  # Array of ternary values (-1, 0, +1)
 
     # ------------------------------------------------------------------
     # Metadata
@@ -33,8 +33,6 @@ cdef class Column:
     # Accessors
     # ------------------------------------------------------------------
     cdef Tuple          get_py_values(self)
-    cdef array.array    get_f_values(self)
-    cdef array.array    get_t_values(self)
 
     cdef const double*  as_float_values(self) except NULL
     cdef const signed char*  as_ternary_values(self) except NULL

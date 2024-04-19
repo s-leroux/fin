@@ -61,7 +61,7 @@ cdef class Functor1:
                 data_(self.src1_tc, src1),
                 )
 
-        return Column.from_float_array(dst1, name=self.make_name(src1), type=src1._type)
+        return Column.from_float_mv(dst1, name=self.make_name(src1), type=src1._type)
 
 cdef class Functor1_3:
     """
@@ -105,9 +105,9 @@ cdef class Functor1_3:
         names = self.make_names(src1);
 
         return (
-                Column.from_float_array(dst1, name=names[0], type=src1._type),
-                Column.from_float_array(dst2, name=names[1], type=src1._type),
-                Column.from_float_array(dst3, name=names[2], type=src1._type),
+                Column.from_float_mv(dst1, name=names[0], type=src1._type),
+                Column.from_float_mv(dst2, name=names[1], type=src1._type),
+                Column.from_float_mv(dst3, name=names[2], type=src1._type),
                 )
 
 cdef class Functor2:
@@ -134,7 +134,7 @@ cdef class Functor2:
                 data_(self.src2_tc, src2),
                 )
 
-        return Column.from_float_array(dst1, name=self.make_name(src1, src2), type=src1._type)
+        return Column.from_float_mv(dst1, name=self.make_name(src1, src2), type=src1._type)
 
 cdef class Functor2_3:
     """
@@ -173,9 +173,9 @@ cdef class Functor2_3:
         names = self.make_names(src1, src2);
 
         return (
-                Column.from_float_array(dst1, name=names[0], type=src1._type),
-                Column.from_float_array(dst2, name=names[1], type=src1._type),
-                Column.from_float_array(dst3, name=names[2], type=src1._type),
+                Column.from_float_mv(dst1, name=names[0], type=src1._type),
+                Column.from_float_mv(dst2, name=names[1], type=src1._type),
+                Column.from_float_mv(dst3, name=names[2], type=src1._type),
                 )
 
 cdef class Functor3:
@@ -203,7 +203,7 @@ cdef class Functor3:
                 data_(self.src3_tc, src3),
                 )
 
-        return Column.from_float_array(dst1, name=self.make_name(src1, src2, src3), type=src1._type)
+        return Column.from_float_mv(dst1, name=self.make_name(src1, src2, src3), type=src1._type)
 
 cdef class Functor5_4:
     """
@@ -249,10 +249,10 @@ cdef class Functor5_4:
         names = self.make_names(src1, src2, src3, src4, src5);
 
         return [
-                Column.from_float_array(dst1, name=names[0], type=src1._type),
-                Column.from_float_array(dst2, name=names[1], type=src1._type),
-                Column.from_float_array(dst3, name=names[2], type=src1._type),
-                Column.from_float_array(dst4, name=names[3], type=src1._type),
+                Column.from_float_mv(dst1, name=names[0], type=src1._type),
+                Column.from_float_mv(dst2, name=names[1], type=src1._type),
+                Column.from_float_mv(dst3, name=names[2], type=src1._type),
+                Column.from_float_mv(dst4, name=names[3], type=src1._type),
                 ]
 
 
@@ -284,4 +284,4 @@ cdef class FunctorN:
 
         self.eval(l, <param_t*>dst1.data.as_voidptr, m, v)
 
-        return Column.from_float_array(dst1, name=self.make_name(seqs), type=(<Column>seqs[0])._type)
+        return Column.from_float_mv(dst1, name=self.make_name(seqs), type=(<Column>seqs[0])._type)

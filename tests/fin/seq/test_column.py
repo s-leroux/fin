@@ -31,7 +31,7 @@ class TestColumnRemap(unittest.TestCase):
     def test_remap_from_f_values(self):
         arr = array.array("d", (10, 20, 30, 40, 50, 60))
         #                        0   1   2   3   4   5
-        column = Column.from_float_array(arr)
+        column = Column.from_float_mv(arr)
 
         actual = column.remap([3,4,0,3,1,4,4,5])
 
@@ -44,7 +44,7 @@ def BinOp(name, op, fct):
         def test_scalar_op(self):
             scalar = 3
             arr = array.array("d", (10, 20, 30, 40, 50, 60))
-            c0 = Column.from_float_array(arr)
+            c0 = Column.from_float_mv(arr)
             c1 = fct(c0, scalar)
 
             self.assertSequenceEqual(c1.f_values, [fct(i, scalar) for i in arr])
@@ -53,8 +53,8 @@ def BinOp(name, op, fct):
         def test_column_op(self):
             arr0 = array.array("d", (10, 20, 30, 40, 50, 60))
             arr1 = array.array("d", (11, 21, 31, 41, 51, 61))
-            c0 = Column.from_float_array(arr0)
-            c1 = Column.from_float_array(arr1)
+            c0 = Column.from_float_mv(arr0)
+            c1 = Column.from_float_mv(arr1)
             c2 = fct(c0, c1)
 
             self.assertSequenceEqual(c2.f_values, [fct(i, j) for i,j in zip(arr0, arr1)])
@@ -153,20 +153,20 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         c = Column.from_sequence(seq)
         self.assertSequenceEqual(c.py_values, seq)
 
-    def test_create_from_float_array(self):
+    def test_create_from_float_mv(self):
         """
         You can create a column from a float array.
         """
         arr = array.array("d", [1, 2, 3, float("nan"), 5])
-        c = Column.from_float_array(arr)
+        c = Column.from_float_mv(arr)
         self.assertFloatSequenceEqual(c.f_values, arr)
 
-    def test_create_from_signed_char_array(self):
+    def test_create_from_signed_char_mv(self):
         """
         You can create a column from a signed array.
         """
         arr = array.array("b", [+1, 0, -1, -1, +1])
-        c = Column.from_ternary_array(arr)
+        c = Column.from_ternary_mv(arr)
         self.assertSequenceEqual(c.t_values, arr)
 
     def test_create_from_callable_1(self):
@@ -207,7 +207,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         """
         seq = [1, 2, 3, None, 5]
         arr = array.array("d", [1, 2, 3, float("nan"), 5])
-        c = Column.from_float_array(arr)
+        c = Column.from_float_mv(arr)
         self.assertSequenceEqual(c.py_values, seq)
 
     def test_sequence_to_ternary_conversion(self):
@@ -225,7 +225,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         """
         seq = [True, False, None, False, False, True]
         arr = array.array("b", [+1, -1, 0, -1, -1, +1])
-        c = Column.from_ternary_array(arr)
+        c = Column.from_ternary_mv(arr)
         self.assertSequenceEqual(c.py_values, seq)
 
     def tesst_ternary_to_float_conversion(self):
@@ -235,7 +235,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         NaN = float("nan")
         a = array.array("b", [ +1,  -1,  +1,   0,  +1])
         b = array.array("d", [1.0, 0.0, 3.0, NaN, 5.0])
-        c = Column.from_ternary_array(seq, a)
+        c = Column.from_ternary_mv(seq, a)
         self.assertFloatSequenceEqual(c.f_values, b)
 
     def tesst_float_to_ternary_conversion(self):
@@ -245,7 +245,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         NaN = float("nan")
         a = array.array("d", [1.0, 0.0, 3.0, NaN, 5.0])
         b = array.array("b", [ +1,  -1,  +1,   0,  +1])
-        c = Column.from_float_array(seq, a)
+        c = Column.from_float_mv(seq, a)
         self.assertFloatSequenceEqual(c.t_values, b)
 
     def test_equality(self):
@@ -268,7 +268,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         """
         with self.subTest(created="from a float array"):
             arr = array.array("d", [1, 2, 3, float("nan"), 5])
-            c = Column.from_float_array(arr)
+            c = Column.from_float_mv(arr)
 
             self.assertEqual(len(c), len(arr))
 
@@ -284,7 +284,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         """
         LEN=10
         cseq = Column.from_sequence(range(LEN))
-        carr = Column.from_float_array(array.array("d", range(LEN)))
+        carr = Column.from_float_mv(array.array("d", range(LEN)))
 
         for i in range(LEN):
             with self.subTest(created="from sequence"):
@@ -298,7 +298,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         """
         with self.subTest(created="from a float array"):
             arr = array.array("d", [10, 2, 3, float("nan"), 5])
-            c = Column.from_float_array(arr)
+            c = Column.from_float_mv(arr)
 
             self.assertEqual(c.min_max(), (2, 10))
 
@@ -314,7 +314,7 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         """
         LEN=10
         cseq = Column.from_sequence(range(LEN))
-        carr = Column.from_float_array(array.array("d", range(LEN)))
+        carr = Column.from_float_mv(array.array("d", range(LEN)))
         use_cases = (
                 ( 0, LEN ),
 #                ( 0, LEN+1 ), # raise an error with fin.containers.Tuple
@@ -325,10 +325,10 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         for use_case in use_cases:
             with self.subTest(use_case=use_case, created="from sequence"):
                 start, end = use_case
-                self.assertSequenceEqual(cseq[start:end].py_values, cseq.py_values.tst_slice(start,end))
+                self.assertSequenceEqual(tuple(cseq[start:end].py_values), tuple(cseq.py_values.tst_slice(start,end)))
             with self.subTest(use_case=use_case, created="from float array"):
                 start, end = use_case
-                self.assertSequenceEqual(carr[start:end].f_values, carr.f_values[start:end])
+                self.assertSequenceEqual(tuple(carr[start:end].f_values), tuple(carr.f_values[start:end]))
 
 # ======================================================================
 # Column metadata

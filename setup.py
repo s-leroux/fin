@@ -5,6 +5,7 @@ setup(
     ext_modules = cythonize([
         "fin/containers/tuple.pyx",
         "fin/mathx.pyx",
+        "fin/mem.pyx",
         "fin/model/kellyx.pyx",
         "fin/model/solvers/particle.pyx",
         "fin/model/solvers/random.pyx",
