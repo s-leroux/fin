@@ -284,4 +284,4 @@ cdef class FunctorN:
 
         self.eval(l, <param_t*>dst1.data.as_voidptr, m, v)
 
-        return Column.from_float_array(dst1, name=self.make_name(seqs), type=seqs[0]._type)
+        return Column.from_float_array(dst1, name=self.make_name(seqs), type=(<Column>seqs[0])._type)

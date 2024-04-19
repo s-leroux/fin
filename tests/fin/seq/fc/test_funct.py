@@ -73,3 +73,16 @@ class TestFunctor(unittest.TestCase):
                 res[0],
                 [x+y for x,y in zip(self.src1.py_values, self.src2.py_values)]
         )
+
+    def test_functor_N(self):
+        fct = functor.FunctorN_Example()
+        serie = Serie.create(self.idx)
+
+        res = fct(serie, self.src1, self.src1, self.src2, self.src2)
+
+        self.assertIsInstance(res, Column)
+        self.assertSequenceEqual(
+                res,
+                [x+x+y+y for x,y in zip(self.src1.py_values, self.src2.py_values)]
+        )
+

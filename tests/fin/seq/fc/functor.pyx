@@ -98,3 +98,18 @@ cdef class Functor2_3Example(funcx.Functor2_3):
         for i in range(n):
             # Sum
             dst1.as_doubles[i] = dst2.as_doubles[i] = dst3.as_doubles[i] = src1.as_doubles[i] + src2.as_doubles[i]
+
+cdef class FunctorN_Example(funcx.FunctorN):
+    def __cinit__(self):
+        self.src_tc = b"dddd"
+        self.dst1_tc = b"d"
+
+    cdef void eval(self, unsigned l, funcx.param_t *dst, unsigned m, (const funcx.param_t*)[] src):
+        cdef double acc
+        for i in range(l):
+            acc = 0.0
+            for j in range(m):
+                acc += src[j].as_doubles[i]
+
+            dst.as_doubles[i] = acc
+
