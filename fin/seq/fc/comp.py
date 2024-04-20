@@ -1,3 +1,5 @@
+from fin.seq.fc.compx import *
+
 from fin.seq.column import Column
 from fin.seq.coltypes import Ternary
 
