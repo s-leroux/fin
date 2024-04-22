@@ -340,22 +340,24 @@ cdef class bband:
     """
     Compute the Bollinger's band.
     """
+    cdef unsigned _n
+    cdef unsigned _width
     cdef sma    _sma
     cdef statx.stdev _stdev
     cdef band _band
-    cdef unsigned _n
 
     def __init__(self, n, w=2):
+        self._n = n
+        self._width = w
         self._sma = sma(n)
         self._stdev = statx.stdev.p(n)
         # Above:
         # in "Bollinger on Bollinger's Bands" p52 John Bollinger uses the population 
         # formula for standard deviation.
-        self._band = band(2)
-        self._n = n
+        self._band = band(w)
 
     def __repr__(self):
-        return f"BBANDB({self.n},{self.width})"
+        return f"BBANDB({self._n},{self._width})"
 
     def __call__(self, Serie ser, Column col1):
         # ------------------ prologue ------------------
@@ -377,7 +379,7 @@ cdef class bband:
                 ),
                 Column.from_float_mv(
                     dst2,
-                    name=f"SMA({self.n}), {col1.name}",
+                    name=f"SMA({self._n}), {col1.name}",
                     type=col1._type
                 ),
                 Column.from_float_mv(
