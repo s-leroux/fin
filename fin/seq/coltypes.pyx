@@ -4,6 +4,8 @@ from fin.utils.log import console
 from fin.utils import formatters
 from fin import datetime
 
+from fin.mathx cimport isnan
+
 cdef object IGNORE = object()
 
 # ======================================================================
@@ -115,13 +117,21 @@ class Float(ColType):
         cdef int tmp
         cdef str item
         for item in sequence:
-            tmp = item.rfind(".")
-            if tmp > -1:
-                tmp = len(item)-tmp-1
-                if tmp > precision:
-                    precision = tmp
+            try:
+                value = float(item)
+            except:
+                value = None # XXX Log warning here
+            else:
+                if isnan(value):
+                    value = None
+                else:
+                    tmp = item.rfind(".")
+                    if tmp > -1:
+                        tmp = len(item)-tmp-1
+                        if tmp > precision:
+                            precision = tmp
 
-            result.append(float(item))
+            result.append(value)
 
         self._options["precision.inferred"] = precision
         return result
@@ -141,7 +151,12 @@ class Integer(ColType):
     def parse_string_sequence(self, sequence):
         cdef list result = []
         for item in sequence:
-            result.append(int(item))
+            try:
+                value = int(item)
+            except:
+                value = None # XXX Log warning here
+
+            result.append(value)
 
         return result
 
