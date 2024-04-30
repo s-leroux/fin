@@ -114,7 +114,6 @@ cdef Serie serie_from_data(data, headings, types, dict kwargs):
         for col in it:
             if len(col) != rowcount:
                 raise ValueError(f"All columns must have the same length.")
-
     return serie_create(columns, name=name) # XXX Why not using `serie_bind` here?
 
 cdef Serie serie_from_rows(headings, types, rows, dict kwargs):
@@ -125,6 +124,9 @@ cdef Serie serie_from_csv(iterator, str formats, fieldnames, str delimiter, dict
     """
     Create a new serie by iterating over CSV data rows.
     """
+    if isinstance(iterator, str):
+        iterator = iterator.splitlines()
+
     rows = []
     types = parse_type_string(formats)
     reader = csv.reader(iterator, delimiter=delimiter)

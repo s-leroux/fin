@@ -325,6 +325,16 @@ class TestSerieFromCSV(unittest.TestCase):
         self.assertIsInstance(ser, serie.Serie)
         self.assertEqual(ser.rowcount, 756)
 
+    def test_from_csv_string(self):
+        with open("tests/_fixtures/MCD-20200103-20230103.csv", "rt") as f:
+            text = f.read()
+        ser = serie.Serie.from_csv(
+                text,
+                format="dnnnnni"
+                )
+        self.assertIsInstance(ser, serie.Serie)
+        self.assertEqual(ser.rowcount, 756)
+
 
 # ======================================================================
 # Projections
