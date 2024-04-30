@@ -118,8 +118,8 @@ class Float(ColType):
             tmp = item.rfind(".")
             if tmp > -1:
                 tmp = len(item)-tmp-1
-            if tmp > precision:
-                precision = tmp
+                if tmp > precision:
+                    precision = tmp
 
             result.append(float(item))
 
