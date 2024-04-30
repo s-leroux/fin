@@ -69,3 +69,18 @@ class TestCoreFunctions(unittest.TestCase):
         col = core.rownum(serie)
 
         self.assertSequenceEqual(tuple(col), range(LEN))
+
+    def test_coalesce(self):
+        XX = None
+        cols = (
+                ( 10, XX, XX, XX, XX, 15, ),
+                ( XX, 21, XX, XX, XX, 25, ),
+                ( 30, 31, 32, XX, XX, XX, ),
+                ( 40, 41, 42, 43, XX, 45, ),
+            )
+        expected = \
+                ( 10, 21, 32, 43, XX, 15, )
+
+        res = utilities.apply(self, core.coalesce, *[column.Column.from_sequence(col) for col in cols])
+        self.assertIsInstance(res, column.Column)
+        self.assertSequenceEqual(res, expected)

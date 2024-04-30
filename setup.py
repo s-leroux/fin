@@ -12,6 +12,7 @@ setup(
         "fin/model/solvers/solver.pyx",
         "fin/seq/coltypes.pyx",
         "fin/seq/column.pyx",
+        "fin/seq/fc/core.pyx",
         "fin/seq/fc/compx.pyx",
         "fin/seq/fc/logic.pyx",
         "fin/seq/fc/statx.pyx",

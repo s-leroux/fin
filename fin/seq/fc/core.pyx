@@ -2,6 +2,12 @@ import builtins
 
 from fin.seq.column import Column
 
+from cpython.ref cimport PyObject
+
+from fin.mem cimport alloca
+from fin.seq.column cimport Column
+from fin.seq.serie cimport Serie
+
 # ======================================================================
 # Core functions
 # ======================================================================
@@ -57,6 +63,35 @@ def named(new_name):
 
 def rownum(serie):
     return Column.from_sequence(builtins.range(serie.rowcount), type="i")
+
+def coalesce(Serie serie, *cols):
+    cdef unsigned n = serie.rowcount
+    cdef unsigned l = len(cols)
+    cdef PyObject ***cols_ptr = <PyObject***>alloca(l*sizeof(PyObject**))
+    cdef Column col
+    cdef unsigned i
+    for i, col in enumerate(cols):
+        cols_ptr[i] = col.get_py_values()._base_ptr
+
+    cdef list result = []
+    cdef PyObject *it
+    cdef PyObject *none_ptr = <PyObject*>None
+
+    cdef unsigned j = 0
+    while j < n:
+        i = 0
+        it = none_ptr
+        while i<l:
+            if cols_ptr[i][j] != none_ptr:
+                it = cols_ptr[i][j]
+                break
+            i += 1
+
+        assert it != NULL
+        result.append(<object>it)
+        j += 1
+
+    return Column.from_sequence(result)
 
 def shift(n):
     """
