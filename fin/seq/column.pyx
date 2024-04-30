@@ -29,12 +29,12 @@ cpdef Column as_column(obj):
     except TypeError:
         return Column.from_sequence(obj)
 
-cdef Column new_column_with_meta(Column other, length):
+cdef Column new_column_with_meta(Column other, length, type=None, name=None):
     cdef Column result = Column()
     # _id is filled by __cinit__
     result.length = length
-    result._name = other._name
-    result._type = other._type
+    result._name = name if name is not None else other._name
+    result._type = coltypes.parse_type_atom(type) if type is not None else other._type
 
     return result
 
@@ -121,7 +121,7 @@ cdef Column add_column_scalar(Column column, double scalar):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef Column result = new_column_with_meta(column, column.length)
+    cdef Column result = new_column_with_meta(column, column.length, type="n")
     result._name = f"({column.get_name()}+{scalar})"
 
     result._f_values = add_vector_scalar(
@@ -146,10 +146,8 @@ cdef Column add_column_column(Column a, Column b):
     if lenB != lenA:
         raise ColumnSizeMismatchError(a, b)
 
-    cdef Column result = new_column_with_meta(a, lenA)
+    cdef Column result = new_column_with_meta(a, lenA, type="n")
     result._name = f"({a.get_name()}+{b.get_name()})"
-    if result._type is None:
-        result._type = b._type
 
     result._f_values = add_vector_vector(
             lenA,
@@ -188,7 +186,7 @@ cdef Column mul_column_scalar(Column column, double scalar):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef Column result = new_column_with_meta(column, column.length)
+    cdef Column result = new_column_with_meta(column, column.length, type="n")
     result._name = f"({column.get_name()}*{scalar})"
 
     result._f_values = mul_vector_scalar(
@@ -213,10 +211,8 @@ cdef Column mul_column_column(Column a, Column b):
     if lenB != lenA:
         raise ColumnSizeMismatchError(a, b)
 
-    cdef Column result = new_column_with_meta(a, lenA)
+    cdef Column result = new_column_with_meta(a, lenA, type="n")
     result._name = f"({a.get_name()}*{b.get_name()})"
-    if result._type is None:
-        result._type = b._type
 
     result._f_values = mul_vector_vector(
             lenA,
@@ -255,7 +251,7 @@ cdef Column div_column_scalar(Column column, double scalar):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef Column result = new_column_with_meta(column, column.length)
+    cdef Column result = new_column_with_meta(column, column.length, type="n")
     result._name = f"({column.get_name()}/{scalar})"
 
     result._f_values = div_vector_scalar(
@@ -280,10 +276,8 @@ cdef Column div_column_column(Column a, Column b):
     if lenB != lenA:
         raise ColumnSizeMismatchError(a, b)
 
-    cdef Column result = new_column_with_meta(a, lenA)
+    cdef Column result = new_column_with_meta(a, lenA, type="n")
     result._name = f"({a.get_name()}/{b.get_name()})"
-    if result._type is None:
-        result._type = b._type
 
     result._f_values = div_vector_vector(
             lenA,
