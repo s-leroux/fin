@@ -1,7 +1,7 @@
 from fin.seq import serie
 from fin.utils import formatters
 
-DEFAULT_FORMATTER=formatters.StringLeftFormatter()
+DEFAULT_FORMATTER=formatters.StringRightFormatter()
 DEFAULT_CONTEXT=formatters.Context()
 
 def CSVFormatter(heading, columns, context, options):
