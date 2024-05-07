@@ -7,17 +7,16 @@ Cython implementation of common algorithms on columns.
 
 from libc.math cimport sqrt
 import array
-from cpython cimport array
 
 from fin.mathx cimport alloc, aalloc, isnan, NaN
-from fin.seq cimport column
-from fin.seq import column
-from fin.seq.fc cimport funcx
+from fin.seq.column cimport Column
+from fin.seq.serie cimport Serie
+from fin cimport mem
 
 # ======================================================================
 # Math and stats
 # ======================================================================
-cdef class var(funcx.Functor1):
+cdef class var:
     """
     Compute the Variance over a n-period window.
 
@@ -55,8 +54,22 @@ cdef class var(funcx.Functor1):
 
         return res
 
-    cdef make_name(self, col):
-        return f"{repr(self)}, {col.name}"
+    def __call__(self, Serie ser, Column col):
+        # ------------------ prologue ------------------
+        cdef unsigned l = ser.rowcount
+        cdef double[::1] dst = mem.double_alloc(l)
+        cdef const double *src = col.as_float_values()
+        # -------------- end of prologue ---------------
+
+        self.eval(l, &dst[0], src)
+
+        # ------------------ epilogue ------------------
+        return Column.from_float_mv(
+                dst,
+                name=f"{self}, {col.name}",
+                type=col._type
+            )
+        # -------------- end of epilogue ---------------
 
     cdef void eval(self, unsigned l, double* dst, const double* src):
         cdef double a = self.a
@@ -81,6 +94,7 @@ cdef class var(funcx.Functor1):
             else:
                 nones += 1
 
+            dst[i] = NaN
             i += 1
 
         while i < l:
@@ -102,7 +116,7 @@ cdef class var(funcx.Functor1):
             else:
                 nones -= 1
 
-cdef class stdev(funcx.Functor1):
+cdef class stdev:
     """
     Compute the Standard Deviation over a n-period window.
 
@@ -135,8 +149,25 @@ cdef class stdev(funcx.Functor1):
 
         return res
 
-    cdef make_name(self, col):
-        return f"STDDEV({self.delegate.n}), {col.name}"
+    def __repr__(self):
+        return f"STDDEV({self.delegate.n})"
+
+    def __call__(self, Serie ser, Column col):
+        # ------------------ prologue ------------------
+        cdef unsigned l = ser.rowcount
+        cdef double[::1] dst = mem.double_alloc(l)
+        cdef const double *src = col.as_float_values()
+        # -------------- end of prologue ---------------
+
+        self.eval(l, &dst[0], src)
+
+        # ------------------ epilogue ------------------
+        return Column.from_float_mv(
+                dst,
+                name=f"{self}, {col.name}",
+                type=col._type
+            )
+        # -------------- end of epilogue ---------------
 
     cdef void eval(self, unsigned l, double* dst, const double* src):
         self.delegate.eval(l, dst, src)

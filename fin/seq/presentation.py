@@ -118,11 +118,8 @@ class Presentation:
         for column in serie.columns:
             if opt_heading:
                 heading.append(DEFAULT_FORMATTER(context, column.name))
-            formatter = column.formatter
-            if formatter is None:
-                formatter = DEFAULT_FORMATTER
 
-            columns.append([formatter(context, cell) for cell in column])
+            columns.append(column.format(context))
 
         return heading, columns
 

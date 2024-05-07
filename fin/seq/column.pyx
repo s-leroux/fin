@@ -6,6 +6,8 @@ import array
 from fin.seq import coltypes
 from fin.seq cimport coltypes
 
+from fin cimport mem
+
 # ======================================================================
 # Globals
 # ======================================================================
@@ -27,9 +29,10 @@ cpdef Column as_column(obj):
     except TypeError:
         return Column.from_sequence(obj)
 
-cdef Column new_column_with_meta(Column other):
+cdef Column new_column_with_meta(Column other, length):
     cdef Column result = Column()
     # _id is filled by __cinit__
+    result.length = length
     result._name = other._name
     result._type = other._type
 
@@ -38,30 +41,72 @@ cdef Column new_column_with_meta(Column other):
 # ======================================================================
 # Low-level operations
 # ======================================================================
-cdef array.array _double_array_template = array.array("d")
+ctypedef signed char schar
 
 # ----------------------------------------------------------------------
 # Conversion
 # ----------------------------------------------------------------------
-cpdef array.array f_values_from_py_values(Tuple sequence):
+cpdef double[::1] f_values_from_py_values(Tuple sequence):
     cdef unsigned n = len(sequence)
     cdef unsigned i
-    cdef array.array arr = array.clone(_double_array_template, n, zero=False)
+    cdef double[::1] arr = mem.double_alloc(n)
 
     for i in range(n):
-        arr.data.as_doubles[i] = NaN if sequence[i] is None else sequence[i]
-    
+        arr[i] = NaN if sequence[i] is None else sequence[i]
+
     return arr
 
-cpdef Tuple py_values_from_f_values(array.array arr):
+cpdef Tuple py_values_from_f_values(double[::1] arr):
     cdef unsigned n = len(arr)
-    cdef const double* src = arr.data.as_doubles
-    cdef list lst = arr.tolist()
+    cdef const double* src = &arr[0]
+    cdef list lst = []
 
     cdef unsigned i
     for i in range(n):
-        if isnan(src[i]):
-            lst[i] = None
+        lst.append(None if isnan(src[i]) else src[i])
+
+    return Tuple.create(n, lst)
+
+cpdef signed char[::1] t_values_from_py_values(Tuple sequence):
+    """ Convert a column to a list of values in ternary logic.
+
+        Here, false is -1, unknown is 0 and true is +1
+
+        See https://en.wikipedia.org/wiki/Three-valued_logic
+        and https://homepage.cs.uiowa.edu/~dwjones/ternary/logic.shtml
+    """
+    cdef unsigned n = len(sequence)
+    cdef unsigned i
+    cdef signed char[::1] arr = mem.schar_alloc(n)
+    cdef signed char tmp
+    cdef object obj
+
+    for i in range(n):
+        obj = sequence[i]
+        if obj is None:
+            tmp = 0
+        elif obj:
+            tmp = 1
+        else:
+            tmp = -1
+
+        arr[i] = tmp
+
+    return arr
+
+cpdef Tuple py_values_from_t_values(signed char[::1] arr):
+    cdef unsigned n = len(arr)
+    cdef const signed char* src = &arr[0]
+    cdef list lst = []
+
+    cdef unsigned i
+    for i in range(n):
+        if src[i] == 0:
+            lst.append(None)
+        elif src[i] > 0:
+            lst.append(True)
+        else:
+            lst.append(False)
 
     return Tuple.create(n, lst)
 
@@ -76,13 +121,12 @@ cdef Column add_column_scalar(Column column, double scalar):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef Column result = new_column_with_meta(column)
+    cdef Column result = new_column_with_meta(column, column.length)
     result._name = f"({column.get_name()}+{scalar})"
 
-    cdef array.array values = column.get_f_values()
     result._f_values = add_vector_scalar(
-            len(values),
-            values.data.as_doubles,
+            column.length,
+            column.as_float_values(),
             scalar
     )
 
@@ -96,42 +140,40 @@ cdef Column add_column_column(Column a, Column b):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef array.array arrA = a.get_f_values()
-    cdef array.array arrB = b.get_f_values()
-    cdef unsigned lenA = len(arrA)
-    cdef unsigned lenB = len(arrB)
+    cdef unsigned lenA = a.length
+    cdef unsigned lenB = b.length
 
     if lenB != lenA:
         raise ColumnSizeMismatchError(a, b)
 
-    cdef Column result = new_column_with_meta(a)
+    cdef Column result = new_column_with_meta(a, lenA)
     result._name = f"({a.get_name()}+{b.get_name()})"
     if result._type is None:
         result._type = b._type
 
     result._f_values = add_vector_vector(
             lenA,
-            arrA.data.as_doubles,
-            arrB.data.as_doubles
+            a.as_float_values(),
+            b.as_float_values(),
     )
 
     return result
 
-cdef array.array add_vector_scalar(unsigned count, const double* values, double other):
-    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+cdef double[::1] add_vector_scalar(unsigned count, const double* values, double other):
+    cdef double[::1] arr = mem.double_alloc(count)
     cdef unsigned i
 
     for i in range(count):
-        arr.data.as_doubles[i] = values[i] + other
+        arr[i] = values[i] + other
 
     return arr
 
-cdef array.array add_vector_vector(unsigned count, const double* a, const double* b):
-    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+cdef double[::1] add_vector_vector(unsigned count, const double* a, const double* b):
+    cdef double[::1] arr = mem.double_alloc(count)
     cdef unsigned i
 
     for i in range(count):
-        arr.data.as_doubles[i] = a[i] + b[i]
+        arr[i] = a[i] + b[i]
 
     return arr
 
@@ -146,13 +188,12 @@ cdef Column mul_column_scalar(Column column, double scalar):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef Column result = new_column_with_meta(column)
+    cdef Column result = new_column_with_meta(column, column.length)
     result._name = f"({column.get_name()}*{scalar})"
 
-    cdef array.array values = column.get_f_values()
     result._f_values = mul_vector_scalar(
-            len(values),
-            values.data.as_doubles,
+            column.length,
+            column.as_float_values(),
             scalar
     )
 
@@ -166,42 +207,40 @@ cdef Column mul_column_column(Column a, Column b):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef array.array arrA = a.get_f_values()
-    cdef array.array arrB = b.get_f_values()
-    cdef unsigned lenA = len(arrA)
-    cdef unsigned lenB = len(arrB)
+    cdef unsigned lenA = a.length
+    cdef unsigned lenB = b.length
 
     if lenB != lenA:
         raise ColumnSizeMismatchError(a, b)
 
-    cdef Column result = new_column_with_meta(a)
+    cdef Column result = new_column_with_meta(a, lenA)
     result._name = f"({a.get_name()}*{b.get_name()})"
     if result._type is None:
         result._type = b._type
 
     result._f_values = mul_vector_vector(
             lenA,
-            arrA.data.as_doubles,
-            arrB.data.as_doubles
+            a.as_float_values(),
+            b.as_float_values(),
     )
 
     return result
 
-cdef array.array mul_vector_scalar(unsigned count, const double* values, double other):
-    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+cdef double[::1] mul_vector_scalar(unsigned count, const double* values, double other):
+    cdef double[::1] arr = mem.double_alloc(count)
     cdef unsigned i
 
     for i in range(count):
-        arr.data.as_doubles[i] = values[i] * other
+        arr[i] = values[i] * other
 
     return arr
 
-cdef array.array mul_vector_vector(unsigned count, const double* a, const double* b):
-    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+cdef double[::1] mul_vector_vector(unsigned count, const double* a, const double* b):
+    cdef double[::1] arr = mem.double_alloc(count)
     cdef unsigned i
 
     for i in range(count):
-        arr.data.as_doubles[i] = a[i] * b[i]
+        arr[i] = a[i] * b[i]
 
     return arr
 
@@ -216,13 +255,12 @@ cdef Column div_column_scalar(Column column, double scalar):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef Column result = new_column_with_meta(column)
+    cdef Column result = new_column_with_meta(column, column.length)
     result._name = f"({column.get_name()}/{scalar})"
 
-    cdef array.array values = column.get_f_values()
     result._f_values = div_vector_scalar(
-            len(values),
-            values.data.as_doubles,
+            column.length,
+            column.as_float_values(),
             scalar
     )
 
@@ -236,61 +274,143 @@ cdef Column div_column_column(Column a, Column b):
 
     TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
     """
-    cdef array.array arrA = a.get_f_values()
-    cdef array.array arrB = b.get_f_values()
-    cdef unsigned lenA = len(arrA)
-    cdef unsigned lenB = len(arrB)
+    cdef unsigned lenA = a.length
+    cdef unsigned lenB = b.length
 
     if lenB != lenA:
         raise ColumnSizeMismatchError(a, b)
 
-    cdef Column result = new_column_with_meta(a)
+    cdef Column result = new_column_with_meta(a, lenA)
     result._name = f"({a.get_name()}/{b.get_name()})"
     if result._type is None:
         result._type = b._type
 
     result._f_values = div_vector_vector(
             lenA,
-            arrA.data.as_doubles,
-            arrB.data.as_doubles
+            a.as_float_values(),
+            b.as_float_values(),
     )
 
     return result
 
-cdef array.array div_vector_scalar(unsigned count, const double* values, double other):
-    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+cdef double[::1] div_vector_scalar(unsigned count, const double* values, double other):
+    cdef double[::1] arr = mem.double_alloc(count)
     cdef unsigned i
 
     for i in range(count):
-        arr.data.as_doubles[i] = values[i] / other
+        arr[i] = values[i] / other
 
     return arr
 
-cdef array.array div_vector_vector(unsigned count, const double* a, const double* b):
-    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+cdef double[::1] div_vector_vector(unsigned count, const double* a, const double* b):
+    cdef double[::1] arr = mem.double_alloc(count)
     cdef unsigned i
 
     for i in range(count):
-        arr.data.as_doubles[i] = a[i] / b[i]
+        arr[i] = a[i] / b[i]
 
     return arr
 
 # ----------------------------------------------------------------------
 # Unary negation
 # ----------------------------------------------------------------------
-cdef array.array neg(unsigned count, const double* values):
-    cdef array.array arr = array.clone(_double_array_template, count, zero=False)
+cdef double[::1] neg(unsigned count, const double* values):
+    cdef double[::1] arr = mem.double_alloc(count)
     cdef unsigned i
 
     for i in range(count):
-        arr.data.as_doubles[i] = -values[i]
+        arr[i] = -values[i]
+
+    return arr
+
+# ----------------------------------------------------------------------
+# Bitwise and
+# ----------------------------------------------------------------------
+cdef Column and_column_column(Column a, Column b):
+    """
+    Column to column logical and.
+
+    This method performs an implicit conversion to ternary values.
+
+    TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+    """
+    cdef unsigned lenA = a.length
+    cdef unsigned lenB = b.length
+
+    if lenB != lenA:
+        raise ColumnSizeMismatchError(a, b)
+
+    cdef Column result = new_column_with_meta(a, lenA)
+    result._name = f"({a.get_name()}&{b.get_name()})"
+    if result._type is None:
+        result._type = b._type
+
+    result._t_values = and_vector_vector(
+            lenA,
+            a.as_ternary_values(),
+            b.as_ternary_values(),
+    )
+
+    return result
+
+cdef signed char[::1] and_vector_vector(unsigned count, const signed char* a, const signed char* b):
+    cdef signed char[::1] arr = mem.schar_alloc(count)
+    cdef unsigned i
+
+    for i in range(count):
+        arr[i] = a[i] if a[i] < b[i] else b[i]
+        # In balanced ternary logic, and() is the same as min()
+
+    return arr
+
+# ----------------------------------------------------------------------
+# Bitwise or
+# ----------------------------------------------------------------------
+cdef Column or_column_column(Column a, Column b):
+    """
+    Column to column logical or.
+
+    This method performs an implicit conversion to ternary values.
+
+    TODO: If implicit conversion raise an error, fallback to cell-by-cell addition.
+    """
+    cdef unsigned lenA = a.length
+    cdef unsigned lenB = b.length
+
+    if lenB != lenA:
+        raise ColumnSizeMismatchError(a, b)
+
+    cdef Column result = new_column_with_meta(a, lenA)
+    result._name = f"({a.get_name()}|{b.get_name()})"
+    if result._type is None:
+        result._type = b._type
+
+    result._t_values = or_vector_vector(
+            lenA,
+            a.as_ternary_values(),
+            b.as_ternary_values(),
+    )
+
+    return result
+
+cdef signed char[::1] or_vector_vector(unsigned count, const signed char* a, const signed char* b):
+    cdef signed char[::1] arr = mem.schar_alloc(count)
+    cdef unsigned i
+
+    for i in range(count):
+        arr[i] = a[i] if a[i] > b[i] else b[i]
+        # In balanced ternary logic, or() is the same as max()
 
     return arr
 
 # ----------------------------------------------------------------------
 # Column remapping
 # ----------------------------------------------------------------------
-cdef array.array remap_from_f_values(double* values, unsigned count, const unsigned* mapping):
+ctypedef fused integral_column_t:
+    signed char
+    double
+
+cdef integral_column_t[::1] remap_values(integral_column_t *values, unsigned count, const unsigned* mapping):
     """
     Remap an array of double using the indices provided in `mapping`.
 
@@ -298,7 +418,17 @@ cdef array.array remap_from_f_values(double* values, unsigned count, const unsig
 
     Low-level function.
     """
-    cdef array.array result = array.clone(_double_array_template, count, zero=False)
+    cdef integral_column_t[::1] result
+    cdef integral_column_t undefined
+
+    if integral_column_t is double:
+        result = mem.double_alloc(count)
+        undefined = NaN
+    else:
+        result = mem.schar_alloc(count)
+        undefined = 0
+
+    cdef integral_column_t *dst = &result[0]
     cdef unsigned i
     cdef unsigned idx
     cdef unsigned MISSING=-1
@@ -307,16 +437,38 @@ cdef array.array remap_from_f_values(double* values, unsigned count, const unsig
 
     for i in range(count):
         idx = mapping[i]
-        result.data.as_doubles[i] = values[idx] if idx != MISSING else NaN
+        dst[i] = values[idx] if idx != MISSING else undefined
 
     return result
 
-cdef inline Tuple remap_from_py_values(Tuple values, unsigned count, const unsigned* mapping):
+
+cdef double[::1] get_f_values(Column self):
     """
-    Remap an array of Python objects using the indices provided in `mapping`.
+    Return the content of the column as an array of floats.
     """
-    return values.remap(count, mapping)
-    
+    if self._f_values is not None:
+        return self._f_values
+
+    # Not cached and no direct conversion implemented. Fallback to the slow path.
+    if self._py_values is None:
+        self.get_py_values()
+
+    self._f_values = f_values_from_py_values(self._py_values)
+    return self._f_values
+
+cdef signed char[::1] get_t_values(Column self):
+    """
+    Return the content of the column as an array of ternary values.
+    """
+    if self._t_values is not None:
+        return self._t_values
+
+    # Not cached and no direct conversion implemented. Fallback to the slow path.
+    if self._py_values is None:
+        self.get_py_values()
+
+    self._t_values = t_values_from_py_values(self._py_values)
+    return self._t_values
 
 # ======================================================================
 # Column class
@@ -337,6 +489,8 @@ cdef class Column:
 
         self._id = _id
         _id += 1
+        self._t_values = None
+        self._f_values = None
 
     def __init__(self, *, name=None, type=None):
         if name is not None:
@@ -359,6 +513,7 @@ cdef class Column:
 
         cdef Column column = Column(name=name, **kwargs)
         column._py_values = Tuple.from_constant(count, k)
+        column.length = count
 
         return column
 
@@ -369,11 +524,12 @@ cdef class Column:
         """
         cdef Column column = Column(**kwargs)
         column._py_values = Tuple.from_sequence(sequence)
+        column.length = len(column._py_values)
 
         return column
 
     @staticmethod
-    def from_float_array(arr, **kwargs):
+    def from_float_mv(double[::1] arr, **kwargs):
         """
         Create a Column from an array of floats.
 
@@ -381,7 +537,22 @@ cdef class Column:
         You MUST treat the original array's content as an immutable object.
         """
         cdef Column column = Column(**kwargs)
-        column._f_values = arr # type checking is implicitly done here
+        column._f_values = arr
+        column.length = arr.shape[0]
+
+        return column
+
+    @staticmethod
+    def from_ternary_mv(signed char[::1] arr, **kwargs):
+        """
+        Create a Column from an array of signed chars.
+
+        This is an efficient "zero-copy" operation.
+        You MUST treat the original array's content as an immutable object.
+        """
+        cdef Column column = Column(**kwargs)
+        column._t_values = arr
+        column.length = arr.shape[0]
 
         return column
 
@@ -432,26 +603,33 @@ cdef class Column:
             return self._py_values
 
         # else
+        if self._t_values is not None:
+            self._py_values = py_values_from_t_values(self._t_values)
+            return self._py_values
+
+        # else
         raise NotImplementedError()
 
     @property
     def f_values(self):
-        return self.get_f_values()
+        return get_f_values(self)
 
-    cdef array.array get_f_values(self):
-        """
-        Return the content of the column as an array of floats.
-        """
-        if self._f_values is not None:
-            return self._f_values
+    cdef const double* as_float_values(self) except NULL:
+        if self._f_values is None:
+            get_f_values(self) # This may raise an exception!
 
-        # else
-        if self._py_values is not None:
-            self._f_values = f_values_from_py_values(self._py_values)
-            return self._f_values
+        return &self._f_values[0]
 
-        # else
-        raise NotImplementedError()
+    @property
+    def t_values(self):
+        return get_t_values(self)
+
+    cdef const signed char* as_ternary_values(self) except NULL:
+        if self._t_values is None:
+            get_t_values(self) # This may raise an exception!
+
+        return &self._t_values[0]
+
 
     # ------------------------------------------------------------------
     # Metadata
@@ -466,9 +644,8 @@ cdef class Column:
 
         return self._name
 
-    @property
-    def formatter(self):
-        return self._type.formatter(self)
+    def format(self, context):
+        return self._type.format(context, self)
 
     @property
     def type(self):
@@ -502,13 +679,13 @@ cdef class Column:
         """
         Compare if two columns are equal.
         """
-        if isinstance(other, Column):
+        if isinstance(other, Column) and isinstance(self, Column):
             if op == Py_EQ:
                 return self.py_values == other.py_values
             if op == Py_NE:
                 return self.py_values != other.py_values
 
-        raise NotImplementedError()
+        return NotImplemented
 
     def __repr__(self):
         parts = [ repr(self.py_values) ]
@@ -520,27 +697,34 @@ cdef class Column:
         return f"Column({', '.join(parts)})"
 
     def __len__(self):
-        if self._f_values is not None:
-            return len(self._f_values)
-        if self._py_values is not None:
-            return len(self._py_values)
-
-        raise NotImplementedError()
+        return self.length
 
     def __getitem__(self, x):
+        cdef slice  sl
         if type(x) is slice:
-            column = new_column_with_meta(self)
+            sl = <slice>x
+            if sl.step is not None and sl.step != 1:
+                raise ValueError(f"Only contiguous slices are supported ({sl})")
+
+            column = new_column_with_meta(self, 0)
             # XXX Do we really need to slice all representations?
             if self._f_values is not None:
-                column._f_values = self._f_values[x]
+                column._f_values = self._f_values[sl.start:sl.stop]
+                column.length = len(column._f_values)
+            if self._t_values is not None:
+                column._t_values = self._t_values[sl.start:sl.stop]
+                column.length = len(column._t_values)
             if self._py_values is not None:
                 column._py_values = self._py_values.slice(x.start, x.stop)
+                column.length = len(column._py_values)
             return column
 
         if self._py_values is not None:
-            return self._py_values[x]
+            return self._py_values[<Py_ssize_t>x]
         if self._f_values is not None:
-            return self._f_values[x]
+            return self._f_values[<Py_ssize_t>x]
+        if self._t_values is not None:
+            return self._t_values[<Py_ssize_t>x]
 
         raise NotImplementedError()
 
@@ -562,9 +746,11 @@ cdef class Column:
         """
         Create a copy of the column with values picked from the index specificed in `mapping`.
         """
-        cdef Column result = new_column_with_meta(self)
+        cdef Column result = new_column_with_meta(self, count)
         if self._f_values is not None:
-            result._f_values = remap_from_f_values(self._f_values.data.as_doubles, count, mapping)
+            result._f_values = remap_values[double](&self._f_values[0], count, mapping)
+        elif self._t_values is not None:
+            result._t_values = remap_values[schar](&self._t_values[0], count, mapping)
         elif self._py_values is not None:
             result._py_values = self._py_values.remap(count, mapping)
         else:
@@ -576,7 +762,7 @@ cdef class Column:
         return self.c_rename(newName)
 
     cdef Column c_rename(self, str newName):
-        cdef Column result = new_column_with_meta(self)
+        cdef Column result = new_column_with_meta(self, self.length)
         result._f_values = self._f_values
         result._py_values = self._py_values
 
@@ -591,7 +777,7 @@ cdef class Column:
         return self.c_shift(n)
 
     cdef Column c_shift(self, int n):
-        cdef Column result = new_column_with_meta(self)
+        cdef Column result = new_column_with_meta(self, self.length)
         result._py_values = self.get_py_values().shift(n)
 
         return result
@@ -658,14 +844,32 @@ cdef class Column:
 
         TODO: If implicit conversion raise an error, fallback to cell-by-cell negation.
         """
-        cdef array.array values = self.get_f_values()
+        cdef double[::1] values = get_f_values(self)
         cdef unsigned count = len(values)
 
-        cdef Column result = new_column_with_meta(self)
+        cdef Column result = new_column_with_meta(self, self.length)
         result._name = f"-{self.get_name()}"
-        result._f_values = neg(count, values.data.as_doubles)
+        result._f_values = neg(count, &values[0])
 
         return result
+
+    # ------------------------------------------------------------------
+    # Bitwise and
+    # ------------------------------------------------------------------
+    def __and__(self, other):
+        if isinstance(other, Column):
+            return and_column_column(self, other)
+        else:
+            return NotImplemented
+
+    # ------------------------------------------------------------------
+    # Bitwise or
+    # ------------------------------------------------------------------
+    def __or__(self, other):
+        if isinstance(other, Column):
+            return or_column_column(self, other)
+        else:
+            return NotImplemented
 
 
     # ------------------------------------------------------------------
@@ -677,3 +881,4 @@ cdef class Column:
         # magic value ("MISSING" constant).
 
         return self.c_remap(len(mapping), arr.data.as_uints)
+

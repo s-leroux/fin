@@ -15,19 +15,17 @@ import array
 from cpython cimport array
 
 from fin.mathx cimport alloc, aalloc, isnan, NaN
-from fin.seq cimport column
-from fin.seq import column
+from fin.seq.serie cimport Serie
+from fin.seq.column cimport Column
 
-from fin.seq.fc cimport funcx
 from fin.seq.fc cimport statx
+
+from fin cimport mem
 
 # ======================================================================
 # Moving averages and smoothing functions
 # ======================================================================
-cdef class sma(funcx.Functor1):
-    """
-    Compute the Simple Moving Average over a n-period window.
-    """
+cdef class sma:
     cdef unsigned n
 
     def __init__(self, n):
@@ -36,7 +34,24 @@ cdef class sma(funcx.Functor1):
     def __repr__(self):
         return f"SMA({self.n})"
 
-    cdef void eval(self, unsigned l, double* dst, double* src):
+    def __call__(self, Serie ser, Column col):
+        # ------------------ prologue ------------------
+        cdef unsigned l = ser.rowcount
+        cdef double[::1] dst = mem.double_alloc(l)
+        cdef const double *src = col.as_float_values()
+        # -------------- end of prologue ---------------
+
+        self.eval(l, &dst[0], src)
+
+        # ------------------ epilogue ------------------
+        return Column.from_float_mv(
+                dst,
+                name=f"{self}, {col.name}",
+                type=col._type
+            )
+        # -------------- end of epilogue ---------------
+
+    cdef int eval(self, unsigned l, double* dst, const double* src):
         cdef unsigned n = self.n
 
         cdef double[::1] buffer = alloc(n)
@@ -65,7 +80,7 @@ cdef class sma(funcx.Functor1):
 
             dst[i] = NaN if nans else acc/n
 
-cdef class ema(funcx.Functor1):
+cdef class ema:
     """
     Compute the Exponential Moving Average over a n-period window.
 
@@ -81,7 +96,24 @@ cdef class ema(funcx.Functor1):
     def __repr__(self):
         return f"EMA({self.n})"
 
-    cdef void eval(self, unsigned l, double* dst, double* src):
+    def __call__(self, Serie ser, Column col):
+        # ------------------ prologue ------------------
+        cdef unsigned l = ser.rowcount
+        cdef double[::1] dst = mem.double_alloc(l)
+        cdef const double *src = col.as_float_values()
+        # -------------- end of prologue ---------------
+
+        self.eval(l, &dst[0], src)
+
+        # ------------------ epilogue ------------------
+        return Column.from_float_mv(
+                dst,
+                name=f"{self}, {col.name}",
+                type=col._type
+            )
+        # -------------- end of epilogue ---------------
+
+    cdef void eval(self, unsigned l, double* dst, const double* src):
         cdef unsigned n = self.n
         cdef double alpha = self.alpha
 
@@ -104,7 +136,7 @@ cdef class ema(funcx.Functor1):
             dst[i] = NaN if history<n else acc
 
 
-cdef class wilders(funcx.Functor1):
+cdef class wilders:
     """
     Compute the Wilder's Smoothing.
 
@@ -121,7 +153,24 @@ cdef class wilders(funcx.Functor1):
     def __repr__(self):
         return f"WILDERS({self.n})"
 
-    cdef void eval(self, unsigned l, double* dst, double* src):
+    def __call__(self, Serie ser, Column col):
+        # ------------------ prologue ------------------
+        cdef unsigned l = ser.rowcount
+        cdef double[::1] dst = mem.double_alloc(l)
+        cdef const double *src = col.as_float_values()
+        # -------------- end of prologue ---------------
+
+        self.eval(l, &dst[0], src)
+
+        # ------------------ epilogue ------------------
+        return Column.from_float_mv(
+                dst,
+                name=f"{self}, {col.name}",
+                type=col._type
+            )
+        # -------------- end of epilogue ---------------
+
+    cdef void eval(self, unsigned l, double* dst, const double* src):
         cdef unsigned n = self.n
         cdef double alpha = self.alpha
 
@@ -146,7 +195,7 @@ cdef class wilders(funcx.Functor1):
 # ======================================================================
 # Technical Indicators
 # ======================================================================
-cdef class Tr(funcx.Functor3):
+cdef class Tr:
     """
     Compute the True Range
 
@@ -155,11 +204,33 @@ cdef class Tr(funcx.Functor3):
     * `abs(high[i]-close[i-1])`
     * `abs(low[i]-close[i-1])`
     """
-
     def __repr__(self):
         return f"TR"
 
-    cdef void eval(self, unsigned l, double* dst, double* high, double* low, double* close):
+    def __call__(self, Serie ser, Column high, Column low, Column close):
+        # ------------------ prologue ------------------
+        cdef unsigned l = ser.rowcount
+        cdef double[::1] dst1 = mem.double_alloc(l)
+        cdef const double *src1 = high.as_float_values()
+        cdef const double *src2 = low.as_float_values()
+        cdef const double *src3 = close.as_float_values()
+        # -------------- end of prologue ---------------
+
+        self.eval(l, &dst1[0], src1, src2, src3)
+
+        # ------------------ epilogue ------------------
+        return Column.from_float_mv(
+                dst1,
+                name=f"{self}, {high.name}, {low.name}, {close.name}",
+                type=close._type
+            )
+        # -------------- end of epilogue ---------------
+
+    cdef void eval(self,
+            unsigned l,
+            double *dst,
+            const double* high, const double* low, const double* close
+            ):
         cdef double yc = NaN # Yesterday's close
         cdef double th # today's high
         cdef double tl # today's low
@@ -189,7 +260,7 @@ cdef class Tr(funcx.Functor3):
 
 tr = Tr()
 
-class atr(funcx.Functor3):
+class atr:
     """
     Compute the Average True Range.
 
@@ -211,7 +282,7 @@ class atr(funcx.Functor3):
         atr = self.smooth(rowcount, tr)
         return atr
 
-cdef class band(funcx.Functor2_3):
+cdef class band:
     """
     Compute a band arround a middle value.
     """
@@ -220,17 +291,44 @@ cdef class band(funcx.Functor2_3):
     def __init__(self, width):
         self._width = width
 
-    cdef make_names(self, col1, col2):
-        basename = col1.name
-        return [
-                f"{basename}:B",
-                f"{basename}:M",
-                f"{basename}:A",
-                ]
+    def __repr__(self):
+        return "BAND({self._width})"
+
+    def __call__(self, Serie ser, Column col1, Column col2):
+        # ------------------ prologue ------------------
+        cdef unsigned l = ser.rowcount
+        cdef double[::1] dst1 = mem.double_alloc(l)
+        cdef double[::1] dst2 = mem.double_alloc(l)
+        cdef double[::1] dst3 = mem.double_alloc(l)
+        cdef const double *src1 = col1.as_float_values()
+        cdef const double *src2 = col2.as_float_values()
+        # -------------- end of prologue ---------------
+
+        self.eval(l, &dst1[0], &dst2[0], &dst3[0], src1, src2)
+
+        # ------------------ epilogue ------------------
+        return (
+                Column.from_float_mv(
+                    dst1,
+                    name=f"{self}, {col1.name}:B",
+                    type=col1._type
+                ),
+                Column.from_float_mv(
+                    dst2,
+                    name=f"{self}, {col1.name}:M",
+                    type=col1._type
+                ),
+                Column.from_float_mv(
+                    dst3,
+                    name=f"{self}, {col1.name}:A",
+                    type=col1._type
+                ),
+            )
+        # -------------- end of epilogue ---------------
 
     cdef void eval(self, unsigned l,
-            double* dst1, double* dst2, double* dst3,
-            const double* src1, const double* src2):
+            double *dst1, double *dst2, double *dst3,
+            const double *src1, const double *src2):
         cdef double width = self._width
         cdef unsigned i
         for i in range(l):
@@ -238,11 +336,11 @@ cdef class band(funcx.Functor2_3):
             dst2[i] = src1[i]
             dst3[i] = src1[i]+width*src2[i]
 
-cdef class bband(funcx.Functor1_3):
+cdef class bband:
     """
     Compute the Bollinger's band.
     """
-    cdef sma _sma
+    cdef sma    _sma
     cdef statx.stdev _stdev
     cdef band _band
     cdef unsigned _n
@@ -256,19 +354,43 @@ cdef class bband(funcx.Functor1_3):
         self._band = band(2)
         self._n = n
 
-    cdef make_names(self, col1):
-        n = self._n
-        width = self._band._width
-        basename = col1.name
-        return [
-                f"BBANDB({n},{width}) {basename}",
-                f"{self._sma.make_name(col1)}",
-                f"BBANDT({n},{width}) {basename}",
-                ]
+    def __repr__(self):
+        return f"BBANDB({self.n},{self.width})"
+
+    def __call__(self, Serie ser, Column col1):
+        # ------------------ prologue ------------------
+        cdef unsigned l = ser.rowcount
+        cdef double[::1] dst1 = mem.double_alloc(l)
+        cdef double[::1] dst2 = mem.double_alloc(l)
+        cdef double[::1] dst3 = mem.double_alloc(l)
+        cdef const double *src1 = col1.as_float_values()
+        # -------------- end of prologue ---------------
+
+        self.eval(l, &dst1[0], &dst2[0], &dst3[0], src1)
+
+        # ------------------ epilogue ------------------
+        return (
+                Column.from_float_mv(
+                    dst1,
+                    name=f"B{self}, {col1.name}",
+                    type=col1._type
+                ),
+                Column.from_float_mv(
+                    dst2,
+                    name=f"SMA({self.n}), {col1.name}",
+                    type=col1._type
+                ),
+                Column.from_float_mv(
+                    dst3,
+                    name=f"T{self}, {col1.name}",
+                    type=col1._type
+                ),
+            )
+        # -------------- end of epilogue ---------------
 
     cdef void eval(self, unsigned l,
-            double* dst1, double* dst2, double* dst3,
-            const double* src1):
+            double *dst1, double *dst2, double *dst3,
+            const double *src1):
         cdef double[::1] middle = alloc(l)
         cdef double[::1] sd = alloc(l)
         self._sma.eval(l, &middle[0], src1)

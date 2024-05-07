@@ -317,6 +317,15 @@ class TestSerieFromCSV(unittest.TestCase):
         self.assertEqual(ser.columns[1].name, "C")
         self.assertSequenceEqual(ser.columns[1].py_values, range(20,25))
 
+    def test_from_csv_file(self):
+        ser = serie.Serie.from_csv_file(
+                "tests/_fixtures/MCD-20200103-20230103.csv",
+                format="dnnnnni"
+                )
+        self.assertIsInstance(ser, serie.Serie)
+        self.assertEqual(ser.rowcount, 756)
+
+
 # ======================================================================
 # Projections
 # ======================================================================
@@ -746,17 +755,6 @@ class TestSerieEvaluationExpression(unittest.TestCase):
         self.assertSequenceEqual(serB.columns[1].py_values,seqA)
         self.assertEqual(serB.columns[0].name, "Y")
         self.assertEqual(serB.columns[1].name, "X")
-
-    def test_all(self):
-        ser = serie.Serie.create(
-                fc.sequence("ABCDEF"),
-                fc.constant(2),
-                fc.constant(3),
-                fc.constant(4),
-                )
-
-        cols = ser.evaluate(fc.all)
-        self.assertSequenceEqual(cols, ser.columns)
 
     def test_trivial_get(self):
         ser = serie.Serie.create(

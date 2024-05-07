@@ -58,7 +58,7 @@ def Gray():
     return ColorFormatter('gray')
 
 # ======================================================================
-# Flost formatters
+# Float formatters
 # ======================================================================
 class FloatFormatter(ComposableFormatter):
     def __init__(self, *, precision=2):
@@ -100,6 +100,27 @@ class ColorFloatFormatter(FloatFormatter):
             color = lambda x : x
 
         return (color(text), llen, rlen)
+
+# ======================================================================
+# Ternary value formatter
+# ======================================================================
+class TernaryFormatter(ComposableFormatter):
+    def __init__(self, *, true, false, none):
+        self._true = true
+        self._false = false
+        self._none = none
+
+    def __call__(self, context, value):
+        if value is True:
+            text = self._true
+        elif value is False:
+            text = self._false
+        elif value is None:
+            text = self._none
+        else:
+            raise ValueError(f"Ternary logic value expected, found {value!r}")
+
+        return (text, len(text), 0)
 
 # ======================================================================
 # String formatters

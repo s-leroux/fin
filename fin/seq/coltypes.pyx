@@ -54,57 +54,54 @@ cdef parse_type_string(object types):
     return types
 
 # ======================================================================
-# Utilities
-# ======================================================================
-def _parse_string_sequence(sequence, converter):
-    result = []
-    push = result.append
-
-    for item in sequence:
-        try:
-            item = converter(item)
-        except:
-            e = sys.exc_info()[1] # This will also catch an exception that doesn't inherit from Exception
-            console.warn(f"Can't convert {item} using {converter}")
-            console.info(str(e))
-            item = None
-
-        push(item)
-
-    return tuple(result)
-
-# ======================================================================
 # Types
 # ======================================================================
-class Type:
+class ColType:
+    """ The new column type implementation.
+
+        The type is responsible converting columns from and to
+        strings. The conversion of the individual cells to string
+        with extended alignment information if forwarded to a formatter
+        object.
+    """
     def __init__(self, **kwargs):
         self._options = kwargs
+        self._formatter = None
 
-    def formatter(self, column):
-        try:
-            return self._formatter
-        except AttributeError:
-            self._formatter = formatter = self.new_formatter_for(column)
-            return formatter
+    def set_option(self, name, value):
+        self._options[name] = value
 
-    def new_formatter_for(self, column):
+    def format(self, context, column):
+        formatter = self._formatter
+        if formatter is None:
+            formatter = self._formatter = self.create_formatter()
+
+        cdef list result = []
+        for cell in column:
+            result.append(formatter(context, cell))
+
+        return result
+
+    def create_formatter(self):
+        """ Return a Formatter object suitable for data of this type.
+
+            The default implementation return a StringFormatter.
+        """
         return formatters.StringLeftFormatter()
-
 
     def parse_string_sequence(self, sequence):
         """ Convert from a sequence of string to a tuple of the receiver's type instances.
+
+            Some types may collect statistics about the cell's current
+            representation in order to convert the values back to string at a
+            later time. Typically, a float formatter may gather data to
+            infer the precision used for float to string conversion.
+
+            The default implementation trivially convert the sequence to a tuple.
         """
         return tuple(sequence)
 
-
-def _infer_precision_from_data(column):
-    precision = 2
-    for cell in column:
-        if type(cell) is str:
-            precision = max(precision, cell.rfind("."))
-
-    return precision
-class Float(Type):
+class Float(ColType):
     """ The type for a column containing floating-point numbers.
 
         This type support the following options:
@@ -112,27 +109,95 @@ class Float(Type):
             The number of digits after the decimal separator when converting
             to a string.
     """
-    def new_formatter_for(self, column):
-        try:
-            precision = self._options["precision"]
-        except KeyError:
-            precision = _infer_precision_from_data(column)
+    def parse_string_sequence(self, sequence):
+        cdef list result = []
+        cdef unsigned precision = 2
+        cdef int tmp
+        cdef str item
+        for item in sequence:
+            tmp = item.rfind(".")
+            if tmp > -1:
+                tmp = len(item)-tmp-1
+            if tmp > precision:
+                precision = tmp
+
+            result.append(float(item))
+
+        self._options["precision.inferred"] = precision
+        return result
+
+    def create_formatter(self):
+        precision = self._options.get("precision")
+        if precision is None:
+            precision = self._options.get("precision.inferred")
+        if precision is None:
+            precision = 2
 
         return formatters.FloatFormatter(precision=precision)
 
-    def parse_string_sequence(self, sequence):
-        return _parse_string_sequence(sequence, float)
-
-class Integer(Type):
+class Integer(ColType):
     """ The type for a column containing integer numbers.
     """
-    def new_formatter_for(self, column):
+    def parse_string_sequence(self, sequence):
+        cdef list result = []
+        for item in sequence:
+            result.append(int(item))
+
+        return result
+
+    def create_formatter(self):
         return formatters.IntegerFormatter()
 
-    def parse_string_sequence(self, sequence):
-        return _parse_string_sequence(sequence, int)
+class Ternary(ColType):
+    """ The type for a column containing standard ternary logic values.
+        
+        This type support the following options:
+        - true:
+            The set of string considered as valid representations
+            for the True value
+        - false:
+            The set of string considered as valid representations
+            for the False value
+        - none:
+            The set of string considered as valid representations
+            for the None value
+    """
+    def __init__(self, **kwargs):
+        if "true" not in kwargs:
+            kwargs["true"] = ("True", "T", "Yes")
+        if "false" not in kwargs:
+            kwargs["false"] = ("False", "F", "No")
+        if "none" not in kwargs:
+            kwargs["none"] = ("None", "N", "")
 
-class Other(Type):
+        ColType.__init__(self, **kwargs)
+
+    def parse_string_sequence(self, sequence):
+        true = self._options.get("true")
+        false = self._options.get("false")
+        none = self._options.get("none")
+
+        cdef list result = []
+        for item in sequence:
+            if item in true:
+                result.append(True)
+            elif item in false:
+                result.append(False)
+            elif item in none:
+                result.append(None)
+            else:
+                raise ValueError(f"Unexpected value {item}")
+
+        return result
+
+    def create_formatter(self):
+        return formatters.TernaryFormatter(
+                true=self._options["true"][0],
+                false=self._options["false"][0],
+                none=self._options["none"][0],
+            )
+
+class Other(ColType):
     """ The default type for columns.
 
         This type support the following options:
@@ -142,11 +207,15 @@ class Other(Type):
     """
     def parse_string_sequence(self, sequence):
         try:
-            converter = self._options["from_string"]
+            parser = self._options["from_string"]
         except KeyError:
             return super().parse_string_sequence(sequence)
 
-        return _parse_string_sequence(sequence, converter)
+        cdef list result = []
+        for item in sequence:
+            result.append(parser(item))
+
+        return result
 
 Date = Other
 DateTime = Other

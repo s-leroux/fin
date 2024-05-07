@@ -17,12 +17,14 @@ cdef class Column:
     # ------------------------------------------------------------------
     # Polymorphic representation of the values:
     # ------------------------------------------------------------------
-    cdef Tuple          _py_values
-    cdef array.array    _f_values
+    cdef Tuple          _py_values # Python objects
+    cdef double[::1]    _f_values  # Array of doubles
+    cdef signed char[::1] _t_values  # Array of ternary values (-1, 0, +1)
 
     # ------------------------------------------------------------------
     # Metadata
     # ------------------------------------------------------------------
+    cdef unsigned       length
     cdef unsigned       _id
     cdef str            _name
     cdef object         _type
@@ -31,7 +33,14 @@ cdef class Column:
     # Accessors
     # ------------------------------------------------------------------
     cdef Tuple          get_py_values(self)
-    cdef array.array    get_f_values(self)
+
+    cdef const double*  as_float_values(self) except NULL
+    cdef const signed char*  as_ternary_values(self) except NULL
+    # Methods `as_....()` above:
+    # The returned buffer is valid as long as the column exists.
+    # Raise an exception if the column's values cannot be represented using the
+    # requested type.
+
 
     cdef str            get_name(self)
     cdef object         get_type(self)
@@ -47,3 +56,4 @@ cdef class Column:
     cdef Column         c_sub_scalar(self, double scalar)
     cdef Column         c_mul_scalar(self, double scalar)
     cdef Column         c_div_scalar(self, double scalar)
+
