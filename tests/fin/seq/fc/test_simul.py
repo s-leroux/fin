@@ -1,17 +1,11 @@
 import unittest
 
+from testing import assertions
 from fin.seq.fc import simul
 from fin.seq.column import Column
 from fin.seq.serie import Serie
 
-class CustomAssertions:
-    def assertSerieEqual(self, actual, expected, *args, **kwargs):
-        self.assertIsInstance(actual, Serie)
-        self.assertEqual(actual.headings, expected.headings, *args, **kwargs)
-        for n, (a, b) in enumerate(zip(actual.rows, expected.rows)):
-            self.assertEqual(a, b, msg=f"First differing row: {n}")
-
-class TestBSS(unittest.TestCase, CustomAssertions):
+class TestBSS(unittest.TestCase, assertions.ExtraTests):
     def test_basic(self):
         test_cases = (
             "#0 Basic test",

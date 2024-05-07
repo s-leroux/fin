@@ -4,7 +4,23 @@ from math import isnan
 Extra assertions for unittests
 """
 
+try:
+    from fin.seq.serie import Serie
+except:
+    pass
+
 class ExtraTests:
+    def assertSerieEqual(self, actual, expected, *args, **kwargs):
+        """ Assert that two series are identical.
+
+            Perform basic tests and then examine the series data row-by-row
+            to pin-point the differences.
+        """
+        self.assertIsInstance(actual, Serie)
+        self.assertEqual(actual.headings, expected.headings, *args, **kwargs)
+        for n, (a, b) in enumerate(zip(actual.rows, expected.rows)):
+            self.assertEqual(a, b, msg=f"First differing row: {n}")
+
     def assertFloatEqual(self, actual, expected, msg=None):
         """
         Assert that two floats are equal or both NaN.

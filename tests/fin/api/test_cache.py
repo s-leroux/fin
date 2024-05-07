@@ -1,10 +1,12 @@
 import unittest
 import os
 
+from testing import assertions
+
 from fin.api import yf, cache
 from fin.datetime import CalendarDate, CalendarDateDelta, parseisodate
 
-class TestCache(unittest.TestCase):
+class TestCache(unittest.TestCase, assertions.ExtraTests):
     def setUp(self):
         self.client = cache.Client(yf.Client(), db_name=":memory:")
         self.ticker = "MCD"
@@ -19,4 +21,4 @@ class TestCache(unittest.TestCase):
 
             # Compare string representation as we may have rounding errors
             # beyond the precision
-            self.assertEqual(str(t1), str(t2))
+            self.assertSerieEqual(t1, t2)
