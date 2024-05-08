@@ -8,6 +8,7 @@ from fin.seq.fc.comp import *
 from fin.seq.fc.core import *
 from fin.seq.fc.greeks import *
 from fin.seq.fc.interpolations import *
+from fin.seq.fc.logic import *
 from fin.seq.fc.proj import *
 from fin.seq.fc.simul import *
 from fin.seq.fc.stat import *
