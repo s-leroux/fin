@@ -95,6 +95,51 @@ class TestBSS(unittest.TestCase, assertions.ExtraTests):
                 "ORDERS",
                 (simul.bss(init_funds=1000), "ORDERS", "PRICES"),
             ),
+
+            "#4 Sell before buy",
+            "inini",
+            """\
+                T, PRICES, ORDERS, FUNDS, POSITIONS
+                0,     10,      0,  1000,         0
+                1,     11,      0,  1000,         0
+                2,     12,    -10,  1000,         0
+                3,     13,      0,  1000,         0
+                4,     14,      0,  1000,         0
+                5,     15,      5,   925,         5
+                6,     16,      0,   925,         5
+                7,     17,      0,   925,         5
+                8,     18,     -3,   979,         2
+                9,     19,      0,   979,         2\
+            """,
+            (
+                "T",
+                "PRICES",
+                "ORDERS",
+                (simul.bss(init_funds=1000), "ORDERS", "PRICES"),
+            ),
+
+            "#5 With fixed fees",
+            "inini",
+            """\
+                T, PRICES, ORDERS, FUNDS, POSITIONS
+                0,     10,      0,  1000,         0
+                1,     11,      0,  1000,         0
+                2,     12,     10,   879,        10
+                3,     13,      0,   879,        10
+                4,     14,      0,   879,        10
+                5,     15,     -5,   953,         5
+                6,     16,      0,   953,         5
+                7,     17,      0,   953,         5
+                8,     18,      3,   898,         8
+                9,     19,      0,   898,         8\
+            """,
+            (
+                "T",
+                "PRICES",
+                "ORDERS",
+                (simul.bss(init_funds=1000, fees=lambda direction, qty, price: 1), "ORDERS", "PRICES"),
+            ),
+
         )
 
         while test_cases:

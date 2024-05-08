@@ -2,7 +2,7 @@ import math
 
 from fin.seq.column import Column
 
-def bss(*, init_funds, init_position=0, short_sales=False, fractional=False):
+def bss(*, init_funds, init_position=0, short_sales=False, fractional=False, fees=None):
     """ Buy/Sell Simulator.
 
         This simulator uses two signal lines, _order_ and _price_.
@@ -31,22 +31,38 @@ def bss(*, init_funds, init_position=0, short_sales=False, fractional=False):
                 while order > 0:
                     if not fractional:
                         order = int(order)
+                        if order < 1:
+                            break
                     debit = order*price
+                    if fees is not None:
+                        debit += fees(True, order, price)
                     if debit > curr_funds:
-                        order = curr_funds/price
+                        adj_order = curr_funds/price
+                        if adj_order >= order:
+                            order -= 1
+                        else:
+                            order = adj_order
                     else:
                         curr_position += order
                         curr_funds -= debit
                         break
-                if order < 0:
+                while order < 0:
                     if not fractional:
                         order = int(order)
+                        if order > -1:
+                            break
                     if not short_sales:
                         if curr_position + order < 0:
                             order = -curr_position
+                            if order == 0:
+                                break
 
+                        credit = -order*price
+                        if fees is not None:
+                            credit -= fees(False, -order, price)
                     curr_position += order
-                    curr_funds -= order*price
+                    curr_funds += credit
+                    break
 
             funds.append(curr_funds)
             positions.append(curr_position)
