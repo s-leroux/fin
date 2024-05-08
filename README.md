@@ -3,6 +3,10 @@ This project aims to provide a set of personal investment tools with minimum dep
 
 The project does not have a GUI. You interact with the tools by writing Python scripts. The most actively developed part of the project is the `fin.seq` package that provides time/data series manipulation functions.
 
+Topic specific documentations:
+
+* [Simulation and strategy backtesting](./docs/simul.md)
+
 # Getting started
 I keep the dependencies to a minimum. Currently, outside Python 3 (≥ 3.6.9) and the standard Python library, you need:
 
