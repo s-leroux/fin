@@ -757,6 +757,7 @@ cdef class Column:
 
     cdef Column c_rename(self, str newName):
         cdef Column result = new_column_with_meta(self, self.length)
+        result._t_values = self._t_values
         result._f_values = self._f_values
         result._py_values = self._py_values
 

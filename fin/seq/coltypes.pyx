@@ -29,6 +29,8 @@ cdef parse_type_char(Py_UCS4 c):
     elif c==u'i': # INTEGER
 #            f = int
         return Integer()
+    elif c==u't': # TERNARY
+        return Ternary()
     else:
         raise ValueError(f"Invalid column type specifier {c!r}")
 

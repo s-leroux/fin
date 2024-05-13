@@ -47,15 +47,6 @@ class TestCoreFunctions(unittest.TestCase):
 
         self.assertIs(obj, serie["X"])
 
-    def test_named(self):
-        old_name = "X"
-        new_name = "Y"
-        col = column.Column.from_sequence("ABCDEF", name=old_name)
-        fct = core.named(new_name)
-        col = fct(None, col)
-
-        self.assertEqual(col.name, new_name)
-
     def test_shift(self):
         col = column.Column.from_sequence((1,2,3,4,5))
         fct = core.shift(3)
@@ -84,3 +75,23 @@ class TestCoreFunctions(unittest.TestCase):
         res = utilities.apply(self, core.coalesce, *[column.Column.from_sequence(col) for col in cols])
         self.assertIsInstance(res, column.Column)
         self.assertSequenceEqual(res, expected)
+
+class TestCoreFunctions2(unittest.TestCase):
+    def setUp(self):
+        master = column.Column.from_sequence(range(-10, 10))
+        self.cols = (
+                ("py", column.Column.from_sequence(master.py_values, name="X")),
+                ("t", column.Column.from_ternary_mv(master.t_values, name="X", type="t")),
+                ("f", column.Column.from_float_mv(master.f_values, name="X", type="n")),
+            )
+
+    def test_named(self):
+        old_name = "X"
+        new_name = "Y"
+        fct = core.named(new_name)
+        for desc, col in self.cols:
+            with self.subTest(desc=desc):
+                self.assertEqual(col.name, old_name)
+                col = fct(None, col)
+                self.assertEqual(col.name, new_name)
+

@@ -372,6 +372,7 @@ class TestColumnMetadata(unittest.TestCase):
 # ======================================================================
 # Mutations
 # ======================================================================
+from tests.fin.seq.utils import ColumnFactory
 class TestMutations(unittest.TestCase):
     def test_shift_positive(self):
         """
@@ -400,6 +401,26 @@ class TestMutations(unittest.TestCase):
 
         self.assertSequenceEqual(res.py_values, (1,2,3,4,5))
 
+    def test_rename(self):
+        new_name = "Y"
+        test_cases = (
+                "#0 From sequence",
+                ColumnFactory.column_from_sequence(1,2,3, name="X"),
+
+                "#1 From float values",
+                ColumnFactory.column_from_float(1,2,3, name="X"),
+
+                "#1 From ternary values",
+                ColumnFactory.column_from_ternary(1,2,3, name="X"),
+            )
+
+        while test_cases:
+            desc, col, *test_cases = test_cases
+            with self.subTest(desc=desc):
+                self.assertNotEqual(col.name, new_name)
+                res = col.rename(new_name)
+                self.assertEqual(res.name, new_name)
+                self.assertSequenceEqual(res.py_values, col.py_values)
 
 
 
