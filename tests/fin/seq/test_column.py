@@ -228,24 +228,24 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         c = Column.from_ternary_mv(arr)
         self.assertSequenceEqual(c.py_values, seq)
 
-    def tesst_ternary_to_float_conversion(self):
+    def test_ternary_to_float_conversion(self):
         """
         Conversion from ternary to float is supported.
         """
         NaN = float("nan")
         a = array.array("b", [ +1,  -1,  +1,   0,  +1])
-        b = array.array("d", [1.0, 0.0, 3.0, NaN, 5.0])
-        c = Column.from_ternary_mv(seq, a)
+        b = array.array("d", [1.0, 0.0, 1.0, NaN, 1.0])
+        c = Column.from_ternary_mv(a)
         self.assertFloatSequenceEqual(c.f_values, b)
 
-    def tesst_float_to_ternary_conversion(self):
+    def test_float_to_ternary_conversion(self):
         """
         Conversion from ternary to float is supported.
         """
         NaN = float("nan")
         a = array.array("d", [1.0, 0.0, 3.0, NaN, 5.0])
         b = array.array("b", [ +1,  -1,  +1,   0,  +1])
-        c = Column.from_float_mv(seq, a)
+        c = Column.from_float_mv(a)
         self.assertFloatSequenceEqual(c.t_values, b)
 
     def test_use_native_format_1(self):
