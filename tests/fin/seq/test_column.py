@@ -248,6 +248,22 @@ class TestColumn(unittest.TestCase, assertions.ExtraTests):
         c = Column.from_float_mv(seq, a)
         self.assertFloatSequenceEqual(c.t_values, b)
 
+    def test_use_native_format_1(self):
+        arr = array.array("d", [1.0, 0.0, 3.0, 4.0, 5.0])
+        col = Column.from_float_mv(arr)
+        _ = col.t_values # force caching a different representation
+        
+        # We should still use the native representation to convert to Python objects sequence
+        self.assertFloatSequenceEqual(col.py_values, arr)
+
+    def test_use_native_format_2(self):
+        arr = array.array("b", [ +1,  -1,  +1,   0,  +1])
+        col = Column.from_ternary_mv(arr)
+        _ = col.f_values # force caching a different representation
+        
+        # We should still use the native representation to convert to Python objects sequence
+        self.assertSequenceEqual(col.py_values, (True, False, True, None, True))
+
     def test_equality(self):
         seq = [1, 2, 3, None, 5]
         c1 = Column.from_sequence(seq)

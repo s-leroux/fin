@@ -743,12 +743,10 @@ cdef class Column:
         cdef Column result = new_column_with_meta(self, count)
         if self._f_values is not None:
             result._f_values = remap_values[double](&self._f_values[0], count, mapping)
-        elif self._t_values is not None:
+        if self._t_values is not None:
             result._t_values = remap_values[schar](&self._t_values[0], count, mapping)
-        elif self._py_values is not None:
+        if self._py_values is not None:
             result._py_values = self._py_values.remap(count, mapping)
-        else:
-            raise NotImplementedError()
 
         return result
 
