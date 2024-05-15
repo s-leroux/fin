@@ -6,6 +6,7 @@ The project does not have a GUI. You interact with the tools by writing Python s
 Topic specific documentations:
 
 * [Simulation and strategy backtesting](./docs/simul.md)
+* [Cleaning up Data](./docs/cleaningup.md)
 
 # Getting started
 I keep the dependencies to a minimum. Currently, outside Python 3 (≥ 3.6.9) and the standard Python library, you need:
