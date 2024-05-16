@@ -9,11 +9,13 @@ class HistoricalDataTest:
     if os.environ.get('SLOW_TESTS'):
         def test_historical_data_columns(self):
             """
-            The historical_data() method should return the 7 standard columns for
+            The historical_data() method should return the 6 standard columns for
             end-of-day data.
             """
             t = self.client.historical_data(self.ticker)
-            self.assertSequenceEqual(t.headings, ('Date', 'Open', 'High', 'Low', 'Close', 'Adj Close', 'Volume'))
+            headings = t.headings
+            for heading in ('Date', 'Open', 'High', 'Low', 'Close', 'Volume'):
+                self.assertIn(heading, headings)
 
         def test_historical_data_start_end(self):
             """

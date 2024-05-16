@@ -306,6 +306,9 @@ class _CalendarDate:
     def __str__(self):
         return self._pydate.strftime(DATE_FORMAT[self._resolution])
 
+    def format(self, fmt):
+        return self._pydate.strftime(fmt)
+
     @property
     def year(self):
         return self._pydate.year
@@ -559,11 +562,11 @@ def parseisodatetime_ms(datestring):
     """
     return CalendarDate.fromstring(datestring, "%Y-%m-%d %H:%M:%S.%f", DATETIMEMS)
 
-def parsetimestamp(datestring, resolution):
+def parsetimestamp(datestring):
     """
     Parse a string encoding a calendar date as a number of seconds since Unix Epoch.
     """
-    return _CalendarDate.fromtimestamp(float(datestring), resolution)
+    return _CalendarDate.fromtimestamp(float(datestring), DATETIME)
 
 def parsetimestamp_ms(datestring):
     """

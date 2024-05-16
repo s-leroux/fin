@@ -387,8 +387,8 @@ cdef class Serie:
         return serie_from_data(columns, headings, types, kwargs)
 
     @staticmethod
-    def from_rows(headings, type, rows, **kwargs):
-        return serie_from_rows(headings, type, rows, kwargs)
+    def from_rows(headings, types, rows, **kwargs):
+        return serie_from_rows(headings, types, rows, kwargs)
     # XXX Above: fix from_data() and from_rows() to have the parameters in the same order
 
     @staticmethod

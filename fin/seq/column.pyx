@@ -512,6 +512,17 @@ cdef class Column:
         return column
 
     @staticmethod
+    def from_strings(sequence, **kwargs):
+        """ Create a new column from the textual representation of the data.
+        """
+        cdef Column column = Column(**kwargs)
+        tpl = column._type.parse_string_sequence(sequence)
+        column._py_values = Tuple.from_sequence(tpl)
+        column.length = len(column._py_values)
+
+        return column
+
+    @staticmethod
     def from_sequence(sequence, **kwargs):
         """
         Create a Column from a sequence of Python objects.
