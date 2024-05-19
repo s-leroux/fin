@@ -38,13 +38,13 @@ cdef parse_type_char(Py_UCS4 c):
     #
     elif c==u'd': # ISO DATE
 #            f = datetime.parseisodate
-        return Date(from_string=datetime.parseisodate)
+        return Date()
     elif c==u's': # SECONDS SINCE UNIX EPOCH
 #            f = datetime.parsetimestamp
-        return DateTime(from_string=datetime.parsetimestamp)
+        return DateTime()
     elif c==u'm': # MILLISECONDS SINCE UNIX EPOCH
 #            f = datetime.parsetimestamp_ms
-        return DateTime(from_string=datetime.parsetimestamp_ms)
+        return DateTimeMicro()
     #
     # Otherwise...
     #
@@ -110,8 +110,8 @@ class ColType:
         """
         return formatters.StringLeftFormatter()
 
-    def parse_string_sequence(self, sequence):
-        """ Convert from a sequence of string to a tuple of the receiver's type instances.
+    def parse_sequence(self, sequence):
+        """ Convert from a sequence of Python objects to a tuple of the receiver's type instances.
 
             Some types may collect statistics about the cell's current
             representation in order to convert the values back to string at a
@@ -130,7 +130,7 @@ class Float(ColType):
             The number of digits after the decimal separator when converting
             to a string.
     """
-    def parse_string_sequence(self, sequence):
+    def parse_sequence(self, sequence):
         cdef list result = []
         cdef unsigned precision = 2
         cdef int tmp
@@ -167,7 +167,7 @@ class Float(ColType):
 class Integer(ColType):
     """ The type for a column containing integer numbers.
     """
-    def parse_string_sequence(self, sequence):
+    def parse_sequence(self, sequence):
         cdef list result = []
         for item in sequence:
             try:
@@ -206,7 +206,7 @@ class Ternary(ColType):
 
         ColType.__init__(self, **kwargs)
 
-    def parse_string_sequence(self, sequence):
+    def parse_sequence(self, sequence):
         true = self._options.get("true")
         false = self._options.get("false")
         none = self._options.get("none")
@@ -236,22 +236,22 @@ class Object(ColType):
 
         This is the default type if none is specified.
     """
-    def parse_string_sequence(self, sequence):
+    def parse_sequence(self, sequence):
         return sequence
 
 class Other(ColType):
     """ User-defined type.
 
         This type support the following options:
-        - from_string:
-            A function to convert from a string to the most meaningful format for
-            this type of data..
+        - from_object:
+            A function to convert from a Python object to the most meaningful format for
+            this type of data.
     """
-    def parse_string_sequence(self, sequence):
+    def parse_sequence(self, sequence):
         try:
-            parser = self._options["from_string"]
+            parser = self._options["from_object"]
         except KeyError:
-            return super().parse_string_sequence(sequence)
+            return super().parse_sequence(sequence)
 
         cdef list result = []
         for item in sequence:
@@ -259,5 +259,82 @@ class Other(ColType):
 
         return result
 
-Date = Other
-DateTime = Other
+class DateTimeBase(ColType):
+    """ The type for a column containing datetime values.
+
+        This type support the following options:
+        - format:
+            The strftime format string used when converting to string.
+    """
+    def create_formatter(self):
+        format = self._options.get("format")
+
+        return formatters.DateTimeFormatter(format=format)
+
+    def parse_sequence(self, sequence):
+        raise NotImplementedError(f"Sub-classes should call _parse_sequence_to() with the proper arguments")
+
+    def parse_sequence_to(self, sequence, datetime_cls, datetime_from_str):
+        cdef list result = []
+        from_ts = datetime_cls.fromtimestamp
+
+        for item in sequence:
+            # We recognize the following convestions:
+            # - None -> None
+            # - DateTime -> DateTime: identity
+            # - number/obj.timetamp -> convert from timestamp
+            # - str -> DateTime: parse using a format string
+            if item is None:
+                result.append(item)
+                continue
+
+            t = type(item)
+            if t is datetime_cls:
+                result.append(item)
+                continue
+
+            # Possible timestamp:
+            try:
+                item = item.timestamp
+            except AttributeError:
+                pass
+
+            try:
+                item = float(item)
+            except:
+                pass
+            else:
+                result.append(from_ts(item))
+                continue
+
+            # Time string
+            if isinstance(item, str):
+                result.append(datetime_from_str(item))
+                continue
+
+            raise ValueError(f"Can't convert {item} or type {t} to a CalendarDateTime")
+
+        return result
+
+class Date(DateTimeBase):
+    def parse_sequence(self, sequence):
+        return self.parse_sequence_to(
+                sequence, datetime.CalendarDate,
+                datetime.parseisodate,
+            )
+
+class DateTime(DateTimeBase):
+    def parse_sequence(self, sequence):
+        return self.parse_sequence_to(sequence,
+                datetime.CalendarDateTime,
+                datetime.parseisodatetime,
+            )
+
+class DateTimeMicro(DateTimeBase):
+    def parse_sequence(self, sequence):
+        return self.parse_sequence_to(
+                sequence,
+                datetime.CalendarDateTimeMicro,
+                datetime.parseisodatetime_ms,
+            )
+

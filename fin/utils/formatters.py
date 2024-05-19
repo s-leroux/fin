@@ -1,4 +1,5 @@
 from fin.utils import termcap
+from fin.datetime import asCalendarDate
 
 # ======================================================================
 # Context
@@ -134,6 +135,27 @@ class StringRightFormatter(ComposableFormatter):
     def __call__(self, context, string):
         result = str(string)
         return (result, len(result), 0)
+
+# ======================================================================
+# DateTime formatters
+# ======================================================================
+class DateTimeFormatter(ComposableFormatter):
+    def __init__(self, *, format=None):
+        self._format = format
+
+    def __call__(self, context, date):
+        try:
+            date = asCalendarDate(date)
+        except:
+            return (str(date), 0, 0)
+
+        fmt = self._format
+        if fmt is not None:
+            text = date.format(self._format)
+        else:
+            test = str(date)
+
+        return (text, len(text), 0)
 
 IntegerFormatter = StringRightFormatter
 

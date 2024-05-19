@@ -477,8 +477,8 @@ class CalendarDate(_CalendarDate):
                 )
 
 class CalendarDateTime(_CalendarDate):
-    def __init__(self, year, month, day):
-        super().__init__(year, month, day, resolution=DATETIME)
+    def __init__(self, year, month, day, hour=0, minute=0, second=0):
+        super().__init__(year, month, day, hour, minute, second, resolution=DATETIME)
 
     @staticmethod
     def now():
@@ -515,8 +515,8 @@ class CalendarDateTime(_CalendarDate):
                 )
 
 class CalendarDateTimeMicro(_CalendarDate):
-    def __init__(self, year, month, day):
-        super().__init__(year, month, day, resolution=DATETIMEMS)
+    def __init__(self, year, month, day, hour=0, minute=0, second=0, microsecond=0):
+        super().__init__(year, month, day, hour, minute, second, microsecond, resolution=DATETIMEMS)
 
     @staticmethod
     def now():

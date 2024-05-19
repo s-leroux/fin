@@ -1,9 +1,10 @@
 import unittest
 
+from fin import datetime
 from fin.seq import coltypes
 
 class TestFloat(unittest.TestCase):
-    def test_parse_string_sequence(self):
+    def test_parse_sequence(self):
         test_cases = (
                 "#0 Basic use case",
                 ( "10.5", "1.45", "100.345", "1.2345", "-10"),
@@ -18,7 +19,7 @@ class TestFloat(unittest.TestCase):
             desc, seq, expected, *test_cases = test_cases
             typ = coltypes.Float()
             with self.subTest(desc=desc):
-                actual = typ.parse_string_sequence(seq)
+                actual = typ.parse_sequence(seq)
                 self.assertSequenceEqual(actual, expected)
 
     def test_precision_inference(self):
@@ -36,6 +37,34 @@ class TestFloat(unittest.TestCase):
             desc, seq, precision, *test_cases = test_cases
             typ = coltypes.Float()
             with self.subTest(desc=desc):
-                typ.parse_string_sequence(seq)
+                typ.parse_sequence(seq)
                 self.assertEqual(typ._options["precision.inferred"], precision)
+
+class TestDateTime(unittest.TestCase):
+    def test_parse_sequence(self):
+        dt = datetime.CalendarDateTime(2023, 12, 5, 18, 30, 14)
+        test_cases = (
+                "#0 Idendtity",
+                dt,
+                dt,
+
+                "#1 From iso string",
+                "2023-12-05 18:30:14",
+                dt,
+
+                "#2 From timestamp",
+                dt.timestamp,
+                dt,
+
+                "#3 None",
+                None,
+                None,
+            )
+
+        while test_cases:
+            desc, indata, expected, *test_cases = test_cases
+            typ = coltypes.DateTime()
+            with self.subTest(desc=desc):
+                actual = typ.parse_sequence((indata,))
+                self.assertSequenceEqual(actual, (expected,))
 

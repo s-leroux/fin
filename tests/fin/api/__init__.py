@@ -29,9 +29,10 @@ class HistoricalDataTest(ExtraTests):
                 )
 
             t = self.client.historical_data(self.ticker, **params)
+            datefmt = "%Y-%m-%d"
             dc = t["Date"].columns[-1]
-            self.assertStartsWith(str(dc[-1]), "2023-01-03")
-            self.assertStartsWith(str(dc[0]), "2022-12-28")
+            self.assertStartsWith(dc[-1].format(datefmt), "2023-01-03")
+            self.assertStartsWith(dc[0].format(datefmt), "2022-12-28")
             # self.assertEqual(len(dc), 5) # some exchange are open the week-end!
             for cell in dc:
                 self.assertIsInstance(cell, CalendarDate)

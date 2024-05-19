@@ -377,7 +377,7 @@ class TestColumnMetadata(unittest.TestCase):
         You may specify a type at column's creation time.
         """
         class T:
-            def parse_string_sequence(self, sequence):
+            def parse_sequence(self, sequence):
                 return tuple(sequence)
         t = T()
 

@@ -31,11 +31,19 @@ def historical_data_download(pair, duration, end):
                 interval="1d",
             ))
         if r.status_code != 200:
+            print(r.text)
             raise Exception(f"Can't retrieve data at {end_point} (status={r.status_code})")
 
         chunk = r.json()
-        result += chunk
+
         start = chunk[-1][6]+1
+
+        # In place conversion from milliseconds to timestamps
+        for record in chunk:
+            record[0] /= 1000.0
+            record[6] /= 1000.0
+
+        result += chunk
 
     return result
 
@@ -48,6 +56,7 @@ def Client():
                         "mnnnnn",
                         data,
                         name=ticker,
+                        conv=True
                         )
 
     return _Client()

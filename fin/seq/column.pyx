@@ -519,7 +519,7 @@ cdef class Column:
         """
         cdef Column column = Column(**kwargs)
         column._py_values = Tuple.from_sequence(
-            column._type.parse_string_sequence(sequence)
+            column._type.parse_sequence(sequence)
         )
         column.length = len(column._py_values)
 
