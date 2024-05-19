@@ -252,8 +252,8 @@ class _CalendarDate:
 
         return result
 
-    @staticmethod
-    def fromstring(string, fmt, resolution):
+    @classmethod
+    def fromstring(cls, string, fmt, resolution):
         """
         Parse a string using a `strptime`-compatible format and register it.
         """
@@ -276,7 +276,7 @@ class _CalendarDate:
 
         # FIXME Should reduce resolution according to the calendar date resolution
 
-        result = CalendarDate.__new__(CalendarDate)
+        result = cls.__new__(cls)
         result._pydate = dt
         result._resolution = resolution
 
@@ -379,56 +379,57 @@ class _CalendarDate:
 
     def __add__(self, delta):
         """
-        Create a new CalendarDate offsetted by delta.
+        Create a new CalendarDate offset by delta.
 
         Delta are applied individually from the largest to the smallest unit.
         This may raise a ValueError if the date does not exist or is ambiguous.
 
         For example, trying to find the calendar date one year before 2020-02-29
-        is ambiguous and will raise ValueError (since 2020 is a bisextile year,
+        is ambiguous and will raise ValueError (since 2020 is a leap year,
         whereas 2019 isn't)
 
         If is a *error* to apply a delta whose resolution in greater than the
         receiving calendar date (ie: add a MICROSECOND resolution delta to a
-        DATE reolution calendar date)..
+        DATE resolution calendar date)..
         """
-        if isinstance(delta, CalendarDateDelta):
-            self_resolution = self._resolution
-            delta_resolution = delta._resolution
+        try:
+            delta = asCalendarDateDelta(delta)
+        except:
+            return NotImplemented
 
-            if f"{self_resolution}:{delta_resolution}" not in (
-                    "DATE:DATE",
-                    "DATETIME:DATETIME", "DATETIME:DATE",
-                    "DATETIMEMS:DATETIME", "DATETIMEMS:DATE", "DATETIMEMS:DATETIMEMICRO"
-                    ):
-                raise ValueError(f"Cannot mix {self_resolution} and {delta_resolution}")
+        self_resolution = self._resolution
+        delta_resolution = delta._resolution
 
-            a,b = divmod((delta._years or 0)*12 + (delta._months or 0), 12)
-            new_year = self.year + a
-            new_month = self.month + b
-            # Above, self.month in the [1..12] range and 12 > b >= 0
-            if new_month > 12:
-                new_year += 1
-                new_month -= 12
+        if f"{self_resolution}:{delta_resolution}" not in (
+                "DATE:DATE",
+                "DATETIME:DATETIME", "DATETIME:DATE",
+                "DATETIMEMS:DATETIME", "DATETIMEMS:DATE", "DATETIMEMS:DATETIMEMICRO"
+                ):
+            raise ValueError(f"Cannot mix {self_resolution} and {delta_resolution}")
 
-            new_date = self._pydate.replace(year=new_year, month=new_month)
+        a,b = divmod((delta._years or 0)*12 + (delta._months or 0), 12)
+        new_year = self.year + a
+        new_month = self.month + b
+        # Above, self.month in the [1..12] range and 12 > b >= 0
+        if new_month > 12:
+            new_year += 1
+            new_month -= 12
 
-            # for days, we can delegate to the python datetime module
-            days = delta._weeks*7 + delta._days
-            new_date = new_date + timedelta(days=days)
+        new_date = self._pydate.replace(year=new_year, month=new_month)
 
-            microseconds = (((delta._hours*60)+delta._minutes)*60+delta._seconds*1000000)+delta._microseconds
-            new_date = new_date + timedelta(microseconds=microseconds)
+        # for days, we can delegate to the python datetime module
+        days = delta._weeks*7 + delta._days
+        new_date = new_date + timedelta(days=days)
 
-            cls = type(self)
-            result = cls.__new__(cls)
-            result._pydate = new_date
-            result._resolution=self_resolution
+        microseconds = (((delta._hours*60)+delta._minutes)*60+delta._seconds*1000000)+delta._microseconds
+        new_date = new_date + timedelta(microseconds=microseconds)
 
-            return result
+        cls = type(self)
+        result = cls.__new__(cls)
+        result._pydate = new_date
+        result._resolution=self_resolution
 
-
-        return NotImplemented
+        return result
 
     def __sub__(self, other):
         """
@@ -462,6 +463,10 @@ class CalendarDate(_CalendarDate):
 
         return result
 
+    @classmethod
+    def fromstring(cls, string, fmt):
+        return super(CalendarDate, cls).fromstring(string, fmt, resolution=DATE)
+
     def __repr__(self):
         return "{}.{}({}, {}, {})".format(
                 type(self).__module__,
@@ -492,6 +497,10 @@ class CalendarDateTime(_CalendarDate):
         result._resolution = DATETIME
 
         return result
+
+    @classmethod
+    def fromstring(cls, string, fmt):
+        return super(CalendarDateTime, cls).fromstring(string, fmt, resolution=DATETIME)
 
     def __repr__(self):
         return "{}.{}({}, {}, {}, {}, {}, {})".format(
@@ -526,6 +535,10 @@ class CalendarDateTimeMicro(_CalendarDate):
 
         return result
 
+    @classmethod
+    def fromstring(cls, string, fmt):
+        return super(CalendarDateTimeMicro, cls).fromstring(string, fmt, resolution=DATETIMEMICRO)
+
     def __repr__(self):
         return "{}.{}({}, {}, {}, {}, {}, {}, {})".format(
                 type(self).__module__,
@@ -548,28 +561,34 @@ def parseisodate(datestring):
     """
     Parse a string formated as an ISO 8601 calendar date.
     """
-    return CalendarDate.fromstring(datestring, "%Y-%m-%d", DATE)
+    return CalendarDate.fromstring(datestring, "%Y-%m-%d")
 
 def parseisodatetime(datestring):
     """
     Parse a string formated as an ISO 8601 calendar date.
     """
-    return CalendarDate.fromstring(datestring, "%Y-%m-%d %H:%M:%S", DATETIME)
+    return CalendarDateTime.fromstring(datestring, "%Y-%m-%d %H:%M:%S")
 
 def parseisodatetime_ms(datestring):
     """
     Parse a string formated as an ISO 8601 calendar date.
     """
-    return CalendarDate.fromstring(datestring, "%Y-%m-%d %H:%M:%S.%f", DATETIMEMS)
+    return CalendarDateTimeMicro.fromstring(datestring, "%Y-%m-%d %H:%M:%S.%f")
 
-def parsetimestamp(datestring):
+def parsetimestamp_d(datestring):
     """
     Parse a string encoding a calendar date as a number of seconds since Unix Epoch.
     """
-    return _CalendarDate.fromtimestamp(float(datestring), DATETIME)
+    return CalendarDate.fromtimestamp(float(datestring))
+
+def parsetimestamp_s(datestring):
+    """
+    Parse a string encoding a calendar date as a number of seconds since Unix Epoch.
+    """
+    return CalendarDateTime.fromtimestamp(float(datestring))
 
 def parsetimestamp_ms(datestring):
     """
     Parse a string encoding a calendar date as a number of milliseconds since Unix Epoch.
     """
-    return _CalendarDate.fromtimestamp(float(datestring)/1000, DATETIMEMS)
+    return CalendarDateTimeMicro.fromtimestamp(float(datestring)/1000)

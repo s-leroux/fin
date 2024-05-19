@@ -12,11 +12,30 @@ cdef object IGNORE = object()
 # Type string parsing
 # ======================================================================
 cdef parse_type_char(Py_UCS4 c):
+    #
+    # Generic types
+    #
     if c==u'-': # IGNORE
         return None
+    elif c==u'o':
+        return Object()
+    #
+    # Numeric types
+    #
     elif c==u'n': # NUMERIC
 #            f = float
         return Float()
+    elif c==u'i': # INTEGER
+#            f = int
+        return Integer()
+    #
+    # Logical types
+    #
+    elif c==u't': # TERNARY
+        return Ternary()
+    #
+    # Date/Time types
+    #
     elif c==u'd': # ISO DATE
 #            f = datetime.parseisodate
         return Date(from_string=datetime.parseisodate)
@@ -26,11 +45,9 @@ cdef parse_type_char(Py_UCS4 c):
     elif c==u'm': # MILLISECONDS SINCE UNIX EPOCH
 #            f = datetime.parsetimestamp_ms
         return DateTime(from_string=datetime.parsetimestamp_ms)
-    elif c==u'i': # INTEGER
-#            f = int
-        return Integer()
-    elif c==u't': # TERNARY
-        return Ternary()
+    #
+    # Otherwise...
+    #
     else:
         raise ValueError(f"Invalid column type specifier {c!r}")
 
@@ -117,7 +134,7 @@ class Float(ColType):
         cdef list result = []
         cdef unsigned precision = 2
         cdef int tmp
-        cdef str item
+
         for item in sequence:
             try:
                 value = float(item)
@@ -126,7 +143,7 @@ class Float(ColType):
             else:
                 if isnan(value):
                     value = None
-                else:
+                elif type(item) is str:
                     tmp = item.rfind(".")
                     if tmp > -1:
                         tmp = len(item)-tmp-1
@@ -196,11 +213,11 @@ class Ternary(ColType):
 
         cdef list result = []
         for item in sequence:
-            if item in true:
+            if item is True or item in true:
                 result.append(True)
-            elif item in false:
+            elif item is False or item in false:
                 result.append(False)
-            elif item in none:
+            elif item is None or item in none:
                 result.append(None)
             else:
                 raise ValueError(f"Unexpected value {item}")
@@ -214,8 +231,16 @@ class Ternary(ColType):
                 none=self._options["none"][0],
             )
 
+class Object(ColType):
+    """ The type for a column containing arbitrary PYthon objects.
+
+        This is the default type if none is specified.
+    """
+    def parse_string_sequence(self, sequence):
+        return sequence
+
 class Other(ColType):
-    """ The default type for columns.
+    """ User-defined type.
 
         This type support the following options:
         - from_string:

@@ -47,6 +47,17 @@ class ExtraTests:
         """
         return self.assertSequenceEqual(list(iter(actual)), list(iter(expected)), msg)
 
+    def assertStartsWith(self, actual, head, msg=None):
+        if msg is None:
+            msg = f"{actual!r} does not start with {head!r}"
+        
+        tmp = self.longMessage
+        try:
+            self.longMessage = False
+            return self.assertTrue(actual.startswith(head), msg=msg)
+        finally:
+            self.longMessage = tmp
+
 
 def assertAlmostEqual(*, ndigits=8):
     def _assertAlmostEqual(self, actual, expected, msg=None):

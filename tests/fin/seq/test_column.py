@@ -366,18 +366,18 @@ class TestColumnMetadata(unittest.TestCase):
 
     def test_default_type(self):
         """
-        By default, the type is set to Other.
+        By default, the type is set to Object.
         """
         c = Column.from_sequence([1,2,3])
 
-        self.assertIsInstance(c.type, coltypes.Other)
+        self.assertIsInstance(c.type, coltypes.Object)
 
     def test_user_type(self):
         """
         You may specify a type at column's creation time.
         """
         class T:
-            def from_sequence(self, sequence):
+            def parse_string_sequence(self, sequence):
                 return tuple(sequence)
         t = T()
 

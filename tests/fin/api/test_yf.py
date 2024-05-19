@@ -18,7 +18,7 @@ class TestYF(HistoricalDataTest, unittest.TestCase):
             """
             params=dict(
                 end = parseisodate("2023-01-03"),
-                duration = CalendarDateDelta(years=3),
+                duration = CalendarDateDelta(years=3, days=1),
                 )
 
             t = self.client.historical_data(self.ticker, **params)

@@ -14,14 +14,14 @@ def Client():
             uri = f"{YF_BASE_URI}/download/{ticker}"
 
             start = end-duration
-            start_ts = start.timestamp
+            start_ts = start.timestamp+ONE_DAY
             end_ts = end.timestamp+ONE_DAY-1
             t = None
 
             while True:
                 params = {
-                        "period1": round(start.timestamp),
-                        "period2": round(end.timestamp+ONE_DAY-1),
+                        "period1": round(start_ts),
+                        "period2": round(end_ts),
                         "interval": "1d",
                         "events": "history",
                         "includeAdjustedClose": "true",
@@ -30,7 +30,6 @@ def Client():
                 r = get(uri, params=params)
                 if r.status_code != 200:
                     raise Exception(f"Can't retrieve data at {uri} (status={r.status_code})")
-
                 tmp = Serie.from_csv(
                         r.text.splitlines(),
                         name=ticker,

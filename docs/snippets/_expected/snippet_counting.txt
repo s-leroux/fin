@@ -2,4 +2,4 @@ Average number of consecutive days BTC closes below its SMA50D
 See https://github.com/s-leroux/fin/issues/27
       Date | Avg  
 ---------- | -----
-2023-05-27 | 12.38
+2023-05-28 | 12.25
