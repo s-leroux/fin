@@ -20,12 +20,11 @@ class HistoricalData:
         The default for end (the end date) is today.
 
         The returned table will have the folling columns (order is not garanteed):
-        * `Data`
+        * `Date`
         * `Open`
         * `High`
         * `Low`
         * `Close`
-        * `Adj Close`
         * `Volume`
 
         The precision option override the double precision indered from the data.

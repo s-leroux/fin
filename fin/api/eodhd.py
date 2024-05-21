@@ -14,7 +14,7 @@ def Client(api_token):
         def _historical_data(self, ticker, duration, end, _get=get, **kwargs):
             uri = f"{EODHD_BASE_URI}/eod/{ticker}"
 
-            start = end-duration
+            start = end-duration+dict(days=1)
             params = {
                     "from": str(start),
                     "to": str(end),

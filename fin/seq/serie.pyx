@@ -96,13 +96,18 @@ cdef Serie serie_create(exprs, str name):
 cdef Serie serie_from_data(data, headings, types, dict kwargs):
     """
     Create a serie from raw Python data (sequences).
+
+    By default, this method does *not* convert the data to their correct type.
+    Use the keyword argument `conv=True` to request text->native format conversion.
     """
     name = kwargs.get("name", SERIE_DEFAULT_NAME)
+    conv = kwargs.get("conv", False)
+    column_from_sequence = Column.from_sequence if conv else Column.from_sequence_noconv
     types = parse_type_string(types)
 
-    # `data` can be an iterator: compute the columns first so we can later call `len()`
+    # `data` can be an iterator: materialize the columns first so we can later call `len()`
     columns = [
-        Column.from_sequence(column, name=heading, type=type) for heading, type, column in zip(headings, types, data) if type is not IGNORE
+        column_from_sequence(column, name=heading, type=type) for heading, type, column in zip(headings, types, data) if type is not IGNORE
             ]
 
     if not len(columns):
@@ -139,10 +144,11 @@ cdef Serie serie_from_csv(iterator, str formats, fieldnames, str delimiter, dict
     cols = []
     names = []
 
-    for name, tps, col in zip(heading, types, zip(*rows)):
+    for name, _, col in zip(heading, types, zip(*rows)):
         names.append(name)
-        cols.append(tps.parse_string_sequence(col))
+        cols.append(col)
 
+    kwargs["conv"] = True
     result = serie_from_data(cols, names, types, kwargs)
 #    if select:
 #        result = result.select(*select)
@@ -387,8 +393,8 @@ cdef class Serie:
         return serie_from_data(columns, headings, types, kwargs)
 
     @staticmethod
-    def from_rows(headings, type, rows, **kwargs):
-        return serie_from_rows(headings, type, rows, kwargs)
+    def from_rows(headings, types, rows, **kwargs):
+        return serie_from_rows(headings, types, rows, kwargs)
     # XXX Above: fix from_data() and from_rows() to have the parameters in the same order
 
     @staticmethod
@@ -933,7 +939,7 @@ cdef Join join_engine(
     cdef list rightColumns = join_engine_remap_columns(colB, n, mappingB.data.as_uints)
 
     return Join.create(
-            Column.from_sequence(
+            Column.from_sequence_noconv(
                 joinIndex,
                 name=serA._index.name,
                 type=serA._index.type,
@@ -1000,7 +1006,7 @@ cdef tuple set_operator_engine(
         data_columns.append(Column.from_sequence(t, name=colA.name, type=colA.type))
 
     return (
-            Column.from_sequence(
+            Column.from_sequence_noconv(
                 joinIndex,
                 name=serA._index.name,
                 type=serA._index.type,

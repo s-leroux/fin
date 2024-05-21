@@ -175,8 +175,8 @@ class TestCalendarDate(unittest.TestCase):
         """
         It should parse dates expressed as a number of seconds since Unix Epoch.
         """
-        date = parsetimestamp(f"{TM_TIMESTAMP}", "DATE")
-        self.assertEqual(str(date), f"{TM_DATE}")
+        date = parsetimestamp_s(f"{TM_TIMESTAMP}")
+        self.assertEqual(str(date), f"{TM_DATE}T{TM_TIME}")
 
     def test_parse_timestamp_ms(self):
         """

@@ -492,7 +492,7 @@ cdef class Column:
         if type is not None:
             self._type = coltypes.parse_type_atom(type)
         else:
-            self._type = coltypes.Other()
+            self._type = coltypes.Object()
 
     # ------------------------------------------------------------------
     # Factory methods
@@ -513,11 +513,28 @@ cdef class Column:
 
     @staticmethod
     def from_sequence(sequence, **kwargs):
-        """
-        Create a Column from a sequence of Python objects.
+        """ Create a Column from a sequence of Python objects.
+
+            This factory method delegates the actual conversion to the column's `_type` object.
         """
         cdef Column column = Column(**kwargs)
-        column._py_values = Tuple.from_sequence(sequence)
+        column._py_values = Tuple.from_sequence(
+            column._type.parse_sequence(sequence)
+        )
+        column.length = len(column._py_values)
+
+        return column
+
+    @staticmethod
+    def from_sequence_noconv(sequence, **kwargs):
+        """ Create a Column from a sequence of Python objects.
+
+            This method perform no conversions or type checks.
+        """
+        cdef Column column = Column(**kwargs)
+        column._py_values = Tuple.from_sequence(
+            sequence
+        )
         column.length = len(column._py_values)
 
         return column

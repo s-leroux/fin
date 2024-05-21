@@ -6,6 +6,6 @@ end_date = "2024-05-14"
 duration = dict(years=5)
 
 client = Client()
-data = client.historical_data(ticker, duration, end_date)
+data = client.historical_data(ticker, duration, end_date, precision=2)
 
 print(data)
