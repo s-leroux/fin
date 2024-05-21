@@ -2,6 +2,11 @@ __version_info__ = (0, 3, 0)
 __version__ = '.'.join(map(str,__version_info__))
 
 __history__ = {
+    "0.4.0":
+    """ Introduce an API interface to retrieve Binance historical data.
+
+        The 'm' type (DateTimeMicro) now require input timestamps expressed in *seconds*.
+    """,
     "0.3.0":
     """ Introduce three-state logical columns and a temptative back-tester.
     """,
