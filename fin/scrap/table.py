@@ -29,6 +29,21 @@ def _union(selection, start, end):
 
     return result
 
+def _filter_cell_text(text, element):
+    """
+    Apply various heuristics to cleanup cell data.
+    """
+
+    # MarketWatch has duplicated headings
+    if not text.isdecimal():
+        l = len(text)
+        head = text[:l//2]
+        tail = text[l//2:]
+        if head == tail:
+            text = head
+
+    return text
+
 def cols(start, end):
     def _cols(cols, rows):
         return _union(cols, start, end), rows
@@ -96,31 +111,33 @@ def parse(fragment):
     """
     Parse a table statement as a python object.
     """
-    tbody = fragment.find("tbody")
-    if tbody is None:
-        tbody = fragment
-
     indices = {}
     data = []
-    ncolindices = 0
 
     data_row_start = 0
     data_col_start = 0
 
-    for rnum, tr in enumerate(tbody.find_all("tr")):
+    for rnum, tr in enumerate(fragment.find_all("tr")):
         py_row = []
         for cnum, titem in enumerate(tr.find_all(("th", "td"))):
+            # Clean-up markup
+            for it in titem.find_all("sup"):
+                it.extract()
+
+            name = titem.name
             text = titem.get_text(strip=True)
+            text = _filter_cell_text(text, name)
+
             py_row.append(text)
-            if titem.name == "th":
+            if name == "th":
                 if cnum > 0:
                     indices[text] = cols(cnum, cnum+1)
-                    ncolindices += 1
+                    data_row_start = 1
                 else:
                     rows(rnum, rnum+1)
-            elif cnum == 0 and ncolindices == 0:
+            elif cnum == 0:
                 # Heuristic: the first td element of each row is assumed to
-                # be a row header if there was no column headers.
+                # be a row header
                 indices[text] = rows(rnum, rnum+1)
                 data_col_start = 1
 
