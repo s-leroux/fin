@@ -1,3 +1,6 @@
+import os
+import re
+
 from fin import requests
 
 class RestAPI:
@@ -34,7 +37,7 @@ class RestAPI:
 
         return params
     
-    def get(self, endpoint, path=None, *, params={}, options={}):
+    def _get(self, endpoint, path=None, *, params={}, options={}):
         """
         Send a GET request to the given API endpoint.
         """
@@ -48,9 +51,14 @@ class RestAPI:
 def _get_wrapper(endpoint, param_list):
     # XXX This should add a layer of parameter checking
     def get(self, *args, **kwargs):
-        return self.get(endpoint, *args, **kwargs)
+        return self._get(endpoint, *args, params=kwargs)
 
     return get
+
+MANDATORY = True
+OPTIONAL = False
+
+VERSION_PREFIX_RE = re.compile("^v[0-9]+/")
 
 class RestAPIBuilder:
     def __init__(self, class_name, *, api_base_class = RestAPI):
@@ -60,14 +68,16 @@ class RestAPIBuilder:
 
     def __call__(self):
         methods = {
-            name: method for name, _, method in self._methods.values()
+            name: method for name, method in self._methods.values()
         }
         return type(self._class_name, (self._api_base_class,), methods)
 
     def method_name_for_endpoint(self, endpoint):
+        endpoint = VERSION_PREFIX_RE.sub("", endpoint)
+        endpoint = endpoint.replace("-","_")
         return endpoint
 
-    def register(self, endpoint, verb, param_list=None, *, method_name=None, mandatory=False):
+    def register(self, endpoint, verb, param_list=None, *, method_name=None):
         if not method_name:
             method_name = self.method_name_for_endpoint(endpoint)
 
@@ -78,9 +88,25 @@ class RestAPIBuilder:
 
         method = (
                 method_name,
-                mandatory,
                 wrapper(endpoint, param_list)
             )
 
         self._methods[method_name] = method
         return method
+
+FMP_BASE_URL = "https://financialmodelingprep.com/api/"
+
+fmp_rest_api_builder = RestAPIBuilder("FMPRestAPI")
+fmp_rest_api_builder.register(
+    "v3/search-name",
+    "get",
+    {
+        "query": ( MANDATORY, str),
+        "limit": ( OPTIONAL, int),
+        "exchange": ( OPTIONAL, str),
+    }
+)
+
+class FMPRestAPI(fmp_rest_api_builder()):
+    def __init__(self, api_key):
+        super().__init__(FMP_BASE_URL, api_key)
