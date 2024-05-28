@@ -7,10 +7,11 @@ class RestAPI:
     """
     Helper class to access REST APIs.
     """
-    def __init__(self, base_url, api_key=None, *, api_key_param = "apikey"):
+    def __init__(self, base_url, api_key=None, *, api_key_param = "apikey", get=None):
         self._base_url = base_url
         self._api_key = api_key
         self._api_key_param = api_key_param
+        self._get = get or self._http_get
 
     def url_for_endpoint(self, endpoint, path):
         url = endpoint
@@ -37,7 +38,7 @@ class RestAPI:
 
         return params
     
-    def _get(self, endpoint, path=None, *, params={}, options={}):
+    def _http_get(self, endpoint, path=None, *, params={}, options={}):
         """
         Send a GET request to the given API endpoint.
         """
@@ -48,15 +49,43 @@ class RestAPI:
 
         return _get(url, params=params)
 
+class ExtraParameterError(ValueError):
+    def __init__(self, name):
+        ValueError.__init__(self, f"Extra parameter: {name!r}")
+
+class MissingParameterError(ValueError):
+    def __init__(self, name):
+        ValueError.__init__(self, f"Missing mandatory parameter: {name!r}")
+
+def _filter_params(params, param_list):
+    """
+    Check the given parameters fits with the specifications.
+    """
+    params = params.copy()
+
+    for name, specs in param_list.items():
+        req = specs[0]
+        if req == MANDATORY:
+            if name not in params:
+                raise MissingParameterError(name)
+        elif req == FIXED:
+            if name in params:
+                raise ExtraParameterError(name)
+            params[name] = specs[1]
+
+    return params
+
 def _get_wrapper(endpoint, param_list):
     # XXX This should add a layer of parameter checking
     def get(self, *args, **kwargs):
-        return self._get(endpoint, *args, params=kwargs)
+        params = _filter_params(kwargs, param_list)
+        return self._get(endpoint, *args, params=params)
 
     return get
 
 MANDATORY = True
 OPTIONAL = False
+FIXED = None
 
 VERSION_PREFIX_RE = re.compile("^v[0-9]+/")
 
@@ -77,7 +106,7 @@ class RestAPIBuilder:
         endpoint = endpoint.replace("-","_")
         return endpoint
 
-    def register(self, endpoint, verb, param_list=None, *, method_name=None):
+    def register(self, endpoint, verb, param_list={}, *, method_name=None):
         if not method_name:
             method_name = self.method_name_for_endpoint(endpoint)
 

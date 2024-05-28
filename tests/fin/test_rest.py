@@ -1,7 +1,7 @@
 import unittest
 import os
 
-from fin.rest import RestAPI, RestAPIBuilder
+from fin.rest import RestAPI, RestAPIBuilder, MANDATORY, FIXED
 
 HTTPBIN_BASE_URL = "https://httpbingo.org"
 
@@ -62,6 +62,40 @@ class TestRestAPIBuilder(unittest.TestCase):
                 api = builder()
 
                 self.assertIn(method, dir(api))
+
+class TestRestAPIParameters(unittest.TestCase):
+    def api_with_method(self, method_name, param_name, req, extra, action):
+        builder = RestAPIBuilder("MyAPIClass")
+        builder.register(
+            method_name,
+            "get",
+            {
+                param_name: ( req, extra),
+            }
+        )
+        api_class = builder()
+        return api_class("http://example.com/api", get=action)
+
+    def test_param_mandatory(self):
+        called = False
+        def fake_get(*args, **kwargs):
+            nonlocal called
+            called = True
+
+        api = self.api_with_method("my_method", "x", MANDATORY, str, fake_get)
+        api.my_method(x="abc")
+        self.assertTrue(called)
+
+    def test_param_fixed(self):
+        x = None
+        def fake_get(*args, params, **kwargs):
+            nonlocal x
+            x = params["x"]
+
+        api = self.api_with_method("my_method", "x", FIXED, "hello", fake_get)
+        api.my_method()
+        self.assertEqual(x, "hello")
+        
 
 class TestRestAPIBuilderBuilt(unittest.TestCase):
     if SLOW_TESTS:
