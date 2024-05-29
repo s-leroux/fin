@@ -29,6 +29,16 @@ av_rest_api_builder.register(
     method_name = "symbol_search"
 )
 
+av_rest_api_builder.register(
+    "query",
+    "get",
+    {
+        "function": ( FIXED, "INFLATION" ),
+        "datatype": ( FIXED, "csv" ),
+    },
+    method_name = "inflation"
+)
+
 class AlphaVantageAPI(av_rest_api_builder()):
     def __init__(self, api_key):
         super().__init__(AV_BASE_URL, api_key)

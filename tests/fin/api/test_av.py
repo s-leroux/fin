@@ -13,9 +13,11 @@ class TestAlphaVantageApi(unittest.TestCase):
 
         def test_search_name(self):
             result = self.api.symbol_search(keywords="Xilam")
-            self.assertEqual(result.status_code, 200)
-            
-            json = result.json()
+            print(result)
+
+        def test_inflation(self):
+            result = self.api.inflation()
+            print(result)
 
 
 

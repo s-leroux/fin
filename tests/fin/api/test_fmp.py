@@ -13,9 +13,7 @@ class TestFMPApi(unittest.TestCase):
 
         def test_search_name(self):
             result = self.api.search_name(query="Xilam")
-            self.assertEqual(result.status_code, 200)
-            json = result.json()
-            self.assertEqual(json[0]["symbol"], "XIL.PA")
+            self.assertEqual(result[0]["symbol"], "XIL.PA")
 
 
 

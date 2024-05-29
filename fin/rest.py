@@ -3,6 +3,18 @@ import re
 
 from fin import requests
 
+JSON_MIME_TYPES = (
+    "application/json",
+)
+
+def mime_type(headers):
+    """
+    Extract the mimetype from an http response header.
+    """
+    content_type = headers["Content-Type"]
+    content_type = content_type.split(";")[0].strip()
+    return content_type
+
 class RestAPI:
     """
     Helper class to access REST APIs.
@@ -13,7 +25,7 @@ class RestAPI:
         self._api_key_param = api_key_param
         self._get = get or self._http_get
 
-    def url_for_endpoint(self, endpoint, path):
+    def _url_for_endpoint(self, endpoint, path):
         url = endpoint
         base_url = self._base_url
 
@@ -25,7 +37,7 @@ class RestAPI:
 
         return url
 
-    def adjust_params(self, params):
+    def _adjust_params(self, params):
         """
         Add API specific parameters to the request.
 
@@ -42,12 +54,31 @@ class RestAPI:
         """
         Send a GET request to the given API endpoint.
         """
-        _get = options.get("get", requests.get)
+        _get = options.get("get", self._http_get_using_request)
 
-        url = self.url_for_endpoint(endpoint, path)
-        params = self.adjust_params(params)
-
+        url = self._url_for_endpoint(endpoint, path)
+        params = self._adjust_params(params)
         return _get(url, params=params)
+
+    def _http_get_using_request(self, url, *, params):
+        res = requests.get(url, params=params)
+
+        status_code = res.status_code
+        if status_code == 200:
+            pass
+        elif 400 <= status_code <= 499:
+            raise HTTPClientError(res)
+        else:
+            raise HTTPServerError(res)
+
+        return self._handle_http_response(res)
+
+    def _handle_http_response(self, res):
+        mt = mime_type(res.headers)
+        if mt in JSON_MIME_TYPES:
+            return res.json()
+
+        return res.text
 
 class ExtraParameterError(ValueError):
     def __init__(self, name):
@@ -88,6 +119,7 @@ OPTIONAL = False
 FIXED = None
 
 VERSION_PREFIX_RE = re.compile("^v[0-9]+/")
+
 
 class RestAPIBuilder:
     def __init__(self, class_name, *, api_base_class = RestAPI):

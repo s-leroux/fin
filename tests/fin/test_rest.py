@@ -108,8 +108,7 @@ class TestRestAPIBuilderBuilt(unittest.TestCase):
             api = api_class(HTTPBIN_BASE_URL)
 
             result = api.range("26")
-            self.assertEqual(result.status_code, 200)
-            self.assertEqual(result.text, "abcdefghijklmnopqrstuvwxyz")
+            self.assertEqual(result, "abcdefghijklmnopqrstuvwxyz")
 
         def test_get_with_param(self):
             self.builder.register("get", "get", {
@@ -119,6 +118,5 @@ class TestRestAPIBuilderBuilt(unittest.TestCase):
             api = api_class(HTTPBIN_BASE_URL)
 
             result = api.get(x="26")
-            self.assertEqual(result.status_code, 200)
-            json = result.json()
-            self.assertSequenceEqual(json["args"]["x"], ["26"])
+            print(result)
+            self.assertSequenceEqual(result["args"]["x"], ["26"])
