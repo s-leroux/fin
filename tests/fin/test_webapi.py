@@ -7,6 +7,9 @@ HTTPBIN_BASE_URL = "https://httpbingo.org"
 
 SLOW_TESTS = os.environ.get("SLOW_TESTS")
 
+def fake_get(*args, **kwargs):
+    return (args, kwargs)
+
 class TestWebAPI(unittest.TestCase):
     def test_get(self):
         request_args = ()
@@ -23,7 +26,7 @@ class TestWebAPI(unittest.TestCase):
                 query="AA",
             ),
             options=dict(
-                get=fake_get,
+                transport=fake_get,
             )
         )
 
@@ -34,6 +37,25 @@ class TestWebAPI(unittest.TestCase):
             "apikey": api_key,
             "query": "AA",
         })
+
+    def test_url_parameters(self):
+        endpoint = "base64/{encoded}"
+        params = {
+            "encoded": "aHR0cGJpbmdvLm9yZw==",
+        }
+
+        api = WebAPI(HTTPBIN_BASE_URL)
+        args, kwargs = api._get(endpoint,
+            params=params,
+            options=dict(
+                transport=fake_get,
+            )
+        )
+
+        self.assertEqual(args[0], f"{HTTPBIN_BASE_URL}/base64/{params['encoded']}")
+        self.assertNotIn("encoded", kwargs)
+
+
 
 class TestWebAPIBuilder(unittest.TestCase):
     def test_register(self):

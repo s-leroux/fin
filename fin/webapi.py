@@ -7,6 +7,8 @@ JSON_MIME_TYPES = (
     "application/json",
 )
 
+PARAM_PLACEHOLDERS = re.compile("{[^}]*}")
+
 def mime_type(headers):
     """
     Extract the mimetype from an http response header.
@@ -25,7 +27,7 @@ class WebAPI:
         self._api_key_param = api_key_param
         self._get = get or self._http_get
 
-    def _url_for_endpoint(self, endpoint, path):
+    def _url_for_endpoint(self, endpoint, path, params={}):
         url = endpoint
         base_url = self._base_url
 
@@ -34,6 +36,12 @@ class WebAPI:
 
         if path:
             url = f"{url}/{path}"
+
+        def param_repl(matchobj):
+            key = matchobj.group(0)[1:-1]
+            return params.pop(key)
+
+        url = PARAM_PLACEHOLDERS.sub(param_repl, url)
 
         return url
 
@@ -44,9 +52,9 @@ class WebAPI:
         Mostly intended to inject the API key into the request.
         """
         params = params.copy()
-        api_key = self._api_key_param
+        api_key = self._api_key
         if api_key is not None:
-            params[self._api_key_param] = self._api_key
+            params[self._api_key_param] = api_key
 
         return params
     
@@ -54,10 +62,10 @@ class WebAPI:
         """
         Send a GET request to the given API endpoint.
         """
-        _get = options.get("get", self._http_get_using_request)
+        _get = options.get("transport", self._http_get_using_request)
 
-        url = self._url_for_endpoint(endpoint, path)
         params = self._adjust_params(params)
+        url = self._url_for_endpoint(endpoint, path, params)
         return _get(url, params=params)
 
     def _http_get_using_request(self, url, *, params):
@@ -118,6 +126,7 @@ def _get_wrapper(endpoint, param_list):
 MANDATORY = True
 OPTIONAL = False
 FIXED = None
+PATH = "PATH"
 
 VERSION_PREFIX_RE = re.compile("^v[0-9]+/")
 
