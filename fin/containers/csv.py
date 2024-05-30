@@ -1,3 +1,4 @@
+import io
 import csv
 
 class CSV:
@@ -18,9 +19,12 @@ class CSV:
         iterator = iter(sequence)
         reader = csv.reader(iterator, **kwargs)
         self = cls.__new__(cls)
-        headings = self.headings = next(reader)
-        rows = self.rows = [row for row in reader]
-        self.columns = ColumnSelector(headings, rows)
+        self.headings = headings = next(reader)
+        self.rows = rows = [row for row in reader]
+        self.kwargs = kwargs
+        kwargs.setdefault("lineterminator", "\n")
+
+        self.columns = ColumnSelector(headings, rows, kwargs)
 
         return self
 
@@ -30,13 +34,22 @@ class CSV:
     def __len__(self):
         return len(self.rows)
 
+    def __str__(self):
+        with io.StringIO() as output:
+            writer = csv.writer(output, self.headings, **self.kwargs)
+            writer.writerow(self.headings)
+            writer.writerows(self.rows)
+
+            return output.getvalue()
+
     def __getitem__(self, idx):
         return self.rows[idx]
 
 class ColumnSelector:
-    def __init__(self, headings, rows):
+    def __init__(self, headings, rows, kwargs):
         self.headings = headings
         self.rows = rows
+        self.kwargs = kwargs
 
     def __len__(self):
         return len(self.headings)
@@ -57,7 +70,8 @@ class ColumnSelector:
         result = CSV.__new__(CSV)
         result.headings = tpl
         result.rows = store
-        self.columns = ColumnSelector(tpl, rows)
+        result.kwargs = kwargs = self.kwargs
+        self.columns = ColumnSelector(tpl, rows, kwargs)
 
         return result
 

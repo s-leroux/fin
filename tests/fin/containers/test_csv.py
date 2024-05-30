@@ -32,6 +32,11 @@ class TestCSV(unittest.TestCase):
         self.assertSequenceEqual(csv.headings, HEADINGS)
         self.assertSequenceEqual(csv.rows, ROWS)
 
+    def test_str(self):
+        self.maxDiff = None
+        csv = CSV.from_text(CSV_DATA, skipinitialspace=True)
+        self.assertEqual(str(csv), CSV_DATA.replace(", ", ","))
+
     def test_sequence_interface(self):
         csv = CSV.from_text(CSV_DATA, skipinitialspace=True)
         self.assertSequenceEqual(csv, ROWS)

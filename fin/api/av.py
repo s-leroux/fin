@@ -1,3 +1,5 @@
+from fin.containers.csv import CSV
+
 from fin.webapi import WebAPIBuilder, FIXED, MANDATORY, OPTIONAL
 
 AV_BASE_URL = "https://www.alphavantage.co"
@@ -42,3 +44,6 @@ av_web_api_builder.register(
 class AlphaVantageWebAPI(av_web_api_builder()):
     def __init__(self, api_key):
         super().__init__(AV_BASE_URL, api_key)
+
+    def inflation(self, *args, **kwargs):
+        return CSV.from_text(super().inflation(self, *args, *kwargs))
