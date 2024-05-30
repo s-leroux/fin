@@ -1,5 +1,6 @@
 import unittest
 import os
+import json
 
 from fin.api.fmp import FMPWebAPI
 
@@ -14,6 +15,17 @@ class TestFMPWebApi(unittest.TestCase):
         def test_search_name(self):
             result = self.api.search_name(query="Xilam")
             self.assertEqual(result[0]["symbol"], "XIL.PA")
+
+        def test_historical_price_full(self):
+            result = self.api.historical_price_full(**{
+                    "symbol": "AAPL",
+                    "from": "2023-01-21",
+                    "to": "2023-02-22",
+                    })
+            with open("tests/_fixtures/AAPL-20230121-20230222.json", "rt") as f:
+                # json.dump(result, f, indent=4)
+                expected = json.load(f)
+            self.assertEqual(result, expected)
 
 
 

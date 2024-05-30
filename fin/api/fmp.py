@@ -4,12 +4,25 @@ FMP_BASE_URL = "https://financialmodelingprep.com/api/"
 
 fmp_web_api_builder = WebAPIBuilder("FMPWebAPI")
 fmp_web_api_builder.register(
-    "v3/search-name",
+    None,
     "get",
+    "v3/search-name",
     {
         "query": ( MANDATORY, str),
         "limit": ( OPTIONAL, int),
         "exchange": ( OPTIONAL, str),
+    }
+)
+
+fmp_web_api_builder.register(
+    "historical_price_full",
+    "get",
+    "v3/historical-price-full/{symbol}",
+    {
+        "symbol": ( MANDATORY, str),
+        "from": ( OPTIONAL, str),
+        "to": ( OPTIONAL, str),
+        "serietype": ( OPTIONAL, str),
     }
 )
 

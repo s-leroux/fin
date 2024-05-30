@@ -65,19 +65,19 @@ class TestWebAPIBuilder(unittest.TestCase):
             "my_endpoint",
 
             "#1 Remove version prefix",
-            "v3/search",
             "search",
+            "v3/search",
 
             "#2 replace '-' by '_'",
-            "v3/search-name",
             "search_name",
+            "v3/search-name",
         )
 
         while test_cases:
-            desc, endpoint, method, *test_cases = test_cases
+            desc, method, endpoint, *test_cases = test_cases
             with self.subTest(desc=desc):
                 builder = WebAPIBuilder("MyAPIClass")
-                builder.register(endpoint, "get")
+                builder.register(method, "get", endpoint)
 
                 self.assertIn(method, builder._methods)
 
@@ -91,6 +91,7 @@ class TestWebAPIParameters(unittest.TestCase):
         builder.register(
             method_name,
             "get",
+            method_name,
             {
                 param_name: ( req, extra),
             }
@@ -125,7 +126,7 @@ class TestWebAPIBuilderBuilt(unittest.TestCase):
             self.builder = WebAPIBuilder("MyAPIClass")
 
         def test_get(self):
-            self.builder.register("range", "get")
+            self.builder.register("range", "get", "range")
             api_class = self.builder()
             api = api_class(HTTPBIN_BASE_URL)
 
@@ -133,7 +134,7 @@ class TestWebAPIBuilderBuilt(unittest.TestCase):
             self.assertEqual(result, "abcdefghijklmnopqrstuvwxyz")
 
         def test_get_with_param(self):
-            self.builder.register("get", "get", {
+            self.builder.register("get", "get", "get", {
                 "x": ( True, int),
             })
             api_class = self.builder()

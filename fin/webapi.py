@@ -45,13 +45,12 @@ class WebAPI:
 
         return url
 
-    def _adjust_params(self, params):
+    def _adjust_params(self, **params):
         """
         Add API specific parameters to the request.
 
         Mostly intended to inject the API key into the request.
         """
-        params = params.copy()
         api_key = self._api_key
         if api_key is not None:
             params[self._api_key_param] = api_key
@@ -64,7 +63,7 @@ class WebAPI:
         """
         _get = options.get("transport", self._http_get_using_request)
 
-        params = self._adjust_params(params)
+        params = self._adjust_params(**params)
         url = self._url_for_endpoint(endpoint, path, params)
         return _get(url, params=params)
 
@@ -126,7 +125,6 @@ def _get_wrapper(endpoint, param_list):
 MANDATORY = True
 OPTIONAL = False
 FIXED = None
-PATH = "PATH"
 
 VERSION_PREFIX_RE = re.compile("^v[0-9]+/")
 
@@ -148,7 +146,7 @@ class WebAPIBuilder:
         endpoint = endpoint.replace("-","_")
         return endpoint
 
-    def register(self, endpoint, verb, param_list={}, *, method_name=None):
+    def register(self, method_name, verb, endpoint, param_list={}):
         if not method_name:
             method_name = self.method_name_for_endpoint(endpoint)
 

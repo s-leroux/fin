@@ -4,41 +4,41 @@ from fin.webapi import WebAPIBuilder, FIXED, MANDATORY, OPTIONAL
 
 AV_BASE_URL = "https://www.alphavantage.co"
 
-# AlphaVantage API is not Web, but we can stretch WebAPIBuilder to our needs
+# AlphaVantage API is not Rest:
 # All methods will have the same access point named `query`, but will distinguish
 # by their fixed parameter `function`
 av_web_api_builder = WebAPIBuilder("AlphaVantageWebAPI")
 av_web_api_builder.register(
-    "query",
+    "time_series_daily_adjusted",
     "get",
+    "query",
     {
         "function": ( FIXED, "TIME_SERIES_DAILY_ADJUSTED" ),
         "symbol": ( MANDATORY, str),
         "outputsize": ( OPTIONAL, str),
         "datatype": ( OPTIONAL, str),
     },
-    method_name = "time_series_daily_adjusted"
 )
 
 av_web_api_builder.register(
-    "query",
+    "symbol_search",
     "get",
+    "query",
     {
         "function": ( FIXED, "SYMBOL_SEARCH" ),
         "keywords": ( MANDATORY, str),
         "datatype": ( OPTIONAL, str),
     },
-    method_name = "symbol_search"
 )
 
 av_web_api_builder.register(
-    "query",
+    "inflation",
     "get",
+    "query",
     {
         "function": ( FIXED, "INFLATION" ),
         "datatype": ( FIXED, "csv" ),
     },
-    method_name = "inflation"
 )
 
 class AlphaVantageWebAPI(av_web_api_builder()):
