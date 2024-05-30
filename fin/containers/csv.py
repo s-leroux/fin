@@ -12,11 +12,11 @@ class CSV:
 
     @classmethod
     def from_text(cls, text, **kwargs):
-        return cls.from_sequence(text.splitlines(), **kwargs)
+        return cls.from_lines(text.splitlines(), **kwargs)
 
     @classmethod
-    def from_sequence(cls, sequence, **kwargs):
-        iterator = iter(sequence)
+    def from_lines(cls, iterable, **kwargs):
+        iterator = iter(iterable)
         reader = csv.reader(iterator, **kwargs)
         self = cls.__new__(cls)
         self.headings = headings = next(reader)
