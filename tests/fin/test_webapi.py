@@ -1,13 +1,13 @@
 import unittest
 import os
 
-from fin.rest import RestAPI, RestAPIBuilder, MANDATORY, FIXED
+from fin.webapi import WebAPI, WebAPIBuilder, MANDATORY, FIXED
 
 HTTPBIN_BASE_URL = "https://httpbingo.org"
 
 SLOW_TESTS = os.environ.get("SLOW_TESTS")
 
-class TestRestAPI(unittest.TestCase):
+class TestWebAPI(unittest.TestCase):
     def test_get(self):
         request_args = ()
         request_kwargs = {}
@@ -17,7 +17,7 @@ class TestRestAPI(unittest.TestCase):
         api_key = "myapikey"
         endpoint = "json"
 
-        api = RestAPI(HTTPBIN_BASE_URL, api_key)
+        api = WebAPI(HTTPBIN_BASE_URL, api_key)
         request_args, request_kwargs = api._get(endpoint,
             params=dict(
                 query="AA",
@@ -35,7 +35,7 @@ class TestRestAPI(unittest.TestCase):
             "query": "AA",
         })
 
-class TestRestAPIBuilder(unittest.TestCase):
+class TestWebAPIBuilder(unittest.TestCase):
     def test_register(self):
         test_cases = (
             "#0",
@@ -54,7 +54,7 @@ class TestRestAPIBuilder(unittest.TestCase):
         while test_cases:
             desc, endpoint, method, *test_cases = test_cases
             with self.subTest(desc=desc):
-                builder = RestAPIBuilder("MyAPIClass")
+                builder = WebAPIBuilder("MyAPIClass")
                 builder.register(endpoint, "get")
 
                 self.assertIn(method, builder._methods)
@@ -63,9 +63,9 @@ class TestRestAPIBuilder(unittest.TestCase):
 
                 self.assertIn(method, dir(api))
 
-class TestRestAPIParameters(unittest.TestCase):
+class TestWebAPIParameters(unittest.TestCase):
     def api_with_method(self, method_name, param_name, req, extra, action):
-        builder = RestAPIBuilder("MyAPIClass")
+        builder = WebAPIBuilder("MyAPIClass")
         builder.register(
             method_name,
             "get",
@@ -97,10 +97,10 @@ class TestRestAPIParameters(unittest.TestCase):
         self.assertEqual(x, "hello")
         
 
-class TestRestAPIBuilderBuilt(unittest.TestCase):
+class TestWebAPIBuilderBuilt(unittest.TestCase):
     if SLOW_TESTS:
         def setUp(self):
-            self.builder = RestAPIBuilder("MyAPIClass")
+            self.builder = WebAPIBuilder("MyAPIClass")
 
         def test_get(self):
             self.builder.register("range", "get")

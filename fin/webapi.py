@@ -15,7 +15,7 @@ def mime_type(headers):
     content_type = content_type.split(";")[0].strip()
     return content_type
 
-class RestAPI:
+class WebAPI:
     """
     Helper class to access REST APIs.
     """
@@ -64,6 +64,7 @@ class RestAPI:
         res = requests.get(url, params=params)
 
         status_code = res.status_code
+        print(status_code)
         if status_code == 200:
             pass
         elif 400 <= status_code <= 499:
@@ -121,8 +122,8 @@ FIXED = None
 VERSION_PREFIX_RE = re.compile("^v[0-9]+/")
 
 
-class RestAPIBuilder:
-    def __init__(self, class_name, *, api_base_class = RestAPI):
+class WebAPIBuilder:
+    def __init__(self, class_name, *, api_base_class = WebAPI):
         self._class_name = class_name
         self._api_base_class = api_base_class
         self._methods = {}
@@ -145,7 +146,7 @@ class RestAPIBuilder:
         if verb == "get":
             wrapper = _get_wrapper
         else:
-            raise NotImplementedError(f"RestAPIBuildr.register is not implemented for the verb {verb!r}")
+            raise NotImplementedError(f"WebAPIBuildr.register is not implemented for the verb {verb!r}")
 
         method = (
                 method_name,
