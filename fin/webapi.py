@@ -56,7 +56,7 @@ class WebAPI:
             params[self._api_key_param] = api_key
 
         return params
-    
+
     def _http_get(self, endpoint, path=None, *, params={}, options={}):
         """
         Send a GET request to the given API endpoint.
@@ -88,31 +88,38 @@ class WebAPI:
 
         return res.text
 
-class ExtraParameterError(ValueError):
+class ExtraParameterError(TypeError):
     def __init__(self, name):
-        ValueError.__init__(self, f"Extra parameter: {name!r}")
+        TypeError.__init__(self, f"Extra parameter: {name!r}")
 
-class MissingParameterError(ValueError):
+class MissingParameterError(TypeError):
     def __init__(self, name):
-        ValueError.__init__(self, f"Missing mandatory parameter: {name!r}")
+        TypeError.__init__(self, f"Missing mandatory parameter: {name!r}")
 
 def _filter_params(params, param_list):
     """
     Check the given parameters fits with the specifications.
     """
-    params = params.copy()
+    result = {}
 
     for name, specs in param_list.items():
-        req = specs[0]
+        req, init = specs
+        value = params.get(name)
+
         if req == MANDATORY:
-            if name not in params:
+            if value is None:
                 raise MissingParameterError(name)
+            else:
+                result[name] = init(value)
+        elif req == OPTIONAL:
+            if value is not None:
+                result[name] = init(value)
         elif req == FIXED:
             if name in params:
                 raise ExtraParameterError(name)
-            params[name] = specs[1]
+            result[name] = init
 
-    return params
+    return result
 
 def _get_wrapper(endpoint, param_list):
     # XXX This should add a layer of parameter checking

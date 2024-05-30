@@ -1,7 +1,11 @@
 import unittest
 import os
 
-from fin.webapi import WebAPI, WebAPIBuilder, MANDATORY, FIXED
+from fin.webapi import (
+    WebAPI, WebAPIBuilder,
+    MANDATORY, FIXED, OPTIONAL,
+    ExtraParameterError, MissingParameterError,
+)
 
 HTTPBIN_BASE_URL = "https://httpbingo.org"
 
@@ -109,6 +113,18 @@ class TestWebAPIParameters(unittest.TestCase):
         api.my_method(x="abc")
         self.assertTrue(called)
 
+    def test_param_mandatory_missing(self):
+        called = False
+        def fake_get(*args, **kwargs):
+            nonlocal called
+            called = True
+
+        api = self.api_with_method("my_method", "x", MANDATORY, str, fake_get)
+
+        with self.assertRaises(TypeError):
+            api.my_method()
+        self.assertFalse(called)
+
     def test_param_fixed(self):
         x = None
         def fake_get(*args, params, **kwargs):
@@ -118,9 +134,41 @@ class TestWebAPIParameters(unittest.TestCase):
         api = self.api_with_method("my_method", "x", FIXED, "hello", fake_get)
         api.my_method()
         self.assertEqual(x, "hello")
+
+    def test_param_fixed_duplicate(self):
+        called = False
+        def fake_get(*args, **kwargs):
+            nonlocal called
+            called = True
+
+        api = self.api_with_method("my_method", "x", FIXED, "hello", fake_get)
+        with self.assertRaises(TypeError):
+            api.my_method(x=1)
+        self.assertFalse(called)
+
+    def test_param_type_conv(self):
+        x = None
+        def fake_get(*args, params, **kwargs):
+            nonlocal x
+            x = params["x"]
+
+        api = self.api_with_method("my_method", "x", OPTIONAL, int, fake_get)
+        api.my_method(x="12")
+        self.assertEqual(x, 12)
+
+    def test_param_type_check(self):
+        called = False
+        def fake_get(*args, **kwargs):
+            nonlocal called
+            called = True
+
+        api = self.api_with_method("my_method", "x", OPTIONAL, int, fake_get)
+        with self.assertRaises(ValueError):
+            api.my_method(x="a")
+        self.assertFalse(called)
         
 
-class TestWebAPIBuilderBuilt(unittest.TestCase):
+class TestWebAPIBuilderBuild(unittest.TestCase):
     if SLOW_TESTS:
         def setUp(self):
             self.builder = WebAPIBuilder("MyAPIClass")
