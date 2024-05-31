@@ -2,7 +2,8 @@ import unittest
 import os
 import json
 
-from fin.api.fmp import FMPWebAPI
+from fin.api.fmp import FMPWebAPI, Client
+from tests.fin.api import HistoricalDataTest
 
 SLOW_TESTS = os.environ.get("SLOW_TESTS")
 FMP_API_KEY = os.environ.get("FMP_API_KEY")
@@ -27,5 +28,10 @@ class TestFMPWebApi(unittest.TestCase):
                 expected = json.load(f)
             self.assertEqual(result, expected)
 
+if FMP_API_KEY:
+    class TestFMPHistoricalData(HistoricalDataTest, unittest.TestCase):
+        def setUp(self):
+            self.client = Client(FMP_API_KEY)
+            self.ticker = "AAPL"
 
 

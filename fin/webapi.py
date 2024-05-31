@@ -1,6 +1,8 @@
 import os
 import re
 
+from collections import OrderedDict
+
 from fin import requests
 
 JSON_MIME_TYPES = (
@@ -84,7 +86,7 @@ class WebAPI:
     def _handle_http_response(self, res):
         mt = mime_type(res.headers)
         if mt in JSON_MIME_TYPES:
-            return res.json()
+            return res.json(object_pairs_hook=OrderedDict)
 
         return res.text
 
