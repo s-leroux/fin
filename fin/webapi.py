@@ -11,6 +11,17 @@ JSON_MIME_TYPES = (
 
 PARAM_PLACEHOLDERS = re.compile("{[^}]*}")
 
+
+class HTTPError(Exception):
+    def __init__(self, response):
+        super().__init__(f"{response.status_code}: {response.text}")
+
+class HTTPClientError(HTTPError):
+    pass
+
+class HTTPServerError(HTTPError):
+    pass
+
 def mime_type(headers):
     """
     Extract the mimetype from an http response header.

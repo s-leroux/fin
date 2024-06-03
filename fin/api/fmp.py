@@ -4,6 +4,10 @@ from fin.datetime import asCalendarDate
 FMP_BASE_URL = "https://financialmodelingprep.com/api/"
 
 fmp_web_api_builder = WebAPIBuilder("FMPWebAPI")
+
+#
+# Company Search
+#
 fmp_web_api_builder.register(
     None,
     "get",
@@ -15,6 +19,51 @@ fmp_web_api_builder.register(
     }
 )
 
+#
+# Stock List
+#
+fmp_web_api_builder.register(
+    "stock_list",
+    "get",
+    "v3/stock/list",
+    {
+    }
+)
+
+fmp_web_api_builder.register(
+    "etf_list",
+    "get",
+    "v3/etf/list",
+    {
+    }
+)
+
+fmp_web_api_builder.register(
+    "financial_statement_symbol_lists",
+    "get",
+    "v3/financial-statement-symbol-lists",
+    {
+    }
+)
+
+#
+# Financial Statements
+#
+fmp_web_api_builder.register(
+    "cash_flow_statement",
+    "get",
+    "v3/cash-flow-statement/{symbol}",
+    {
+        "symbol": ( MANDATORY, str),
+        "period": ( OPTIONAL, str),
+        "datatype": ( OPTIONAL, str),
+        "limit": ( OPTIONAL, int),
+    }
+)
+
+#
+# Stock Historical Price
+#
 fmp_web_api_builder.register(
     "historical_price_full",
     "get",

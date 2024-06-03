@@ -17,6 +17,39 @@ class TestFMPWebApi(unittest.TestCase):
             result = self.api.search_name(query="Xilam")
             self.assertEqual(result[0]["symbol"], "XIL.PA")
 
+        def test_stock_list(self):
+            result = self.api.stock_list()
+            self.assertIsInstance(result, list)
+            self.assertGreater(len(result), 80000)
+            for field in "symbol", "exchange", "name":
+                self.assertIn(field, result[0])
+
+        def test_etf_list(self):
+            result = self.api.etf_list()
+            self.assertIsInstance(result, list)
+            self.assertGreater(len(result), 10000)
+            for field in "symbol", "exchange", "name":
+                self.assertIn(field, result[0])
+
+        def test_financial_statement_symbol_lists(self):
+            result = self.api.financial_statement_symbol_lists()
+            self.assertIsInstance(result, list)
+            self.assertGreater(len(result), 60000)
+            self.assertIn("AAPL", result)
+
+        def test_cash_flow_statement(self):
+            result = self.api.cash_flow_statement(**{
+                    "symbol": "AAPL",
+                    "limit": 4,
+                    "period": "quaterly",
+                    })
+            self.assertEqual(len(result), 4)
+            for record in result:
+                self.assertEqual(record["symbol"], "AAPL")
+                self.assertIn("date", record.keys())
+                self.assertIn("netIncome", record.keys())
+                self.assertIn("freeCashFlow", record.keys())
+
         def test_historical_price_full(self):
             result = self.api.historical_price_full(**{
                     "symbol": "AAPL",
