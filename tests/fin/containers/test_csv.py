@@ -2,6 +2,7 @@ import unittest
 
 from fin.containers.csv import CSV
 
+CSV_FILE_NAME="tests/_fixtures/MCD-20200103-20200115.csv"
 CSV_DATA = """\
 Date, Open, High, Low, Close, Adj Close, Volume
 2020-01-03, 199.39, 200.55, 198.85, 200.08, 181.49, 2767600
@@ -27,10 +28,15 @@ ROWS = (
     ["2020-01-15", "207.32", "210.35", "207.32", "209.77", "190.28", "3369400"],
 )
 class TestCSV(unittest.TestCase):
-    def test_reader(self):
+    def test_from_text(self):
         csv = CSV.from_text(CSV_DATA, skipinitialspace=True)
         self.assertSequenceEqual(csv.headings, HEADINGS)
         self.assertSequenceEqual(csv.rows, ROWS)
+
+    def test_from_file(self):
+        actual = CSV.from_file(CSV_FILE_NAME, skipinitialspace=True)
+        expected = CSV.from_text(CSV_DATA, skipinitialspace=True)
+        self.assertEqual(actual, expected)
 
     def test_str(self):
         self.maxDiff = None

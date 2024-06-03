@@ -28,6 +28,11 @@ class CSV:
 
         return self
 
+    @classmethod
+    def from_file(cls, path, **kwargs):
+        with open(path, "rt", newline='') as csvfile:
+            return cls.from_lines(csvfile, **kwargs)
+
     def __iter__(self):
         return iter(self.rows)
 
@@ -44,6 +49,15 @@ class CSV:
 
     def __getitem__(self, idx):
         return self.rows[idx]
+
+    def __eq__(self, other):
+        if isinstance(self, CSV) and isinstance(other, CSV):
+            return self.headings == other.headings and self.rows == other.rows
+
+        return NotImplemented
+
+    def __ne__(self, other):
+        return not self == other
 
 class ColumnSelector:
     def __init__(self, headings, rows, kwargs):
