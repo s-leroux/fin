@@ -9,6 +9,7 @@ from fin.seq.column cimport Column
 from fin.seq.coltypes cimport parse_type_string, IGNORE
 from fin.seq.smachine cimport evaluate
 from fin.seq.presentation import Presentation
+from fin.utils import collections as uc
 
 # ======================================================================
 # Globals
@@ -123,6 +124,9 @@ cdef Serie serie_from_data(data, headings, types, dict kwargs):
 
 cdef Serie serie_from_rows(headings, types, rows, dict kwargs):
     return serie_from_data(zip(*rows), headings, types, kwargs)
+
+cdef Serie serie_from_dictionaries(headings, types, iterable, dict kwargs):
+    return serie_from_rows(headings, types, uc.dictionaries_to_list(headings, iterable), kwargs)
 
 import csv
 cdef Serie serie_from_csv(iterator, str formats, fieldnames, str delimiter, dict kwargs):
@@ -396,6 +400,10 @@ cdef class Serie:
     def from_rows(headings, types, rows, **kwargs):
         return serie_from_rows(headings, types, rows, kwargs)
     # XXX Above: fix from_data() and from_rows() to have the parameters in the same order
+
+    @staticmethod
+    def from_dictionaries(headings, format, iterable, **kwargs):
+        return serie_from_dictionaries(headings, format, iterable, kwargs)
 
     @staticmethod
     def from_csv(iterator, format, *, fieldnames=None, delimiter=",", **kwargs):

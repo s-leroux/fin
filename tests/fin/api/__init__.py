@@ -35,7 +35,7 @@ class HistoricalDataTest(ExtraTests):
             self.assertStartsWith(dc[0].format(datefmt), "2022-12-28")
             # self.assertEqual(len(dc), 5) # some exchange are open the week-end!
             for cell in dc:
-                self.assertIsInstance(cell, CalendarDate)
+                self.assertIsInstance(cell, CalendarDate, msg=str(type(cell)))
                 self.assertGreaterEqual(str(cell), "2022-12-28")
                 self.assertLess(str(cell), "2023-01-04")
 

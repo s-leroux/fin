@@ -8,6 +8,9 @@
 **/*.so
 build/**
 
+# CACHE
+*.sqlite3
+
 # Cython-generated files:
 fin/**/*.c
 fin/**/*.html
