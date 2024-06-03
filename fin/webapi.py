@@ -74,13 +74,13 @@ class WebAPI:
         """
         Send a GET request to the given API endpoint.
         """
-        _get = options.get("transport", self._http_get_using_request)
+        _get = options.get("transport", self._send_get_request)
 
         params = self._adjust_params(**params)
         url = self._url_for_endpoint(endpoint, path, params)
         return _get(url, params=params)
 
-    def _http_get_using_request(self, url, *, params):
+    def _send_get_request(self, url, *, params):
         res = requests.get(url, params=params)
 
         status_code = res.status_code

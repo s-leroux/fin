@@ -3,15 +3,19 @@ import os
 import json
 
 from fin.api.fmp import FMPWebAPI, Client
+from fin.utils.cache import SqliteCacheProvider as Cache
+
 from tests.fin.api import HistoricalDataTest
 
 SLOW_TESTS = os.environ.get("SLOW_TESTS")
 FMP_API_KEY = os.environ.get("FMP_API_KEY")
+FMP_CACHE_PATH = "cache-fmp.sqlite3"
+CACHE = Cache(FMP_CACHE_PATH, ttl=5*3600)
 
 class TestFMPWebApi(unittest.TestCase):
     if SLOW_TESTS and FMP_API_KEY:
         def setUp(self):
-            self.api = FMPWebAPI(FMP_API_KEY)
+            self.api = FMPWebAPI(FMP_API_KEY, cache=CACHE)
 
         def test_search_name(self):
             result = self.api.search_name(query="Xilam")
@@ -64,7 +68,7 @@ class TestFMPWebApi(unittest.TestCase):
 if FMP_API_KEY:
     class TestFMPHistoricalData(HistoricalDataTest, unittest.TestCase):
         def setUp(self):
-            self.client = Client(FMP_API_KEY)
+            self.client = Client(FMP_API_KEY, cache=CACHE)
             self.ticker = "AAPL"
 
 

@@ -1,5 +1,6 @@
 from fin.webapi import WebAPIBuilder, MANDATORY, OPTIONAL
 from fin.datetime import asCalendarDate
+from fin.utils.cache import SqliteCacheProvider as Cache
 
 FMP_BASE_URL = "https://financialmodelingprep.com/api/"
 
@@ -77,16 +78,23 @@ fmp_web_api_builder.register(
 )
 
 class FMPWebAPI(fmp_web_api_builder()):
-    def __init__(self, api_key):
+    def __init__(self, api_key, *, cache=None):
         super().__init__(FMP_BASE_URL, api_key)
+
+        if cache is not None:
+            if isinstance(cache, str):
+                cache = Cache(cache)
+
+            self._send_get_request = cache(self._send_get_request)
+
 
 
 from fin.api.core import HistoricalData
 from fin.seq.serie import Serie
 from fin.seq import fc
 
-def Client(api_key):
-    api = FMPWebAPI(api_key)
+def Client(api_key, **kwargs):
+    api = FMPWebAPI(api_key, **kwargs)
     class _Client(HistoricalData):
         def _historical_data(self, ticker, duration, end, **kwargs):
             start = end-duration+dict(days=1)
