@@ -288,9 +288,9 @@ To use those solvers, you must first build a `fin.model.complexmodel.ComplexMode
 Once done, the `ComplexModel` can export the necessary information to feed the solver.
 
 In the following example we will find the duration of a placement to buy a good, taking into consideration the inflation.
-
 Let's assume I plan to buy a good that costs $1000 today.
 I only have $800 in the bank. The yearly inflation is 2%, and I have a placement that yields 4% each year.
+How much time should I wait before I can buy that good?
 
 The solution to that problem can be found by solving the two constraints below:
 
@@ -310,7 +310,7 @@ The solver always tries to minimize (in absolute value) the constraints. We have
 \end{align}
 ```
 
-Once do, we are ready to write the code:
+We are now ready to write the code:
 
 ```
 from fin.model.complexmodel import ComplexModel
