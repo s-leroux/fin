@@ -189,5 +189,4 @@ class TestWebAPIBuilderBuild(unittest.TestCase):
             api = api_class(HTTPBIN_BASE_URL)
 
             result = api.get(x="26")
-            print(result)
             self.assertSequenceEqual(result["args"]["x"], ["26"])

@@ -58,7 +58,6 @@ class TestSolvers(unittest.TestCase):
                 with(self.subTest(desc=desc, solver=Solver)):
                     solver = Solver(*args)
                     score, result = solver.solve(domains, eqs)
-                    print(Solver, desc, score, result)
 
                     self.assertLess(score, testcase.get("score", score_limit))
                     self.assertEqual(len(result), len(solution))

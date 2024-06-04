@@ -31,7 +31,6 @@ def historical_data_download(pair, duration, end):
                 interval="1d",
             ))
         if r.status_code != 200:
-            print(r.text)
             raise Exception(f"Can't retrieve data at {end_point} (status={r.status_code})")
 
         chunk = r.json()

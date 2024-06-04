@@ -84,7 +84,6 @@ class WebAPI:
         res = requests.get(url, params=params)
 
         status_code = res.status_code
-        print(status_code)
         if status_code == 200:
             pass
         elif 400 <= status_code <= 499:
