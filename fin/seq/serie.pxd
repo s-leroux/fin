@@ -4,10 +4,10 @@ from fin.seq.column cimport Column
 # Serie class
 # ======================================================================
 cdef class Serie:
-    cdef Column  _index
-    cdef tuple   _columns
-    cdef unsigned rowcount
-    cdef str      name
+    cdef Column     _index  # The index column
+    cdef tuple      _data   # The data columns
+    cdef unsigned   rowcount
+    cdef str        name
 
     # ------------------------------------------------------------------
     # Arithmetic operators
@@ -22,17 +22,20 @@ cdef class Serie:
     cdef Serie c_get_item_by_index(self, int idx)
     cdef Serie c_get_item_by_name(self, str name)
 
-
-cdef inline Column serie_get_column_by_name(Serie self, str name):
-    if name == self._index.name:
-        return self._index
-
+cdef inline Column columns_get_column_by_name(tuple columns, str name):
     cdef Column column
-    for column in self._columns:
+    for column in columns:
         if column.name == name:
             return column
 
     raise KeyError(name)
+
+
+cdef inline Column serie_get_column_by_name(Serie self, str name):
+    if name == self._index.name:
+        return self._index
+    
+    return columns_get_column_by_name(self._data, name)
 
 
 # ======================================================================

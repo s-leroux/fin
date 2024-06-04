@@ -50,7 +50,7 @@ class TestCSV(unittest.TestCase):
 class TestColumnSelector(unittest.TestCase):
     def test_len(self):
         csv = CSV.from_text(CSV_DATA, skipinitialspace=True)
-        self.assertEqual(len(csv.columns), len(HEADINGS))
+        self.assertEqual(len(csv.data), len(HEADINGS))
 
     def test_select_columns(self):
         test_cases = (
@@ -68,4 +68,4 @@ class TestColumnSelector(unittest.TestCase):
 
             with self.subTest(desc=desc):
                 csv = CSV.from_text(CSV_DATA, skipinitialspace=True)
-                self.assertSequenceEqual(csv.columns[sel], expected)
+                self.assertSequenceEqual(csv.data[sel], expected)

@@ -39,7 +39,7 @@ class HistoricalData:
 
         # XXX This looks like a hack...
         if precision is not None:
-            for col in t.columns:
+            for col in t.data:
                 col.type.set_option("precision", precision)
 
 #        if select:

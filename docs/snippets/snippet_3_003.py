@@ -1,4 +1,4 @@
-sma = t2.columns[-1]
+sma = t2.data[-1]
 
 mp = plot.Multiplot(t2, "Date")
 p = mp.new_plot(3)

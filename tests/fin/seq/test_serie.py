@@ -18,7 +18,7 @@ class TestSerie(unittest.TestCase):
         self.assertIsInstance(ser.index, column.Column)
         self.assertSequenceEqual(ser.index.py_values, "ABC")
 
-        c0, = ser.columns
+        c0, = ser.data
         self.assertIsInstance(c0, column.Column)
         self.assertSequenceEqual(c0.py_values, [10, 20, 30])
 
@@ -32,8 +32,8 @@ class TestSerie(unittest.TestCase):
 
         serB = serA + scalar
         self.assertSequenceEqual(serB.index.py_values, "ABCDF")
-        self.assertEqual(len(serB.columns), 1)
-        self.assertSequenceEqual(serB.columns[0].f_values, [x+scalar for x in seqA])
+        self.assertEqual(len(serB.data), 1)
+        self.assertSequenceEqual(serB.data[0].f_values, [x+scalar for x in seqA])
 
     def test_add_series(self):
         """
@@ -44,8 +44,56 @@ class TestSerie(unittest.TestCase):
 
         serC = serA + serB
         self.assertSequenceEqual(serC.index.py_values, "ABCF")
-        self.assertEqual(len(serC.columns), 1)
-        self.assertSequenceEqual(serC.columns[0].f_values, (21.0, 41.0, 61.0, 101.0))
+        self.assertEqual(len(serC.data), 1)
+        self.assertSequenceEqual(serC.data[0].f_values, (21.0, 41.0, 61.0, 101.0))
+
+    def test_get_column_by_index(self):
+        """
+        You can use the `columns` property to access an individual column by index.
+        """
+        self.maxDiff = None
+
+        c1 = column.Column.from_sequence(range(10), name="a")
+        c2 = column.Column.from_callable(lambda x : x*10, c1, name="b")
+        c3 = column.Column.from_callable(lambda x : x*10, c2, name="c")
+        cols = (c1, c2, c3)
+
+        ser = serie.Serie.create(*cols)
+
+        for idx in 0,1,2:
+            self.assertEqual(ser.columns[idx], cols[idx])
+
+    def test_get_column_by_name(self):
+        """
+        You can use the `columns` property to access an individual column by name.
+        """
+        self.maxDiff = None
+
+        c1 = column.Column.from_sequence(range(10), name="a")
+        c2 = column.Column.from_callable(lambda x : x*10, c1, name="b")
+        c3 = column.Column.from_callable(lambda x : x*10, c2, name="c")
+        cols = (c1, c2, c3)
+
+        ser = serie.Serie.create(*cols)
+
+        for idx, name in zip((0,1,2), "abc"):
+            self.assertEqual(ser.columns[name], cols[idx])
+
+    def test_get_data_column_by_name(self):
+        """
+        You can use the `data` property to access an individual data column by name.
+        """
+        self.maxDiff = None
+
+        c1 = column.Column.from_sequence(range(10), name="a")
+        c2 = column.Column.from_callable(lambda x : x*10, c1, name="b")
+        c3 = column.Column.from_callable(lambda x : x*10, c2, name="c")
+        cols = (c1, c2, c3)
+
+        ser = serie.Serie.create(*cols)
+
+        for idx, name in zip((1,2), "bc"):
+            self.assertEqual(ser.data[name], cols[idx])
 
     def test_get_by_index(self):
         """
@@ -62,8 +110,8 @@ class TestSerie(unittest.TestCase):
             res = ser[idx]
             self.assertIsInstance(res, serie.Serie)
             self.assertEqual(res.index, c1)
-            self.assertEqual(len(res.columns), 1)
-            self.assertEqual(res.columns[0], col)
+            self.assertEqual(len(res.data), 1)
+            self.assertEqual(res.data[0], col)
 
     def test_get_by_negative_index(self):
         """
@@ -79,7 +127,7 @@ class TestSerie(unittest.TestCase):
 
         self.assertIsInstance(res, serie.Serie)
         self.assertEqual(res.index, c1)
-        self.assertEqual(res.columns[0], c3)
+        self.assertEqual(res.data[0], c3)
 
     def test_get_by_name(self):
         """
@@ -96,8 +144,8 @@ class TestSerie(unittest.TestCase):
             res = ser[col.name]
             self.assertIsInstance(res, serie.Serie)
             self.assertEqual(res.index, c1)
-            self.assertEqual(len(res.columns), 1)
-            self.assertEqual(res.columns[0], col)
+            self.assertEqual(len(res.data), 1)
+            self.assertEqual(res.data[0], col)
 
     def test_get_items(self):
         """
@@ -113,10 +161,10 @@ class TestSerie(unittest.TestCase):
 
         self.assertIsInstance(res, serie.Serie)
         self.assertEqual(res.index, c1)
-        self.assertEqual(len(res.columns), 3)
-        self.assertEqual(res.columns[0], c1)
-        self.assertEqual(res.columns[1], c3)
-        self.assertEqual(res.columns[2], c2)
+        self.assertEqual(len(res.data), 3)
+        self.assertEqual(res.data[0], c1)
+        self.assertEqual(res.data[1], c3)
+        self.assertEqual(res.data[2], c2)
 
     def test_clear(self):
         """
@@ -132,7 +180,7 @@ class TestSerie(unittest.TestCase):
 
         self.assertIsInstance(res, serie.Serie)
         self.assertEqual(res.index, c1)
-        self.assertEqual(len(res.columns), 0)
+        self.assertEqual(len(res.data), 0)
 
 # ======================================================================
 # Joins
@@ -248,8 +296,8 @@ class TestJoin(unittest.TestCase):
 
         self.assertSequenceEqual(join.index.py_values, "ABCF")
 
-        self.assertSequenceEqual(join.columns[0].py_values, [10, 11, 12, 14])
-        self.assertSequenceEqual(join.columns[1].py_values, [20, 21, 22, 24])
+        self.assertSequenceEqual(join.data[0].py_values, [10, 11, 12, 14])
+        self.assertSequenceEqual(join.data[1].py_values, [20, 21, 22, 24])
 
     def test_serie_full_outer_join_operator(self):
         XX=None
@@ -260,8 +308,8 @@ class TestJoin(unittest.TestCase):
 
         self.assertSequenceEqual(join.index.py_values, "ABCDEFG")
 
-        self.assertSequenceEqual(join.columns[0].py_values, [10, 11, 12, 13, XX, 14, 15])
-        self.assertSequenceEqual(join.columns[1].py_values, [20, 21, 22, XX, 23, 24, XX])
+        self.assertSequenceEqual(join.data[0].py_values, [10, 11, 12, 13, XX, 14, 15])
+        self.assertSequenceEqual(join.data[1].py_values, [20, 21, 22, XX, 23, 24, XX])
 
 # ======================================================================
 # Extra factory methods
@@ -280,15 +328,15 @@ class TestSerieFromData(unittest.TestCase):
 
         ser = serie.Serie.from_data(columns, headings)
 
-        self.assertEqual(len(ser.columns), 2)
+        self.assertEqual(len(ser.data), 2)
         self.assertEqual(ser.rowcount, 5)
 
         self.assertEqual(ser.index.name, "A")
         self.assertSequenceEqual(ser.index.py_values, range(0,5))
-        self.assertEqual(ser.columns[0].name, "B")
-        self.assertSequenceEqual(ser.columns[0].py_values, range(10,15))
-        self.assertEqual(ser.columns[1].name, "C")
-        self.assertSequenceEqual(ser.columns[1].py_values, range(20,25))
+        self.assertEqual(ser.data[0].name, "B")
+        self.assertSequenceEqual(ser.data[0].py_values, range(10,15))
+        self.assertEqual(ser.data[1].name, "C")
+        self.assertSequenceEqual(ser.data[1].py_values, range(20,25))
 
 
 class TestSerieFromCSV(unittest.TestCase):
@@ -307,15 +355,15 @@ class TestSerieFromCSV(unittest.TestCase):
                 format='nnn'
         )
 
-        self.assertEqual(len(ser.columns), 2)
+        self.assertEqual(len(ser.data), 2)
         self.assertEqual(ser.rowcount, 5)
 
         self.assertEqual(ser.index.name, "A")
         self.assertSequenceEqual(ser.index.py_values, range(0,5))
-        self.assertEqual(ser.columns[0].name, "B")
-        self.assertSequenceEqual(ser.columns[0].py_values, range(10,15))
-        self.assertEqual(ser.columns[1].name, "C")
-        self.assertSequenceEqual(ser.columns[1].py_values, range(20,25))
+        self.assertEqual(ser.data[0].name, "B")
+        self.assertSequenceEqual(ser.data[0].py_values, range(10,15))
+        self.assertEqual(ser.data[1].name, "C")
+        self.assertSequenceEqual(ser.data[1].py_values, range(20,25))
 
     def test_from_csv_file(self):
         ser = serie.Serie.from_csv_file(
@@ -361,18 +409,18 @@ class TestSerieStrip(unittest.TestCase):
         res = ser.lstrip()
 
         self.assertEqual(res.rowcount, ser.rowcount-1)
-        self.assertEqual(len(res.columns), 4)
+        self.assertEqual(len(res.data), 4)
         self.assertSequenceEqual(res.index.py_values, cols[0][1:])
-        self.assertSequenceEqual(res.columns[0].py_values, cols[1][1:])
+        self.assertSequenceEqual(res.data[0].py_values, cols[1][1:])
 
     def test_lstrip_select(self):
         cols, ser = self.cols, self.ser
         res = ser.lstrip("B")
 
         self.assertEqual(res.rowcount, ser.rowcount-3)
-        self.assertEqual(len(res.columns), 4)
+        self.assertEqual(len(res.data), 4)
         self.assertSequenceEqual(res.index.py_values, cols[0][3:])
-        self.assertSequenceEqual(res.columns[0].py_values, cols[1][3:])
+        self.assertSequenceEqual(res.data[0].py_values, cols[1][3:])
 
 
 class TestSerieSelect(unittest.TestCase):
@@ -401,7 +449,7 @@ class TestSerieSelect(unittest.TestCase):
 
         self.assertEqual(b.rowcount, a.rowcount)
         self.assertSequenceEqual(b.index.py_values, cols[1])
-        self.assertEqual(len(b.columns), 0)
+        self.assertEqual(len(b.data), 0)
 
     def test_select_multi(self):
         a = self.serie
@@ -415,10 +463,10 @@ class TestSerieSelect(unittest.TestCase):
 
         self.assertEqual(b.rowcount, a.rowcount)
         self.assertSequenceEqual(b.index, a.index)
-        self.assertEqual(len(b.columns), 2)
+        self.assertEqual(len(b.data), 2)
         self.assertSequenceEqual(b.index.py_values, cols[0])
-        self.assertSequenceEqual(b.columns[0].py_values, [x+y for x,y in zip(cols[1], cols[2])])
-        self.assertSequenceEqual(b.columns[1].py_values, (42,)*a.rowcount)
+        self.assertSequenceEqual(b.data[0].py_values, [x+y for x,y in zip(cols[1], cols[2])])
+        self.assertSequenceEqual(b.data[1].py_values, (42,)*a.rowcount)
 
 
 class TestSerieExtend(unittest.TestCase):
@@ -446,8 +494,8 @@ class TestSerieExtend(unittest.TestCase):
                 )
 
         self.assertEqual(b.rowcount, a.rowcount)
-        self.assertEqual(len(b.columns), len(a.columns)+1)
-        self.assertSequenceEqual(b.columns[-1].py_values, range(61, 70))
+        self.assertEqual(len(b.data), len(a.data)+1)
+        self.assertSequenceEqual(b.data[-1].py_values, range(61, 70))
 
 
 class TestSerieWhere(unittest.TestCase):
@@ -530,7 +578,7 @@ class TestSerieWhere(unittest.TestCase):
                 self.assertIsInstance(b, serie.Serie)
                 self.assertSequenceEqual(b.headings, a.headings)
                 self.assertSequenceEqual(b.index.py_values, [a.index[n] for n in expected])
-                self.assertSequenceEqual(b.columns[0].py_values, [a.columns[0][n] for n in expected])
+                self.assertSequenceEqual(b.data[0].py_values, [a.data[0][n] for n in expected])
 
 
 class TestSerieGroupBy(unittest.TestCase):
@@ -565,7 +613,7 @@ class TestSerieGroupBy(unittest.TestCase):
                 )
 
         self.assertEqual(b.rowcount, 4)
-        self.assertEqual(b.columns[0].name, "C")
+        self.assertEqual(b.data[0].name, "C")
 
     def test_group_by_rename(self):
         a = self.serie
@@ -577,7 +625,7 @@ class TestSerieGroupBy(unittest.TestCase):
                 )
 
         self.assertEqual(b.rowcount, 4)
-        self.assertEqual(b.columns[0].name, "D")
+        self.assertEqual(b.data[0].name, "D")
 
     def test_group_by_expr(self):
         a = self.serie
@@ -588,7 +636,7 @@ class TestSerieGroupBy(unittest.TestCase):
                 (ag.first, "C"),
                 )
         self.assertEqual(b.rowcount, 7)
-        self.assertEqual(len(b.columns), 1)
+        self.assertEqual(len(b.data), 1)
 
 class TestSerieSortBy(unittest.TestCase):
     def setUp(self):
@@ -633,7 +681,7 @@ class TestSerieUnion(unittest.TestCase):
         res = serA.union(serB)
 
         self.assertSequenceEqual(res.index.py_values, "ABCDEF")
-        self.assertSequenceEqual(res.columns[0].py_values, (0,0,0,1,1,1))
+        self.assertSequenceEqual(res.data[0].py_values, (0,0,0,1,1,1))
 
 
 # ======================================================================
@@ -694,9 +742,9 @@ def arithmetic_test(validator, fct):
                 (fct, "X", fc.constant(y)),
                 )
 
-        self.assertEqual(len(ser.columns), 2)
-        self.assertSequenceEqual(ser.columns[0].py_values,(x,)*6)
-        self.assertSequenceEqual(ser.columns[1].py_values,(validator(x,y),)*6)
+        self.assertEqual(len(ser.data), 2)
+        self.assertSequenceEqual(ser.data[0].py_values,(x,)*6)
+        self.assertSequenceEqual(ser.data[1].py_values,(validator(x,y),)*6)
 
     return _arithmetic_test
 
@@ -710,9 +758,9 @@ class TestSerieEvaluationExpression(unittest.TestCase):
                 (fc.named("X"), fc.constant(1)),
                 )
 
-        self.assertEqual(len(ser.columns), 1)
-        self.assertSequenceEqual(ser.columns[0].py_values,(1,)*6)
-        self.assertEqual(ser.columns[0].name, "X")
+        self.assertEqual(len(ser.data), 1)
+        self.assertSequenceEqual(ser.data[0].py_values,(1,)*6)
+        self.assertEqual(ser.data[0].name, "X")
 
     def test_references(self):
         ser = serie.Serie.create(
@@ -721,11 +769,11 @@ class TestSerieEvaluationExpression(unittest.TestCase):
                 "X",
                 )
 
-        self.assertEqual(len(ser.columns), 2)
-        self.assertSequenceEqual(ser.columns[0].py_values,(1,)*6)
-        self.assertSequenceEqual(ser.columns[1].py_values,(1,)*6)
-        self.assertEqual(ser.columns[0].name, "X")
-        self.assertEqual(ser.columns[1].name, "X")
+        self.assertEqual(len(ser.data), 2)
+        self.assertSequenceEqual(ser.data[0].py_values,(1,)*6)
+        self.assertSequenceEqual(ser.data[1].py_values,(1,)*6)
+        self.assertEqual(ser.data[0].name, "X")
+        self.assertEqual(ser.data[1].name, "X")
 
     def test_named_references(self):
         ser = serie.Serie.create(
@@ -734,11 +782,11 @@ class TestSerieEvaluationExpression(unittest.TestCase):
                 (fc.named("Y"), "X"),
                 )
 
-        self.assertEqual(len(ser.columns), 2)
-        self.assertSequenceEqual(ser.columns[0].py_values,(1,)*6)
-        self.assertSequenceEqual(ser.columns[1].py_values,(1,)*6)
-        self.assertEqual(ser.columns[0].name, "X")
-        self.assertEqual(ser.columns[1].name, "Y")
+        self.assertEqual(len(ser.data), 2)
+        self.assertSequenceEqual(ser.data[0].py_values,(1,)*6)
+        self.assertSequenceEqual(ser.data[1].py_values,(1,)*6)
+        self.assertEqual(ser.data[0].name, "X")
+        self.assertEqual(ser.data[1].name, "Y")
 
     test_add = arithmetic_test(lambda x, y: x+y, fc.add)
     test_sub = arithmetic_test(lambda x, y: x-y, fc.sub)
@@ -760,11 +808,11 @@ class TestSerieEvaluationExpression(unittest.TestCase):
                 )
 
 
-        self.assertEqual(len(serB.columns), 2)
-        self.assertSequenceEqual(serB.columns[0].py_values,seqB)
-        self.assertSequenceEqual(serB.columns[1].py_values,seqA)
-        self.assertEqual(serB.columns[0].name, "Y")
-        self.assertEqual(serB.columns[1].name, "X")
+        self.assertEqual(len(serB.data), 2)
+        self.assertSequenceEqual(serB.data[0].py_values,seqB)
+        self.assertSequenceEqual(serB.data[1].py_values,seqA)
+        self.assertEqual(serB.data[0].name, "Y")
+        self.assertEqual(serB.data[1].name, "X")
 
     def test_trivial_get(self):
         ser = serie.Serie.create(
@@ -773,8 +821,8 @@ class TestSerieEvaluationExpression(unittest.TestCase):
                 (fc.named("Y"), fc.get("X")),
                 )
 
-        self.assertEqual(len(ser.columns), 2)
-        self.assertSequenceEqual(ser.columns[0].py_values,(2,)*6)
-        self.assertSequenceEqual(ser.columns[1].py_values,(2,)*6)
-        self.assertEqual(ser.columns[0].name, "X")
-        self.assertEqual(ser.columns[1].name, "Y")
+        self.assertEqual(len(ser.data), 2)
+        self.assertSequenceEqual(ser.data[0].py_values,(2,)*6)
+        self.assertSequenceEqual(ser.data[1].py_values,(2,)*6)
+        self.assertEqual(ser.data[0].name, "X")
+        self.assertEqual(ser.data[1].name, "Y")

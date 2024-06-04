@@ -23,7 +23,7 @@ class TestYF(HistoricalDataTest, unittest.TestCase):
 
             t = self.client.historical_data(self.ticker, **params)
 
-            dc = t["Date"].columns[-1]
+            dc = t["Date"].data[-1]
             self.assertEqual(str(dc[0]), "2020-01-03")
             self.assertEqual(str(dc[-1]), "2023-01-03")
             self.assertEqual(len(dc), 756)

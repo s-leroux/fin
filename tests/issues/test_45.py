@@ -17,6 +17,6 @@ class Test(unittest.TestCase):
             )
 
         lines = str(data).splitlines()
-        last_open = data.columns[1].f_values[-1]
+        last_open = data.data[1].f_values[-1]
 
         self.assertEqual(f"{last_open:0.2f}", "7357.68")
