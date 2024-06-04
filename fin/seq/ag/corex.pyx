@@ -7,7 +7,10 @@ cdef class CAggregateFunction:
     def type_for(self, column):
         return column.type
 
-    def __call__(self, Column col, unsigned begin, unsigned end):
+    def __call__(self, Column col,  begin=0, end=None):
+        if end is None:
+            end = col.length
+
         return self.call(col, begin, end)
 
     cdef call(self, Column col, unsigned begin, unsigned end):
