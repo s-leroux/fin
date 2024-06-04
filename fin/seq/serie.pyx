@@ -309,7 +309,7 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
 
         row = [ ]
         for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
-            row += aggregate_fct(*[column[start:end] for column in aggregate_sub_serie])
+            row += [aggregate_fct(column, start, end) for column in aggregate_sub_serie]
         rows.append(row)
 
         start = end
