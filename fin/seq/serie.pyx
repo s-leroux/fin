@@ -2,12 +2,14 @@ from cpython cimport array
 from cpython.object cimport Py_EQ, Py_NE
 import array
 
-from fin.seq import coltypes
 from fin.mathx cimport ualloc
 from fin.containers cimport Tuple
 from fin.seq.column cimport Column
 from fin.seq.coltypes cimport parse_type_string, IGNORE
 from fin.seq.smachine cimport evaluate
+from fin.seq.ag.corex cimport CAggregateFunction
+
+from fin.seq import coltypes
 from fin.seq.presentation import Presentation
 from fin.utils import collections as uc
 
@@ -304,12 +306,13 @@ cdef Serie serie_group_by(Serie self, expr, tuple aggregate_expr):
     cdef list rows = []
     cdef list row
     cdef unsigned start = 0
+    cdef CAggregateFunction c_aggregate_fct
     while start < self.rowcount:
         end = ptr[0]
 
         row = [ ]
-        for aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
-            row += [aggregate_fct(column, start, end) for column in aggregate_sub_serie]
+        for c_aggregate_fct, aggregate_sub_serie in zip(aggregate_fcts, aggregate_sub_series):
+            row += [c_aggregate_fct.eval(column, start, end) for column in aggregate_sub_serie]
         rows.append(row)
 
         start = end
