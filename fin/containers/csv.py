@@ -24,7 +24,7 @@ class CSV:
         self.kwargs = kwargs
         kwargs.setdefault("lineterminator", "\n")
 
-        self.columns = ColumnSelector(headings, rows, kwargs)
+        self.data = ColumnSelector(headings, rows, kwargs)
 
         return self
 
@@ -85,7 +85,7 @@ class ColumnSelector:
         result.headings = tpl
         result.rows = store
         result.kwargs = kwargs = self.kwargs
-        self.columns = ColumnSelector(tpl, rows, kwargs)
+        self.data = ColumnSelector(tpl, rows, kwargs)
 
         return result
 

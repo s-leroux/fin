@@ -28,7 +28,7 @@ class TestAdjustQuote(unittest.TestCase):
                 (adj, "A", "B", "C", "D", "E"),
             )
 
-        rc = res.columns
+        rc = res.data
         self.assertEqual(len(rc), 4)
         self.assertSequenceEqual(rc[0].py_values, ( 40, 20, 22, 44 ) )
         self.assertSequenceEqual(rc[1].py_values, ( 60, 30, 32, 64 ) )

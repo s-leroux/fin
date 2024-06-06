@@ -16,7 +16,7 @@ t = client.historical_data("BAC", CalendarDateDelta(days=100)) \
         "Open", "High", "Low", "Close",
         (fc.sma(5), "Close")
     )
-sma = t.columns[-1]
+sma = t.data[-1]
 
 mp = plot.Multiplot(t, "Date")
 p = mp.new_plot(3)

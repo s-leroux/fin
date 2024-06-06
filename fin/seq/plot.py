@@ -226,7 +226,7 @@ class Multiplot:
             mode = Multiplot.LABEL
 
 #        if type(x_axis_column) is Serie:
-#            cols = x_axis_column.columns
+#            cols = x_axis_column.data
 #            if len(cols) != 1:
 #                raise ValueError(f"Multi-column are not allowed here")
 #            x_axis_column = x_axis_column[1]
@@ -386,7 +386,7 @@ class _GNUPlotVisitor:
         mode = multiplot["mode"]
         if mode == Multiplot.LABEL:
             write(f"set xrange [0:{serie.rowcount+1}]\n")
-            x_column = serie[multiplot["x"]].columns[0]
+            x_column = serie[multiplot["x"]].data[0]
             x_tics = make_tics_from_sequence(5, x_column)
         elif mode == Multiplot.XY:
             x_tics = None
@@ -424,7 +424,7 @@ class _GNUPlotVisitor:
 
             # Auto-append the min, max and last value of the last column of each element
             for element in plot["elements"]:
-                column = serie[element["data"][-1]].columns[0]
+                column = serie[element["data"][-1]].data[0]
                 poi.extend([*column.min_max(), column[-1]])
 
             if len(poi):
@@ -475,7 +475,7 @@ class _GNUPlotVisitor:
         the_max = float("-inf")
         for element in elements:
             for column_name in element["data"]:
-                mi, ma = serie[column_name].columns[0].min_max()
+                mi, ma = serie[column_name].data[0].min_max()
                 if mi < the_min:
                     the_min = mi
                 if ma > the_max:

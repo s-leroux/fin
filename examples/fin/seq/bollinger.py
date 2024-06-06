@@ -15,7 +15,7 @@ t = t.extend(
         (fc.sma(5), "Close"),
         (fc.bband(5), "Close"),
 )
-sma, boll_b, boll_m, boll_a = t.columns[-4:]
+sma, boll_b, boll_m, boll_a = t.data[-4:]
 
 mp = plot.Multiplot(t, "Date")
 p = mp.new_plot(3)
