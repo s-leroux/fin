@@ -11,6 +11,7 @@ setup(
         "fin/model/solvers/random.pyx",
         "fin/model/solvers/solver.pyx",
         "fin/seq/ag/corex.pyx",
+        "fin/seq/ag/statx.pyx",
         "fin/seq/coltypes.pyx",
         "fin/seq/column.pyx",
         "fin/seq/fc/compx.pyx",
