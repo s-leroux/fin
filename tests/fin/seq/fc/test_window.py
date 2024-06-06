@@ -1,6 +1,6 @@
 import unittest
 
-from fin.seq.fc.window import naive_window, aggregate_over
+from fin.seq.fc.window import naive_window, aggregate_over, cumulate
 
 from tests.fin.seq.fc import utilities
 
@@ -25,7 +25,7 @@ class TestAggregateOver(unittest.TestCase):
     def test_one(self):
         XX = None
         test_cases = (
-            "#o",
+            "#0",
             [10, 11, 12, 13, 14],
             ag.sum, 3,
             [XX, XX, 33, 36, 39],
@@ -37,5 +37,31 @@ class TestAggregateOver(unittest.TestCase):
             ser = Serie.create(col)
             with self.subTest(desc=desc):
                 actual = aggregate_over(fct, n)(ser, col)
+                self.assertSequenceEqual(actual, expected)
+
+import fin.seq.ag.core as ag
+from fin.seq.serie import Serie
+from fin.seq.column import Column
+class TestCumulate(unittest.TestCase):
+    def test_one(self):
+        XX = None
+        test_cases = (
+            "#0, cumulative sum",
+            [10, 11, 12, 13, 14],
+            ag.sum, 0,
+            [10, 21, 33, 46, 60],
+
+            "#0, cumulative sum with cap",
+            [10, 11, 12, 13, 14],
+            ag.sum, 3,
+            [10, 21, 33, 36, 39],
+        )
+
+        while test_cases:
+            desc, seq, fct, n, expected, *test_cases = test_cases
+            col = Column.from_sequence(seq)
+            ser = Serie.create(col)
+            with self.subTest(desc=desc):
+                actual = cumulate(fct, n)(ser, col)
                 self.assertSequenceEqual(actual, expected)
 
