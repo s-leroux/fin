@@ -1,6 +1,6 @@
 from fin.seq.column import Column
 
-from fin.seq.fc import windows
+from fin.seq.fc import window
 
 # ======================================================================
 # Greeks
@@ -51,7 +51,7 @@ def beta(n):
         covar = [(x-x_bar)*(y-y_bar) for x, y in zip(col_x, col_y)]
         var = [(x-x_bar)**2 for x in col_x]
         return sum(covar)/sum(var)
-    return windows.naive_window(_beta, n)
+    return window.naive_window(_beta, n)
 
 def alpha(n):
     """
@@ -67,6 +67,6 @@ def alpha(n):
         covar = [(x-x_bar)*(y-y_bar) for x, y in zip(col_x, col_y)]
         var = [(x-x_bar)**2 for x in col_x]
         return y_bar - x_bar*sum(covar)/sum(var)
-    return windows.naive_window(_alpha, n)
+    return window.naive_window(_alpha, n)
 
 

@@ -1,6 +1,6 @@
 import unittest
 
-from fin.seq.fc import windows
+from fin.seq.fc.window import naive_window
 
 from tests.fin.seq.fc import utilities
 
@@ -10,7 +10,7 @@ from tests.fin.seq.fc import utilities
 class TestWindow(unittest.TestCase):
     def test_one_column(self):
         col = utilities.apply(self,
-            windows.naive_window(sum, 2),
+            naive_window(sum, 2),
             list(range(10, 20)),
         )
 

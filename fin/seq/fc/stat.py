@@ -3,7 +3,7 @@ import math
 from .statx import *
 
 from fin.seq.column import Column
-from fin.seq.fc.windows import naive_window
+from fin.seq.fc.window import naive_window
 from fin.seq.fc import proj
 
 # ======================================================================

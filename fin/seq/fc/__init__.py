@@ -13,4 +13,4 @@ from fin.seq.fc.proj import *
 from fin.seq.fc.simul import *
 from fin.seq.fc.stat import *
 from fin.seq.fc.ti import *
-from fin.seq.fc.windows import *
+from fin.seq.fc.window import *
